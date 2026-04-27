@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Copy, Info } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
@@ -29,6 +29,8 @@ function Config() {
   const removeMiembro = useOperia((s) => s.removeMiembro);
   const riskRules = useOperia((s) => s.riskRules);
   const setRiskRules = useOperia((s) => s.setRiskRules);
+  const whatsapp = useOperia((s) => s.whatsapp);
+  const setWhatsapp = useOperia((s) => s.setWhatsapp);
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
 

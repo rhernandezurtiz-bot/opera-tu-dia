@@ -14,7 +14,9 @@ import { Route as ProduccionRouteImport } from './routes/produccion'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
+import { Route as InboxIndexRouteImport } from './routes/inbox.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
+import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 
 const RiesgosRoute = RiesgosRouteImport.update({
   id: '/riesgos',
@@ -41,9 +43,19 @@ const PedidosIndexRoute = PedidosIndexRouteImport.update({
   path: '/pedidos/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxIndexRoute = InboxIndexRouteImport.update({
+  id: '/inbox/',
+  path: '/inbox/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PedidosIdRoute = PedidosIdRouteImport.update({
   id: '/pedidos/$id',
   path: '/pedidos/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxIdRoute = InboxIdRouteImport.update({
+  id: '/inbox/$id',
+  path: '/inbox/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -52,7 +64,9 @@ export interface FileRoutesByFullPath {
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -60,7 +74,9 @@ export interface FileRoutesByTo {
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/inbox': typeof InboxIndexRoute
   '/pedidos': typeof PedidosIndexRoute
 }
 export interface FileRoutesById {
@@ -69,7 +85,9 @@ export interface FileRoutesById {
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
 export interface FileRouteTypes {
@@ -79,7 +97,9 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/inbox/$id'
     | '/pedidos/$id'
+    | '/inbox/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -87,7 +107,9 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/inbox/$id'
     | '/pedidos/$id'
+    | '/inbox'
     | '/pedidos'
   id:
     | '__root__'
@@ -95,7 +117,9 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/inbox/$id'
     | '/pedidos/$id'
+    | '/inbox/'
     | '/pedidos/'
   fileRoutesById: FileRoutesById
 }
@@ -104,7 +128,9 @@ export interface RootRouteChildren {
   ConfiguracionRoute: typeof ConfiguracionRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
+  InboxIdRoute: typeof InboxIdRoute
   PedidosIdRoute: typeof PedidosIdRoute
+  InboxIndexRoute: typeof InboxIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
 }
 
@@ -145,11 +171,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PedidosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox/': {
+      id: '/inbox/'
+      path: '/inbox'
+      fullPath: '/inbox/'
+      preLoaderRoute: typeof InboxIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pedidos/$id': {
       id: '/pedidos/$id'
       path: '/pedidos/$id'
       fullPath: '/pedidos/$id'
       preLoaderRoute: typeof PedidosIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox/$id': {
+      id: '/inbox/$id'
+      path: '/inbox/$id'
+      fullPath: '/inbox/$id'
+      preLoaderRoute: typeof InboxIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -160,7 +200,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracionRoute: ConfiguracionRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
+  InboxIdRoute: InboxIdRoute,
   PedidosIdRoute: PedidosIdRoute,
+  InboxIndexRoute: InboxIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
 }
 export const routeTree = rootRouteImport
