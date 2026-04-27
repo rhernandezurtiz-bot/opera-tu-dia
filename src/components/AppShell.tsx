@@ -1,12 +1,14 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus } from "lucide-react";
-import type { ReactNode } from "react";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
+import { useOperia } from "@/lib/operia-store";
 import { NewOrderModal } from "./NewOrderModal";
 
 const nav = [
   { to: "/", label: "Inicio", icon: Home },
+  { to: "/inbox", label: "Inbox", icon: MessageCircle },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered },
   { to: "/produccion", label: "Plan del día", icon: ChefHat },
   { to: "/riesgos", label: "Riesgos", icon: AlertTriangle },
