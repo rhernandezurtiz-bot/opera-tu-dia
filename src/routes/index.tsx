@@ -137,10 +137,14 @@ function Index() {
           />
 
           {sortedTodays.length === 0 ? (
-            <EmptyState
-              title="Sin pedidos para hoy"
-              hint="Cuando lleguen, aparecerán aquí ordenados por hora."
-            />
+            orders.length === 0 ? (
+              <FirstRunEmpty onStart={openNew} />
+            ) : (
+              <EmptyState
+                title="Sin pedidos para hoy"
+                hint="Cuando lleguen, aparecerán aquí ordenados por hora."
+              />
+            )
           ) : (
             <div className="space-y-2.5">
               {sortedTodays.map((o) => (

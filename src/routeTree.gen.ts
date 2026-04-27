@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RiesgosRouteImport } from './routes/riesgos'
 import { Route as ProduccionRouteImport } from './routes/produccion'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
@@ -28,6 +31,21 @@ const RiesgosRoute = RiesgosRouteImport.update({
 const ProduccionRoute = ProduccionRouteImport.update({
   id: '/produccion',
   path: '/produccion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracionRoute = ConfiguracionRouteImport.update({
@@ -74,6 +92,9 @@ const ClientesKeyRoute = ClientesKeyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -86,6 +107,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -99,6 +123,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/landing': typeof LandingRoute
+  '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -113,6 +140,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/configuracion'
+    | '/landing'
+    | '/login'
+    | '/onboarding'
     | '/produccion'
     | '/riesgos'
     | '/clientes/$key'
@@ -125,6 +155,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/configuracion'
+    | '/landing'
+    | '/login'
+    | '/onboarding'
     | '/produccion'
     | '/riesgos'
     | '/clientes/$key'
@@ -137,6 +170,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/configuracion'
+    | '/landing'
+    | '/login'
+    | '/onboarding'
     | '/produccion'
     | '/riesgos'
     | '/clientes/$key'
@@ -150,6 +186,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfiguracionRoute: typeof ConfiguracionRoute
+  LandingRoute: typeof LandingRoute
+  LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
@@ -174,6 +213,27 @@ declare module '@tanstack/react-router' {
       path: '/produccion'
       fullPath: '/produccion'
       preLoaderRoute: typeof ProduccionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracion': {
@@ -238,6 +298,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfiguracionRoute: ConfiguracionRoute,
+  LandingRoute: LandingRoute,
+  LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
   ClientesKeyRoute: ClientesKeyRoute,
