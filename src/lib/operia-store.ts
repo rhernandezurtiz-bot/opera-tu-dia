@@ -190,6 +190,8 @@ interface State {
   riskRules: RiskRules;
   messages: WhatsappMessage[];
   whatsapp: WhatsappConfig;
+  // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
+  clientNotes: Record<string, string>;
   addOrder: (o: Order) => void;
   updateOrder: (id: string, patch: Partial<Order>) => void;
   removeOrder: (id: string) => void;
@@ -203,6 +205,7 @@ interface State {
   setMessageStatus: (id: string, estado: WhatsappStatus) => void;
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
+  setClientNote: (key: string, note: string) => void;
 }
 
 export const useOperia = create<State>()(
