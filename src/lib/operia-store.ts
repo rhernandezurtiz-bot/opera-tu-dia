@@ -257,16 +257,40 @@ export const useOperia = create<State>()(
 
 function recompute(o: Order): Order {
   const faltantes: string[] = [];
+  // Producto / descripción exacta
+  if (!o.descripcion || /producto por definir/i.test(o.descripcion)) faltantes.push("Producto exacto");
+  // Cantidad (sólo relevante para producto / personalizado)
+  if ((o.tipo === "producto" || o.tipo === "personalizado") && (!o.cantidad || o.cantidad === "1" && /por definir/i.test(o.descripcion))) {
+    if (!o.cantidad) faltantes.push("Cantidad");
+  }
+  // Fecha
   if (!o.fechaEntrega) faltantes.push("Fecha");
-  if (!o.horaEntrega) faltantes.push("Hora");
-  if (!o.direccion && o.tipo !== "cita") faltantes.push("Dirección");
+  else if (o.fechaConfirmada === false) faltantes.push("Fecha exacta");
+  // Hora
+  if (!o.horaEntrega) {
+    if (o.horaAprox) faltantes.push("Hora exacta");
+    else faltantes.push("Hora");
+  } else if (o.horaConfirmada === false) {
+    faltantes.push("Hora exacta");
+  }
+  // Dirección
+  if (o.tipo !== "cita") {
+    if (!o.direccion) faltantes.push("Dirección completa");
+    else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
+  }
+  // Pago
   if (o.pago === "pendiente") faltantes.push("Pago");
-  if (!o.descripcion) faltantes.push("Descripción");
-  if (!o.telefono) faltantes.push("Teléfono");
+  // Contacto
+  if (!o.telefono) faltantes.push("Contacto");
+
+  // Riesgo: >2 críticos => ALTO; 1–2 => MEDIO; 0 => BAJO
+  const criticos = faltantes.filter((f) =>
+    /Producto|Fecha|Hora|Dirección|Contacto/i.test(f)
+  ).length;
   let riesgo: RiskLevel = "bajo";
-  const isToday = o.fechaEntrega === today();
-  if (!o.fechaEntrega || !o.descripcion || (isToday && !o.horaEntrega)) riesgo = "alto";
+  if (criticos > 2 || o.ambiguo) riesgo = "alto";
   else if (faltantes.length >= 1) riesgo = "medio";
+
   return { ...o, faltantes, riesgo };
 }
 
