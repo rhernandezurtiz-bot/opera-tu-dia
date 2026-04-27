@@ -61,6 +61,10 @@ export interface Order {
   checklist: Record<string, boolean>;
   mensajeOriginal: string;
   createdAt: number;
+  // Confianza de los datos detectados
+  fechaConfirmada?: boolean;
+  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía"
+  fechaTextoOriginal?: string; // texto exacto que usó el cliente: "viernes", "mañana"
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
@@ -269,28 +273,81 @@ const APPOINTMENT_KW = /\b(cita|agendar|agenda|reservar|reserva|turno|appointmen
 const PRODUCT_KW = /\b(pastel|cupcakes?|galletas?|postre|comida|men[uú]|pizza|hamburguesa|ramo|flores|arreglo floral|producto|piezas?|unidades?|encargar|comprar|llevar)\b/i;
 const CUSTOM_KW = /\b(personaliza|a medida|custom|cotizar|cotizaci[oó]n|presupuesto|brief|dise[ñn]o especial)\b/i;
 
+function titleCase(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Limpia descripciones: quita relleno, fechas, horas y zonas para no duplicar
+function cleanDesc(raw: string): string {
+  let s = raw.trim();
+  s = s.replace(/\b(el|la|los|las|un|una|unos|unas)\s+/gi, "");
+  s = s.replace(/\b(hoy|ma[ñn]ana|pasado ma[ñn]ana)\b/gi, "");
+  s = s.replace(/\b(lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\b/gi, "");
+  s = s.replace(/\bpor la (ma[ñn]ana|tarde|noche)\b/gi, "");
+  s = s.replace(/\bal mediod[ií]a\b/gi, "");
+  s = s.replace(/\ba las\s+\d{1,2}(:\d{2})?\s*(am|pm)?/gi, "");
+  s = s.replace(/\b(en|para|hacia|de)\s+(providencia|polanco|condesa|roma|coyoac[aá]n|sat[eé]lite|las lomas|centro|norte|sur)\b/gi, "");
+  s = s.replace(/\s{2,}/g, " ").replace(/[\s,;.\-]+$/g, "").trim();
+  return s;
+}
+
 function buildSummary(tipo: OrderType, rawDesc: string, fechaTxt: string, horaTxt: string, direccion: string, lower: string): string {
-  let core = rawDesc.trim();
-  // Clean filler words
-  core = core.replace(/^(que\s+me\s+|me\s+|de\s+|un[oa]?\s+|el\s+la\s+|los\s+|las\s+)/i, "").trim();
+  let core = cleanDesc(rawDesc);
+
   if (tipo === "servicio") {
-    if (/fuga/.test(lower)) core = "Reparación de fuga";
+    if (/fuga/.test(lower)) core = "Reparación de fuga de agua";
     else if (/masaje/.test(lower)) core = "Sesión de masaje";
     else if (/limpieza|limpiar/.test(lower)) core = "Servicio de limpieza";
-    else if (/instalar|instalaci[oó]n/.test(lower)) core = core || "Instalación";
+    else if (/plomer|plomero/.test(lower)) core = "Servicio de plomería";
+    else if (/electric/.test(lower)) core = "Servicio eléctrico";
+    else if (/instalar|instalaci[oó]n/.test(lower)) core = core ? `Instalación: ${core}` : "Instalación";
     else if (/(reparar|reparaci[oó]n|arreglar|arreglo)/.test(lower) && core) core = `Reparación: ${core}`;
     else if (!core) core = "Servicio solicitado";
-  } else if (tipo === "cita" && !core) {
-    core = "Cita / reserva";
+  } else if (tipo === "cita") {
+    if (!core) core = "Cita / reserva";
+    else core = `Cita: ${core}`;
+  } else if (tipo === "producto") {
+    if (!core) core = "Pedido de producto";
   } else if (!core) {
     core = "Pedido";
   }
-  // Capitalize
-  core = core.charAt(0).toUpperCase() + core.slice(1);
+
+  core = titleCase(core);
+
+  // Combinar fecha + hora en un solo bloque limpio
+  const cuando = [fechaTxt, horaTxt].filter(Boolean).join(" ");
   const parts = [core];
-  if (fechaTxt) parts.push(fechaTxt + (horaTxt ? ` ${horaTxt}` : ""));
+  if (cuando) parts.push(cuando);
   if (direccion) parts.push(direccion);
-  return parts.join(" — ");
+  // Eliminar duplicados consecutivos por seguridad
+  const seen = new Set<string>();
+  const dedup = parts.filter((p) => {
+    const k = p.toLowerCase();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+  return dedup.join(" — ");
+}
+
+const ZONAS_RE = /\b(Providencia|Polanco|Condesa|Roma|Coyoac[aá]n|Sat[eé]lite|Las Lomas|Centro|Norte|Sur|San [AÁ]ngel|Del Valle|N[aá]poles|Doctores|Juárez|Juarez|Tlalpan|Iztapalapa|[ÑN]u[ñn]oa|Las Condes|Vitacura)\b/i;
+
+function extractLocation(text: string): string {
+  // 1) Patrones explícitos
+  const m = text.match(/(?:direcci[oó]n|env[ií]o a|entrega en|llevar a|domicilio en|en la zona de|en la colonia|en el barrio de|en)\s+((?:la\s+|el\s+)?(?:colonia\s+|col\.\s+)?[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ\s]{1,40})/);
+  if (m) {
+    let loc = m[1].trim().replace(/\s+(el|la|los|las)\s+.*$/i, "").trim();
+    // si la captura contiene una zona conocida, recortar a ella
+    const z = loc.match(ZONAS_RE);
+    if (z) return titleCase(z[1]);
+    // recortar a 3 palabras como mucho
+    loc = loc.split(/\s+/).slice(0, 4).join(" ");
+    return loc;
+  }
+  // 2) Zonas conocidas sueltas
+  const z = text.match(ZONAS_RE);
+  if (z) return titleCase(z[1]);
+  return "";
 }
 
 export function parseWhatsapp(text: string): Order {
@@ -314,10 +371,12 @@ export function parseWhatsapp(text: string): Order {
   const cantMatch = text.match(/(\d+)\s+(?:piezas?|unidades?|productos?|cupcakes?|galletas?|sesiones?|personas?)/i);
   const cantidad = cantMatch ? cantMatch[1] : "1";
 
-  // Fecha
+  // Fecha — exacta o referencial (no confirmada)
   let fechaEntrega = "";
-  if (/\bhoy\b/.test(lower)) fechaEntrega = today();
-  else if (/\bma[ñn]ana\b/.test(lower)) fechaEntrega = tomorrow();
+  let fechaConfirmada = false;
+  let fechaTextoOriginal = "";
+  if (/\bhoy\b/.test(lower)) { fechaEntrega = today(); fechaConfirmada = true; fechaTextoOriginal = "hoy"; }
+  else if (/\bma[ñn]ana\b/.test(lower)) { fechaEntrega = tomorrow(); fechaConfirmada = true; fechaTextoOriginal = "mañana"; }
   else {
     const map: Record<string, number> = { domingo:0,lunes:1,martes:2,miércoles:3,miercoles:3,jueves:4,viernes:5,sábado:6,sabado:6 };
     for (const d of Object.keys(map)) {
@@ -327,9 +386,21 @@ export function parseWhatsapp(text: string): Order {
         const diff = (target - now.getDay() + 7) % 7 || 7;
         const dt = new Date(now); dt.setDate(now.getDate() + diff);
         fechaEntrega = dt.toISOString().slice(0,10);
+        fechaConfirmada = false; // día de la semana = aproximado, sin año explícito
+        fechaTextoOriginal = d;
         break;
       }
     }
+  }
+  // Fecha explícita dd/mm => confirmada
+  const explicit = lower.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/);
+  if (explicit) {
+    const d = explicit[1].padStart(2, "0");
+    const m = explicit[2].padStart(2, "0");
+    const y = explicit[3] ? (explicit[3].length === 2 ? "20" + explicit[3] : explicit[3]) : String(new Date().getFullYear());
+    fechaEntrega = `${y}-${m}-${d}`;
+    fechaConfirmada = true;
+    fechaTextoOriginal = `${d}/${m}`;
   }
 
   // Hora — exacta o aproximada
@@ -367,15 +438,8 @@ export function parseWhatsapp(text: string): Order {
   if (/pagad|pagué|liquidad/i.test(text)) pago = "pagado";
   else if (/anticipo|adelanto|se[ñn]a|dep[oó]sito/i.test(text)) pago = "anticipo";
 
-  // Dirección
-  let direccion = "";
-  const dirMatch = text.match(/(?:direcci[oó]n|env[ií]o a|entrega en|llevar a|domicilio en|en)\s+((?:la\s+|el\s+)?(?:colonia\s+|col\.\s+)?[A-ZÁÉÍÓÚÑa-záéíóúñ][^\n.,]{2,60})/i);
-  if (dirMatch) direccion = dirMatch[1].trim();
-  // Reconocer barrios/zonas comunes mencionadas sueltas
-  if (!direccion) {
-    const zonas = text.match(/\b(Providencia|Polanco|Condesa|Roma|Coyoac[aá]n|Satélite|Las Lomas|Centro|Norte|Sur)\b/);
-    if (zonas) direccion = zonas[1];
-  }
+  // Dirección / ubicación limpia
+  const direccion = extractLocation(text);
 
   // Detalles
   let detalles = "";
@@ -384,19 +448,21 @@ export function parseWhatsapp(text: string): Order {
 
   // Construir resumen limpio
   const fechaTxt = fechaEntrega
-    ? (fechaEntrega === today() ? "hoy" : fechaEntrega === tomorrow() ? "mañana" : fechaEntrega)
+    ? (fechaConfirmada
+        ? (fechaEntrega === today() ? "hoy" : fechaEntrega === tomorrow() ? "mañana" : fechaEntrega)
+        : fechaTextoOriginal)
     : "";
   const horaTxt = horaEntrega
     ? `a las ${horaEntrega}`
     : horaAprox
       ? `por la ${horaAprox}`
       : "";
-  const rawForSummary = descripcion || (tipoDetectado ? "" : "");
-  const resumen = buildSummary(tipo, rawForSummary, fechaTxt, horaTxt, direccion, lower);
+  const resumen = buildSummary(tipo, descripcion, fechaTxt, horaTxt, direccion, lower);
 
-  // Notas: marcar hora aproximada y baja confianza
+  // Notas: marcar confianza
   const notasArr: string[] = [];
-  if (horaAprox) notasArr.push(`Hora aproximada: ${horaAprox}`);
+  if (fechaEntrega && !fechaConfirmada) notasArr.push(`Fecha: ${fechaTextoOriginal} (no confirmada)`);
+  if (horaAprox) notasArr.push(`Hora: ${horaAprox} (aproximada)`);
   if (!tipoDetectado && !descripcion) notasArr.push("Datos no confirmados");
 
   return recompute({
@@ -407,6 +473,7 @@ export function parseWhatsapp(text: string): Order {
     pago, precio: 0, notas: notasArr.join(" · "), estado: "nuevo", riesgo: "bajo",
     faltantes: [], checklist: {},
     mensajeOriginal: text, createdAt: Date.now(),
+    fechaConfirmada, horaAprox, fechaTextoOriginal,
   });
 }
 

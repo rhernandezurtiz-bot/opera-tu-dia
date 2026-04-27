@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { parseWhatsapp, useOperia, typeLabels, type Order, type OrderType } from "@/lib/operia-store";
-import { buildMissingMessage } from "@/lib/ui-store";
-import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone } from "lucide-react";
+import { buildSmartReply, buildConfirmMessage, buildPaymentMessage, buildReadyMessage } from "@/lib/ui-store";
+import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone, Clock, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/inbox/$id")({
@@ -65,27 +65,34 @@ function InboxDetail() {
 
   const replies = useMemo(() => {
     if (!message) return [];
-    const cliente = draft?.cliente || message.cliente.replace(/^\+?\d.*/, "").trim();
-    const fechaTxt = draft?.fechaEntrega
-      ? `${draft.fechaEntrega}${draft.horaEntrega ? ` a las ${draft.horaEntrega}` : ""}`
-      : "la fecha acordada";
-    const desc = draft?.descripcion || "tu pedido";
+    const base: Order = draft || ({
+      cliente: message.cliente,
+      telefono: message.telefono,
+      tipo: "producto",
+      descripcion: "",
+      fechaEntrega: "",
+      horaEntrega: "",
+      faltantes: [],
+      precio: 0,
+    } as unknown as Order);
+    const tipoLabel = draft ? typeLabels[draft.tipo] : "pedido";
     return [
       {
-        title: "Pedir información faltante",
-        body: buildMissingMessage(cliente, draft?.faltantes || ["fecha", "dirección", "pago"]),
+        title: `Sugerido para este ${tipoLabel.toLowerCase()}`,
+        body: buildSmartReply(base),
+        primary: true,
       },
       {
         title: "Confirmar pedido",
-        body: `¡Hola${cliente ? " " + cliente : ""}! ✅ Tu pedido de ${desc} queda confirmado para ${fechaTxt}. ¡Gracias por tu preferencia!`,
+        body: buildConfirmMessage(base),
       },
       {
         title: "Solicitar pago / anticipo",
-        body: `¡Hola${cliente ? " " + cliente : ""}! 💳 Para asegurar tu pedido necesitamos un anticipo. Te comparto los datos para realizar el pago. ¿Me confirmas cuando lo hagas? ¡Gracias!`,
+        body: buildPaymentMessage(base),
       },
       {
-        title: "Confirmar entrega lista",
-        body: `¡Hola${cliente ? " " + cliente : ""}! 🎉 Tu pedido está listo. Te lo entregamos según lo acordado para ${fechaTxt}. ¡Gracias por confiar en nosotros!`,
+        title: "Avisar que está listo",
+        body: buildReadyMessage(base),
       },
     ];
   }, [message, draft]);
@@ -150,12 +157,39 @@ function InboxDetail() {
         {/* Structured preview */}
         {draft && !orderLinked && (
           <Card className="p-5 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <CheckCircle2 className="h-4 w-4 text-success" />
               <span className="text-sm font-medium">Orden detectada</span>
               <RiskBadge level={draft.riesgo} />
+              {draft.fechaEntrega && draft.fechaConfirmada === false && (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30">
+                  <CalendarClock className="h-3 w-3" /> Fecha: {draft.fechaTextoOriginal} (no confirmada)
+                </span>
+              )}
+              {draft.horaAprox && !draft.horaEntrega && (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30">
+                  <Clock className="h-3 w-3" /> Hora: {draft.horaAprox} (aproximada)
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mb-3">
+              <span className="font-medium text-foreground">Resumen:</span> {draft.descripcion || "Sin resumen"}
             </div>
             <DraftEditor draft={draft} onChange={setDraft} />
+
+            {/* Mensaje sugerido visible ANTES de los botones */}
+            <div className="mt-4 p-4 rounded-2xl border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Mensaje sugerido para el cliente</span>
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/90 mb-3 whitespace-pre-wrap">
+                {buildSmartReply(draft)}
+              </p>
+              <Button size="sm" className="rounded-full" onClick={() => copiar(buildSmartReply(draft))}>
+                <Copy className="h-4 w-4 mr-1" /> Copiar mensaje
+              </Button>
+            </div>
 
             {draft.faltantes.length > 0 && (
               <div className="mt-3 p-3 rounded-2xl bg-warning/10 border border-warning/30">
