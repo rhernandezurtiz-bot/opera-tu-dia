@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Copy, Info } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
@@ -29,6 +29,8 @@ function Config() {
   const removeMiembro = useOperia((s) => s.removeMiembro);
   const riskRules = useOperia((s) => s.riskRules);
   const setRiskRules = useOperia((s) => s.setRiskRules);
+  const whatsapp = useOperia((s) => s.whatsapp);
+  const setWhatsapp = useOperia((s) => s.setWhatsapp);
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
 
@@ -101,6 +103,70 @@ function Config() {
               setNm({ nombre: "", rol: "" });
               toast.success("Miembro agregado");
             }}><Plus className="h-4 w-4 mr-1" />Agregar</Button>
+          </div>
+        </Card>
+
+        <Card className="p-5 rounded-3xl lg:col-span-2">
+          <div className="flex items-center gap-2 mb-1">
+            <MessageCircle className="h-5 w-5 text-success" />
+            <h3 className="font-display text-lg">Integración WhatsApp</h3>
+            <span className={`ml-auto text-[11px] px-2 py-0.5 rounded-full border ${
+              whatsapp.conectado
+                ? "bg-success/15 text-success border-success/30"
+                : "bg-secondary text-muted-foreground border-border"
+            }`}>
+              {whatsapp.conectado ? "Conectado" : "No conectado"}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Conecta tu número de WhatsApp Business para recibir mensajes automáticamente en el Inbox.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-3">
+            <FieldRow label="Phone Number ID" value={whatsapp.phoneNumberId} onChange={(v) => setWhatsapp({ phoneNumberId: v })} />
+            <FieldRow label="Access Token" value={whatsapp.accessToken} onChange={(v) => setWhatsapp({ accessToken: v })} />
+            <FieldRow label="Verify Token" value={whatsapp.verifyToken} onChange={(v) => setWhatsapp({ verifyToken: v })} />
+            <div>
+              <Label className="text-xs text-muted-foreground">Webhook URL</Label>
+              <div className="flex gap-2 mt-1">
+                <Input value={whatsapp.webhookUrl} onChange={(e) => setWhatsapp({ webhookUrl: e.target.value })} className="rounded-xl" />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-xl shrink-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(whatsapp.webhookUrl);
+                    toast.success("URL copiada");
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            <Button
+              className="rounded-full"
+              onClick={() => {
+                if (!whatsapp.phoneNumberId || !whatsapp.accessToken) {
+                  toast.error("Falta Phone Number ID o Access Token");
+                  return;
+                }
+                setWhatsapp({ conectado: !whatsapp.conectado });
+                toast.success(whatsapp.conectado ? "Integración desactivada" : "Integración marcada como activa");
+              }}
+            >
+              {whatsapp.conectado ? "Desconectar" : "Marcar como conectado"}
+            </Button>
+          </div>
+
+          <div className="mt-4 p-3 rounded-2xl bg-secondary/50 text-xs text-muted-foreground flex gap-2">
+            <Info className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              Para activar la integración real, Operia necesitará conectarse a <strong>WhatsApp Business Cloud API</strong> mediante webhooks.
+              Por ahora, los mensajes del Inbox son simulados para que pruebes el flujo de trabajo completo.
+            </span>
           </div>
         </Card>
       </div>

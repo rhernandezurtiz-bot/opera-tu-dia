@@ -1,12 +1,14 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus } from "lucide-react";
-import type { ReactNode } from "react";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
+import { useOperia } from "@/lib/operia-store";
 import { NewOrderModal } from "./NewOrderModal";
 
 const nav = [
   { to: "/", label: "Inicio", icon: Home },
+  { to: "/inbox", label: "Inbox", icon: MessageCircle },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered },
   { to: "/produccion", label: "Plan del día", icon: ChefHat },
   { to: "/riesgos", label: "Riesgos", icon: AlertTriangle },
@@ -16,6 +18,7 @@ const nav = [
 export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const openNew = useUI((s) => s.openNewOrder);
+  const unread = useOperia((s) => s.messages.filter((m) => m.estado === "nuevo").length);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -37,6 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {nav.map((n) => {
             const active = n.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(n.to);
             const Icon = n.icon;
+            const showBadge = n.to === "/inbox" && unread > 0;
             return (
               <Link
                 key={n.to}
@@ -46,7 +50,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 }`}
               >
                 <Icon className="h-4 w-4" />
-                {n.label}
+                <span className="flex-1">{n.label}</span>
+                {showBadge && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground">{unread}</span>}
               </Link>
             );
           })}
@@ -67,19 +72,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border px-2 py-2 grid grid-cols-5 gap-1">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border px-1 py-2 grid grid-cols-6 gap-0.5">
         {nav.map((n) => {
           const active = n.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(n.to);
           const Icon = n.icon;
+          const showBadge = n.to === "/inbox" && unread > 0;
           return (
             <Link
               key={n.to}
               to={n.to}
-              className={`flex flex-col items-center justify-center py-1.5 rounded-lg text-[10px] gap-0.5 ${
+              className={`relative flex flex-col items-center justify-center py-1.5 rounded-lg text-[10px] gap-0.5 ${
                 active ? "text-primary font-medium" : "text-muted-foreground"
               }`}
             >
               <Icon className="h-5 w-5" />
+              {showBadge && <span className="absolute top-0.5 right-2 text-[9px] min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground grid place-items-center">{unread}</span>}
               <span className="truncate max-w-full">{n.label.split(" ")[0]}</span>
             </Link>
           );
@@ -139,12 +146,17 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function UrgencyChip({ fecha, hora }: { fecha: string; hora: string }) {
-  const u = urgency(fecha, hora);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const tones: Record<string, string> = {
     danger: "bg-danger/15 text-danger border-danger/30",
     warning: "bg-warning/25 text-foreground border-warning/40",
     muted: "bg-secondary text-muted-foreground border-border",
     success: "bg-success/15 text-success border-success/30",
   };
+  if (!mounted) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-secondary text-muted-foreground border-border">{fecha || "Sin fecha"}{hora ? ` · ${hora}` : ""}</span>;
+  }
+  const u = urgency(fecha, hora);
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border ${tones[u.tone]}`}>{u.label}</span>;
 }
