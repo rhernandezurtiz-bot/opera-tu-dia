@@ -10,7 +10,7 @@ export const Route = createFileRoute("/riesgos")({
   head: () => ({
     meta: [
       { title: "Riesgos — Operia" },
-      { name: "description", content: "Detector de pedidos incompletos o riesgosos antes de que sean un problema." },
+      { name: "description", content: "Detector de órdenes incompletas o riesgosas antes de que sean un problema." },
     ],
   }),
   component: Riesgos,
@@ -30,29 +30,27 @@ function detectRisks(orders: Order[]): Risk[] {
   for (const o of orders) {
     if (o.estado === "entregado" || o.estado === "cancelado") continue;
     const isToday = o.fechaEntrega === today;
-    const big = /\b(\d{2,})\s*personas?\b/.test(o.tamano);
+    const big = (o.precio || 0) >= 2000;
 
-    if (!o.fechaEntrega) out.push(mk(o, "alto", "Sin fecha de entrega", "Confirma la fecha con el cliente.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! Para agendar tu pedido, ¿me confirmas la fecha de entrega? 🙏`));
-    if (!o.producto) out.push(mk(o, "alto", "Producto no definido", "Confirma qué producto desea.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! ¿Me confirmas qué producto te gustaría pedir? 🍰`));
+    if (!o.fechaEntrega) out.push(mk(o, "alto", "Sin fecha", "Confirma la fecha con el cliente.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! Para agendar tu orden, ¿me confirmas la fecha? 🙏`));
+    if (!o.descripcion) out.push(mk(o, "alto", "Descripción no clara", "Confirma qué necesita el cliente.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! ¿Me puedes describir con más detalle lo que necesitas? 🙂`));
     if (isToday && !o.horaEntrega) out.push(mk(o, "alto", "Sin hora y es para hoy", "Pide la hora urgente.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! Para tu pedido de hoy necesito la hora exacta de entrega, ¿me la confirmas? ⏰`));
-    if (o.pago === "pendiente" && big) out.push(mk(o, "alto", "Pedido grande sin anticipo", "Solicita el anticipo.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! Para confirmar tu pedido grande necesitamos el anticipo. ¿Te paso los datos? 💳`));
+      `Hola${o.cliente ? " " + o.cliente : ""}! Para tu orden de hoy necesito la hora exacta, ¿me la confirmas? ⏰`));
+    if (o.pago === "pendiente" && big) out.push(mk(o, "alto", "Orden grande sin pago", "Solicita anticipo.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! Para confirmar tu orden necesitamos un anticipo. ¿Te paso los datos? 💳`));
 
-    if (o.fechaEntrega && o.horaEntrega && !o.direccion) out.push(mk(o, "medio", "Falta dirección", "Pide la dirección.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! ¿Me confirmas la dirección de entrega para tu pedido? 📍`));
-    if (!o.personalizacion && (o.producto || "").toLowerCase().includes("pastel")) out.push(mk(o, "medio", "Falta personalización", "Pregunta si lleva texto/diseño.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! ¿Quieres algún texto o diseño especial para tu pastel? ✨`));
-    if (!o.checklist.diseno && (o.producto || "").toLowerCase().includes("pastel")) out.push(mk(o, "medio", "Diseño sin confirmar", "Confirma el diseño.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! Te paso una propuesta de diseño para que la confirmes 🎨`));
+    if (o.fechaEntrega && o.horaEntrega && !o.direccion && o.tipo !== "cita") out.push(mk(o, "medio", "Falta dirección", "Pide la ubicación.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! ¿Me confirmas la dirección de entrega? 📍`));
     if (!o.telefono) out.push(mk(o, "medio", "Falta teléfono", "Pide el número de contacto.",
-      `Hola! ¿Me compartes tu número de teléfono para coordinar la entrega? 📱`));
+      `Hola! ¿Me compartes tu número de teléfono para coordinar? 📱`));
+    if (o.pago === "pendiente" && !big) out.push(mk(o, "medio", "Pago pendiente", "Coordina el pago.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! Te paso los datos para procesar tu pago 💛`));
 
     if (!o.notas) out.push(mk(o, "bajo", "Notas internas vacías", "Agrega contexto interno si es útil.", ""));
-    if (!o.precio) out.push(mk(o, "bajo", "Precio no confirmado", "Define el precio del pedido.",
-      `Hola${o.cliente ? " " + o.cliente : ""}! Te confirmo que el costo de tu pedido es de $___ 💛`));
+    if (!o.precio) out.push(mk(o, "bajo", "Precio no confirmado", "Define el precio de la orden.",
+      `Hola${o.cliente ? " " + o.cliente : ""}! Te confirmo que el costo es de $___ 💛`));
   }
   return out;
 }
@@ -69,7 +67,7 @@ function Riesgos() {
 
   return (
     <AppShell>
-      <PageHeader title="Riesgos" subtitle="Detecta pedidos incompletos antes de que sean un problema." />
+      <PageHeader title="Riesgos" subtitle="Detecta órdenes incompletas antes de que sean un problema." />
 
       <Group title="Alto" risks={groups.alto} icon={AlertOctagon} tone="bg-danger/10 border-danger/30 text-danger" />
       <Group title="Medio" risks={groups.medio} icon={AlertTriangle} tone="bg-warning/15 border-warning/40 text-foreground" />

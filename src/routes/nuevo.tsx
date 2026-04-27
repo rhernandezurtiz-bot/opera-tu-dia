@@ -8,20 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Sparkles, AlertTriangle, Copy, Save, RotateCcw } from "lucide-react";
-import { parseWhatsapp, useOperia, type Order, type PaymentStatus } from "@/lib/operia-store";
+import { parseWhatsapp, useOperia, typeLabels, type Order, type PaymentStatus, type OrderType } from "@/lib/operia-store";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/nuevo")({
   head: () => ({
     meta: [
-      { title: "Nuevo pedido — Operia" },
-      { name: "description", content: "Pega un mensaje de WhatsApp y Operia extrae el pedido en segundos." },
+      { title: "Nueva orden — Operia" },
+      { name: "description", content: "Pega un mensaje de WhatsApp y Operia extrae la orden en segundos." },
     ],
   }),
   component: Nuevo,
 });
 
-const SAMPLE = `Hola! Soy Carolina, quisiera un pastel de chocolate para 25 personas para el sábado a las 6pm. Que diga Feliz cumpleaños Lucas. Mi número es +52 55 8765 4321. Te paso el anticipo hoy.`;
+const SAMPLE = `Hola! Soy Carolina, quisiera agendar una cita de masaje para el sábado a las 6pm a domicilio en Polanco. Mi número es +52 55 8765 4321. Te paso el anticipo hoy.`;
 
 function Nuevo() {
   const [msg, setMsg] = useState("");
@@ -33,7 +33,7 @@ function Nuevo() {
     if (!msg.trim()) { toast.error("Pega primero un mensaje"); return; }
     const parsed = parseWhatsapp(msg);
     setDraft(parsed);
-    toast.success("Pedido analizado", { description: `${parsed.faltantes.length} campos por completar` });
+    toast.success("Orden analizada", { description: `${parsed.faltantes.length} campos por completar` });
   };
 
   const limpiar = () => { setMsg(""); setDraft(null); };
@@ -41,7 +41,7 @@ function Nuevo() {
   const guardar = () => {
     if (!draft) return;
     addOrder(draft);
-    toast.success("Pedido guardado");
+    toast.success("Orden guardada");
     navigate({ to: "/pedidos/$id", params: { id: draft.id } });
   };
 
@@ -50,7 +50,7 @@ function Nuevo() {
     const faltantes = draft.faltantes.length
       ? draft.faltantes.map((f) => f.toLowerCase()).join(", ")
       : "algunos detalles";
-    const text = `¡Hola${draft.cliente ? " " + draft.cliente : ""}! 😊 Para confirmar tu pedido solo me faltaría: ${faltantes}. ¿Me lo puedes compartir por favor? ¡Gracias!`;
+    const text = `¡Hola${draft.cliente ? " " + draft.cliente : ""}! 😊 Para confirmar tu orden solo me faltaría: ${faltantes}. ¿Me lo puedes compartir por favor? ¡Gracias!`;
     navigator.clipboard.writeText(text);
     toast.success("Mensaje copiado al portapapeles");
   };
@@ -60,7 +60,7 @@ function Nuevo() {
   return (
     <AppShell>
       <PageHeader
-        title="Nuevo pedido"
+        title="Nueva orden"
         subtitle="Pega el mensaje de WhatsApp del cliente y Operia hará el resto."
       />
 
@@ -69,13 +69,13 @@ function Nuevo() {
         <Textarea
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
-          placeholder="Pega aquí el mensaje de WhatsApp del cliente…"
+          placeholder="Pega aquí el mensaje del cliente…"
           className="min-h-40 rounded-2xl text-base resize-none"
         />
         <div className="flex flex-wrap gap-2 mt-4 items-center">
           <Button onClick={analizar} size="lg" className="rounded-full">
             <Sparkles className="h-4 w-4 mr-2" />
-            Analizar pedido
+            Analizar
           </Button>
           <Button variant="ghost" onClick={() => setMsg(SAMPLE)} className="rounded-full">
             Probar con ejemplo
@@ -88,7 +88,7 @@ function Nuevo() {
         <Card className="p-5 md:p-6 rounded-3xl">
           <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-display">Pedido extraído</h2>
+              <h2 className="text-2xl font-display">Orden extraída</h2>
               <RiskBadge level={draft.riesgo} />
             </div>
             <span className="text-xs text-muted-foreground">Edita lo que sea necesario antes de guardar</span>
@@ -109,16 +109,28 @@ function Nuevo() {
           )}
 
           <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Tipo de orden</Label>
+              <Select value={draft.tipo} onValueChange={(v) => update({ tipo: v as OrderType })}>
+                <SelectTrigger className="mt-1.5 rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(typeLabels) as OrderType[]).map((t) => (
+                    <SelectItem key={t} value={t}>{typeLabels[t]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Field label="Cliente" value={draft.cliente} onChange={(v) => update({ cliente: v })} />
             <Field label="Teléfono" value={draft.telefono} onChange={(v) => update({ telefono: v })} />
-            <Field label="Producto" value={draft.producto} onChange={(v) => update({ producto: v })} />
-            <Field label="Sabor" value={draft.sabor} onChange={(v) => update({ sabor: v })} />
-            <Field label="Tamaño" value={draft.tamano} onChange={(v) => update({ tamano: v })} />
             <Field label="Cantidad" value={draft.cantidad} onChange={(v) => update({ cantidad: v })} />
-            <Field label="Fecha de entrega" type="date" value={draft.fechaEntrega} onChange={(v) => update({ fechaEntrega: v })} />
-            <Field label="Hora de entrega" type="time" value={draft.horaEntrega} onChange={(v) => update({ horaEntrega: v })} />
-            <Field label="Dirección" value={draft.direccion} onChange={(v) => update({ direccion: v })} />
-            <Field label="Personalización" value={draft.personalizacion} onChange={(v) => update({ personalizacion: v })} />
+            <div className="md:col-span-2">
+              <Label className="text-xs text-muted-foreground">Descripción</Label>
+              <Input value={draft.descripcion} onChange={(e) => update({ descripcion: e.target.value })} className="mt-1.5 rounded-xl" />
+            </div>
+            <Field label="Fecha" type="date" value={draft.fechaEntrega} onChange={(v) => update({ fechaEntrega: v })} />
+            <Field label="Hora" type="time" value={draft.horaEntrega} onChange={(v) => update({ horaEntrega: v })} />
+            <Field label="Ubicación / dirección" value={draft.direccion} onChange={(v) => update({ direccion: v })} />
+            <Field label="Detalles / personalización" value={draft.detalles} onChange={(v) => update({ detalles: v })} />
             <div>
               <Label className="text-xs text-muted-foreground">Estado de pago</Label>
               <Select value={draft.pago} onValueChange={(v) => update({ pago: v as PaymentStatus })}>
@@ -138,7 +150,7 @@ function Nuevo() {
           </div>
 
           <div className="flex flex-wrap gap-2 mt-6">
-            <Button onClick={guardar} size="lg" className="rounded-full"><Save className="h-4 w-4 mr-2" />Guardar pedido</Button>
+            <Button onClick={guardar} size="lg" className="rounded-full"><Save className="h-4 w-4 mr-2" />Guardar orden</Button>
             <Button variant="secondary" onClick={copiarFaltantes} className="rounded-full">
               <Copy className="h-4 w-4 mr-2" />Copiar mensaje para pedir datos faltantes
             </Button>

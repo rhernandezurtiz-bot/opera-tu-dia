@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Inicio — Operia" },
-      { name: "description", content: "Resumen de tus pedidos del día, alertas y producción pendiente." },
+      { name: "description", content: "Resumen de tus órdenes del día, alertas y trabajo pendiente." },
     ],
   }),
   component: Index,
@@ -21,13 +21,13 @@ function Index() {
   const todays = orders.filter((o) => o.fechaEntrega === today);
   const risky = orders.filter((o) => o.riesgo === "alto" || o.riesgo === "medio");
   const pending = orders.filter((o) => o.estado !== "entregado" && o.estado !== "cancelado");
-  const ventas = todays.reduce((acc, o) => acc + (o.precio || 0), 0);
+  const ingresos = todays.reduce((acc, o) => acc + (o.precio || 0), 0);
 
   const stats = [
-    { label: "Pedidos de hoy", value: todays.length, icon: Clock, hint: "Programados para entregar" },
-    { label: "Pedidos en riesgo", value: risky.length, icon: AlertCircle, hint: "Requieren tu atención" },
-    { label: "Producción pendiente", value: pending.length, icon: Sparkles, hint: "En la cocina o por preparar" },
-    { label: "Ventas estimadas", value: `$${ventas.toLocaleString("es-MX")}`, icon: DollarSign, hint: "Total del día de hoy" },
+    { label: "Órdenes de hoy", value: todays.length, icon: Clock, hint: "Programadas para hoy" },
+    { label: "Órdenes en riesgo", value: risky.length, icon: AlertCircle, hint: "Requieren tu atención" },
+    { label: "Trabajo pendiente", value: pending.length, icon: Sparkles, hint: "Por ejecutar o entregar" },
+    { label: "Ingresos estimados", value: `$${ingresos.toLocaleString("es-MX")}`, icon: DollarSign, hint: "Total del día de hoy" },
   ];
 
   const alerts = orders
@@ -43,7 +43,7 @@ function Index() {
           <Button asChild size="lg" className="rounded-full">
             <Link to="/nuevo">
               <Sparkles className="h-4 w-4 mr-2" />
-              Pegar pedido de WhatsApp
+              Pegar mensaje de WhatsApp
             </Link>
           </Button>
         }
@@ -64,9 +64,9 @@ function Index() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2">
-          <h2 className="text-xl font-display mb-3">Pedidos de hoy</h2>
+          <h2 className="text-xl font-display mb-3">Órdenes de hoy</h2>
           {todays.length === 0 ? (
-            <Card className="p-8 text-center text-muted-foreground rounded-2xl">No hay pedidos para hoy todavía.</Card>
+            <Card className="p-8 text-center text-muted-foreground rounded-2xl">No hay órdenes para hoy todavía.</Card>
           ) : (
             <div className="space-y-3">
               {todays.map((o) => (
@@ -75,9 +75,9 @@ function Index() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="font-medium truncate">{o.cliente || "Cliente sin nombre"}</div>
-                        <div className="text-sm text-muted-foreground truncate">{o.producto || "Producto pendiente"}</div>
+                        <div className="text-sm text-muted-foreground truncate">{o.descripcion || "Descripción pendiente"}</div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Entrega: {o.horaEntrega || "hora pendiente"}
+                          {o.horaEntrega || "hora pendiente"}
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -105,7 +105,7 @@ function Index() {
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium truncate">{o.cliente || "Cliente sin nombre"}</div>
                       <div className="text-xs text-muted-foreground truncate">
-                        Falta: {o.faltantes.slice(0, 2).join(", ") || "Revisar pedido"}
+                        Falta: {o.faltantes.slice(0, 2).join(", ") || "Revisar orden"}
                       </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground" />
