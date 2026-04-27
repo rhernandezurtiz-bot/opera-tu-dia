@@ -111,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-1 pt-1.5 pb-2 grid grid-cols-6 gap-0.5">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-1 pt-1.5 pb-2 grid grid-cols-7 gap-0.5">
         {nav.map((n) => {
           const active = n.to === "/" ? loc.pathname === "/" : loc.pathname.startsWith(n.to);
           const Icon = n.icon;
