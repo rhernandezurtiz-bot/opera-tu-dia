@@ -1,358 +1,319 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useOperia, todayStr, type Order } from "@/lib/operia-store";
-import { useUI, buildMissingMessage, summarizeMoney, money } from "@/lib/ui-store";
-import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
-  Plus,
+  MessageSquare,
+  ListChecks,
   AlertCircle,
-  CheckCircle2,
-  Copy,
-  ChevronRight,
-  TrendingUp,
-  AlertOctagon,
+  ChefHat,
+  Users,
   Wallet,
+  Check,
+  Sparkles,
 } from "lucide-react";
-import { toast } from "sonner";
+import operiaLogo from "@/assets/operia-logo.png";
+import operiaIcon from "@/assets/operia-icon.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Inicio — Operia" },
-      { name: "description", content: "Tu centro de mando: lo que debes hacer hoy, alertas y pedidos urgentes." },
+      { title: "Operia — Convierte mensajes de WhatsApp en órdenes organizadas" },
+      {
+        name: "description",
+        content:
+          "Operia organiza tus pedidos de WhatsApp, te dice qué hacer hoy y evita que pierdas dinero por datos faltantes.",
+      },
+      { property: "og:title", content: "Operia — Tu día, en orden" },
+      {
+        property: "og:description",
+        content:
+          "Pega un mensaje de WhatsApp y obtén un pedido listo para confirmar, producir y entregar.",
+      },
     ],
   }),
-  component: Index,
+  component: Landing,
 });
 
-function Index() {
-  const orders = useOperia((s) => s.orders);
-  const updateOrder = useOperia((s) => s.updateOrder);
-  const openNew = useUI((s) => s.openNewOrder);
-  const today = todayStr();
-  const todays = orders.filter((o) => o.fechaEntrega === today && o.estado !== "cancelado");
-  const risky = orders.filter(
-    (o) => (o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado" && o.estado !== "cancelado",
-  );
-
-  const aConfirmar = todays.filter((o) => o.estado === "nuevo").length;
-  const porHacer = todays.filter((o) => o.estado !== "entregado").length;
-  const porEntregar = todays.filter((o) => o.estado === "listo" || o.estado === "en_proceso").length;
-  const dinero = summarizeMoney(orders);
-
-  const sortedTodays = [...todays].sort((a, b) =>
-    (a.horaEntrega || "99:99").localeCompare(b.horaEntrega || "99:99"),
-  );
-
-  // Action-driven primary line
-  const headline =
-    aConfirmar > 0
-      ? `Confirmar ${aConfirmar} ${aConfirmar === 1 ? "pedido" : "pedidos"} ahora`
-      : porHacer > 0
-        ? `${porHacer} ${porHacer === 1 ? "cosa" : "cosas"} por hacer hoy`
-        : "Todo en orden por hoy";
-
+function Landing() {
   return (
-    <AppShell>
-      <PageHeader
-        title={headline}
-        subtitle="Tu centro de mando del día. Empieza por lo urgente."
-        actions={
-          <Button onClick={openNew} size="lg" className="rounded-lg">
-            <Plus className="h-4 w-4" />
-            Nuevo pedido
-          </Button>
-        }
-      />
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="Operia">
+            <img src={operiaIcon} alt="" className="h-7 w-7 rounded-full" />
+            <img src={operiaLogo} alt="Operia" className="h-[16px] w-auto object-contain" />
+          </Link>
+          <nav className="hidden md:flex items-center gap-7 text-[13px] text-muted-foreground">
+            <a href="#como-funciona" className="hover:text-foreground">Cómo funciona</a>
+            <a href="#beneficios" className="hover:text-foreground">Beneficios</a>
+            <a href="#precios" className="hover:text-foreground">Precios</a>
+            <a href="#faq" className="hover:text-foreground">FAQ</a>
+            <a href="#contacto" className="hover:text-foreground">Contacto</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="h-9">
+              <Link to="/login">Entrar</Link>
+            </Button>
+            <Button asChild size="sm" className="h-9">
+              <Link to="/login">Probar Operia</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
 
-      {/* Money */}
-      <section className="mb-10">
-        <Eyebrow>💰 Dinero del día</Eyebrow>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <MoneyCard
-            icon={TrendingUp}
-            label="Ingresos estimados hoy"
-            value={money(dinero.ingresosHoy)}
-            hint={`${todays.filter((o) => o.estado !== "entregado").length} pedidos pendientes`}
-            tone="default"
+      {/* Hero */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto pt-16 md:pt-24 pb-16 md:pb-24">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 text-[11.5px] uppercase tracking-[0.14em] text-muted-foreground mb-5">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Para negocios que venden por WhatsApp</span>
+          </div>
+          <h1 className="text-[40px] md:text-[58px] leading-[1.05] font-semibold tracking-tight">
+            Convierte mensajes de WhatsApp en{" "}
+            <span className="bg-foreground text-background px-2 rounded-md">órdenes organizadas</span>.
+          </h1>
+          <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
+            Pega un mensaje y Operia lo convierte en un pedido con cliente, fecha,
+            hora, dirección y datos faltantes. Te dice qué hacer hoy y evita errores
+            que te cuestan dinero.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="h-12 px-6 text-[14px]">
+              <Link to="/login">
+                Probar Operia <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <a
+              href="#como-funciona"
+              className="text-[13.5px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              Ver cómo funciona <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+          <p className="mt-5 text-[12.5px] text-muted-foreground">
+            Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
+          </p>
+        </div>
+      </section>
+
+      {/* Cómo funciona */}
+      <section id="como-funciona" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Cómo funciona</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          De un mensaje confuso a un pedido listo en segundos.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia un mensaje de WhatsApp y pégalo en Operia." />
+          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y lo que falta." />
+          <Step n="3" icon={ChefHat} title="Sabes qué hacer" body="Confirma, produce y entrega siguiendo el plan del día." />
+        </div>
+      </section>
+
+      {/* Beneficios */}
+      <section id="beneficios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Beneficios</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Menos errores, más tiempo, más dinero.
+        </h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Benefit icon={AlertCircle} title="Nunca pierdas un pedido" body="Operia te avisa qué falta confirmar y qué tiene riesgo." />
+          <Benefit icon={Wallet} title="Cobra a tiempo" body="Controla anticipos, pagos pendientes e ingresos del día." />
+          <Benefit icon={Users} title="Recuerda a tus clientes" body="Historial de cada cliente: qué pidió, cuánto gastó y cuándo." />
+          <Benefit icon={ChefHat} title="Plan del día claro" body="Sabes qué producir y a qué hora, sin pegarte a la libreta." />
+        </div>
+      </section>
+
+      {/* Para quién */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Para quién es</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Hecho para negocios que viven en WhatsApp.
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {["Reposterías", "Dark kitchens", "Floristerías", "Salones de belleza", "Servicios a domicilio", "Estudios y citas", "Talleres y reparaciones", "Pequeños catering"].map((x) => (
+            <Card key={x} className="p-4 rounded-xl text-[13.5px] font-medium">
+              {x}
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Precios */}
+      <section id="precios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Precios</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-3 max-w-2xl">
+          Un plan para cada etapa del negocio.
+        </h2>
+        <p className="text-muted-foreground text-[14.5px] mb-10 max-w-xl">
+          Empieza gratis, paga cuando crezcas. Cancela cuando quieras.
+        </p>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Plan
+            name="Inicial"
+            price="$499"
+            tagline="Para empezar a ordenar tu día."
+            features={["Hasta 50 pedidos / mes", "Inbox de WhatsApp", "Plan del día", "1 usuario"]}
           />
-          <MoneyCard
-            icon={Wallet}
-            label="Pendientes de pago"
-            value={money(dinero.montoSinAnticipo)}
-            hint={`${dinero.pedidosSinAnticipo} ${dinero.pedidosSinAnticipo === 1 ? "pedido sin anticipo" : "pedidos sin anticipo"}`}
-            tone="warning"
+          <Plan
+            name="Pro"
+            highlighted
+            price="$999"
+            tagline="Para negocios que venden todos los días."
+            features={[
+              "Pedidos ilimitados",
+              "Clientes y notas",
+              "Recordatorios y pagos",
+              "Hasta 3 usuarios",
+            ]}
           />
-          <MoneyCard
-            icon={AlertOctagon}
-            label="Ingresos en riesgo"
-            value={money(dinero.ingresosEnRiesgo)}
-            hint={`${risky.length} con datos faltantes`}
-            tone="danger"
+          <Plan
+            name="Negocio"
+            price="$1,999"
+            tagline="Para equipos y operación seria."
+            features={[
+              "Todo lo de Pro",
+              "Usuarios ilimitados",
+              "Integración WhatsApp Cloud API",
+              "Soporte prioritario",
+            ]}
           />
         </div>
       </section>
 
-      {/* Quick action callout */}
-      {aConfirmar > 0 && (
-        <Card className="mb-8 p-4 md:p-5 rounded-xl border-foreground/15 bg-foreground/3 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="h-9 w-9 rounded-lg bg-foreground text-background grid place-items-center shrink-0">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[14px] font-medium">
-                Tienes {aConfirmar} {aConfirmar === 1 ? "pedido nuevo sin confirmar" : "pedidos nuevos sin confirmar"}
-              </div>
-              <div className="text-[12.5px] text-muted-foreground">
-                Confírmalos para que entren al plan del día.
-              </div>
-            </div>
+      {/* FAQ */}
+      <section id="faq" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Preguntas frecuentes</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Lo que normalmente nos preguntan.
+        </h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <Faq q="¿Necesito conectar WhatsApp?" a="No es obligatorio. Puedes pegar mensajes manualmente. Si quieres recibir mensajes en automático, conectas WhatsApp Cloud API en Ajustes." />
+          <Faq q="¿Mis datos están seguros?" a="Tus pedidos, clientes y notas se guardan organizados en un solo lugar y son privados de tu cuenta." />
+          <Faq q="¿Puedo usarlo desde el celular?" a="Sí. Operia funciona en cualquier navegador, optimizado para móvil." />
+          <Faq q="¿Puedo cancelar?" a="Cuando quieras. No hay contratos ni permanencia." />
+        </div>
+      </section>
+
+      {/* CTA + Contacto */}
+      <section id="contacto" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
+        <Card className="p-8 md:p-12 rounded-2xl text-center">
+          <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight max-w-2xl mx-auto">
+            Empieza a ordenar tu día en menos de 2 minutos.
+          </h2>
+          <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-[14.5px]">
+            Sin tarjeta. Sin instalación. Pega tu primer mensaje y verás la diferencia.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild size="lg" className="h-12 px-6">
+              <Link to="/login">
+                Probar Operia <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <a
+              href="mailto:hola@operia.app"
+              className="text-[13.5px] text-muted-foreground hover:text-foreground"
+            >
+              hola@operia.app
+            </a>
           </div>
-          <Button asChild size="sm">
-            <Link to="/pedidos">
-              Ver pendientes <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
         </Card>
-      )}
+      </section>
 
-      <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
-        <section className="lg:col-span-2">
-          <SectionHeading
-            title={porEntregar > 0 ? `${porEntregar} ${porEntregar === 1 ? "entrega" : "entregas"} hoy` : "Pedidos de hoy"}
-            subtitle={`${sortedTodays.length} ${sortedTodays.length === 1 ? "programado" : "programados"} · ordenados por hora`}
-            action={
-              sortedTodays.length > 0 && (
-                <Link
-                  to="/produccion"
-                  className="text-[13px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                >
-                  Plan del día <ChevronRight className="h-3.5 w-3.5" />
-                </Link>
-              )
-            }
-          />
-
-          {sortedTodays.length === 0 ? (
-            orders.length === 0 ? (
-              <FirstRunEmpty onStart={openNew} />
-            ) : (
-              <EmptyState
-                title="Sin pedidos para hoy"
-                hint="Cuando lleguen, aparecerán aquí ordenados por hora."
-              />
-            )
-          ) : (
-            <div className="space-y-2.5">
-              {sortedTodays.map((o) => (
-                <OrderActionCard
-                  key={o.id}
-                  order={o}
-                  onConfirm={() => {
-                    updateOrder(o.id, { estado: "confirmado" });
-                    toast.success("Pedido confirmado");
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section>
-          <SectionHeading
-            title={
-              risky.length === 0
-                ? "Sin alertas"
-                : `Resolver ${risky.length} ${risky.length === 1 ? "problema" : "problemas"}`
-            }
-            subtitle={
-              risky.length === 0
-                ? "Nada pendiente"
-                : "Datos faltantes que pueden costarte dinero"
-            }
-          />
-
-          {risky.length === 0 ? (
-            <EmptyState title="Todo en orden" hint="No hay pedidos en riesgo." compact />
-          ) : (
-            <div className="space-y-1.5">
-              {risky.slice(0, 5).map((o) => (
-                <Link key={o.id} to="/pedidos/$id" params={{ id: o.id }}>
-                  <Card className="p-3.5 rounded-xl flex items-center gap-3 hover:border-foreground/15 transition-colors">
-                    <div
-                      className={`h-7 w-7 rounded-lg grid place-items-center shrink-0 ${
-                        o.riesgo === "alto"
-                          ? "bg-danger/8 text-danger/90"
-                          : "bg-warning/12 text-foreground/70"
-                      }`}
-                    >
-                      <AlertCircle className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13.5px] font-medium truncate">
-                        {o.cliente || "Sin nombre"}
-                      </div>
-                      <div className="text-[12px] text-muted-foreground truncate">
-                        Falta: {o.faltantes.slice(0, 2).join(", ") || "Revisar"}
-                      </div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground/60" />
-                  </Card>
-                </Link>
-              ))}
-              {risky.length > 5 && (
-                <Link
-                  to="/riesgos"
-                  className="block text-center text-[12.5px] text-muted-foreground hover:text-foreground py-2"
-                >
-                  Resolver los {risky.length} pendientes →
-                </Link>
-              )}
-            </div>
-          )}
-        </section>
-      </div>
-    </AppShell>
+      <footer className="border-t border-border py-8 text-center text-[12px] text-muted-foreground">
+        © {new Date().getFullYear()} Operia. Hecho para negocios reales.
+      </footer>
+    </div>
   );
 }
 
-function MoneyCard({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  icon: any;
-  label: string;
-  value: string;
-  hint: string;
-  tone: "default" | "danger" | "warning";
-}) {
-  const styles =
-    tone === "danger"
-      ? "bg-danger/8 text-danger/90"
-      : tone === "warning"
-        ? "bg-warning/15 text-foreground/70"
-        : "bg-secondary text-foreground/70 border border-border";
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Card className="p-5 rounded-xl">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`h-8 w-8 rounded-lg grid place-items-center ${styles}`}>
-          <Icon className="h-[15px] w-[15px]" strokeWidth={2} />
+    <div className="text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground font-medium mb-4">
+      {children}
+    </div>
+  );
+}
+
+function Step({ n, icon: Icon, title, body }: { n: string; icon: any; title: string; body: string }) {
+  return (
+    <Card className="p-6 rounded-xl">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="h-9 w-9 rounded-lg bg-foreground text-background grid place-items-center">
+          <Icon className="h-4 w-4" />
         </div>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Paso {n}</span>
       </div>
-      <div className="text-[26px] leading-none font-semibold tracking-tight tabular-nums">
-        {value}
-      </div>
-      <div className="text-[13px] text-foreground/70 mt-2 font-medium">{label}</div>
-      <div className="text-[11.5px] text-muted-foreground mt-0.5">{hint}</div>
+      <div className="text-[16px] font-semibold mb-1">{title}</div>
+      <p className="text-[13.5px] text-muted-foreground leading-relaxed">{body}</p>
     </Card>
   );
 }
 
-function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => void }) {
-  const copyMissing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigator.clipboard.writeText(buildMissingMessage(order.cliente, order.faltantes));
-    toast.success("Mensaje copiado");
-  };
-
+function Benefit({ icon: Icon, title, body }: { icon: any; title: string; body: string }) {
   return (
-    <Card className="p-4 md:p-5 rounded-xl hover:border-foreground/15 transition-colors">
-      <Link to="/pedidos/$id" params={{ id: order.id }} className="block">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="min-w-0">
-            <div className="font-medium text-[15px] truncate">
-              {order.cliente || "Cliente sin nombre"}
-            </div>
-            <div className="text-[13px] text-muted-foreground truncate mt-0.5">
-              {order.descripcion || "Descripción pendiente"}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <RiskBadge level={order.riesgo} />
-            {order.precio > 0 && (
-              <span className="text-[12.5px] font-semibold tabular-nums">
-                {money(order.precio)}
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <UrgencyChip fecha={order.fechaEntrega} hora={order.horaEntrega} />
-          {order.faltantes.length > 0 && (
-            <span className="text-[11.5px] text-muted-foreground">
-              Falta: {order.faltantes.slice(0, 2).join(", ")}
-            </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
-        {order.estado === "nuevo" && (
-          <Button size="sm" variant="secondary" onClick={onConfirm}>
-            <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar
-          </Button>
-        )}
-        {order.faltantes.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={copyMissing}>
-            <Copy className="h-3.5 w-3.5" /> Copiar mensaje
-          </Button>
-        )}
-        <Button size="sm" variant="ghost" className="ml-auto" asChild>
-          <Link to="/pedidos/$id" params={{ id: order.id }}>
-            Abrir <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </Button>
+    <Card className="p-6 rounded-xl">
+      <div className="h-8 w-8 rounded-lg bg-secondary border border-border grid place-items-center mb-4">
+        <Icon className="h-4 w-4 text-foreground/70" />
       </div>
+      <div className="text-[15.5px] font-semibold mb-1">{title}</div>
+      <p className="text-[13.5px] text-muted-foreground leading-relaxed">{body}</p>
     </Card>
   );
 }
 
-function EmptyState({
-  title,
-  hint,
-  compact,
+function Plan({
+  name,
+  price,
+  tagline,
+  features,
+  highlighted,
 }: {
-  title: string;
-  hint?: string;
-  compact?: boolean;
+  name: string;
+  price: string;
+  tagline: string;
+  features: string[];
+  highlighted?: boolean;
 }) {
   return (
     <Card
-      className={`rounded-xl text-center ${
-        compact ? "p-6" : "p-10"
-      } border-dashed bg-secondary/30`}
+      className={`p-6 rounded-2xl flex flex-col ${
+        highlighted ? "border-foreground bg-foreground text-background" : ""
+      }`}
     >
-      <div className="text-[14px] font-medium text-foreground/80">{title}</div>
-      {hint && <div className="text-[12.5px] text-muted-foreground mt-1">{hint}</div>}
+      <div className={`text-[11px] uppercase tracking-[0.14em] mb-2 ${highlighted ? "text-background/70" : "text-muted-foreground"}`}>
+        {name} {highlighted && "· Más popular"}
+      </div>
+      <div className="flex items-baseline gap-1.5 mb-2">
+        <span className="text-[34px] font-semibold tracking-tight tabular-nums">{price}</span>
+        <span className={`text-[12.5px] ${highlighted ? "text-background/70" : "text-muted-foreground"}`}>MXN / mes</span>
+      </div>
+      <p className={`text-[13px] mb-5 ${highlighted ? "text-background/80" : "text-muted-foreground"}`}>{tagline}</p>
+      <ul className="space-y-2 mb-6 flex-1">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2 text-[13.5px]">
+            <Check className={`h-4 w-4 mt-0.5 shrink-0 ${highlighted ? "text-background" : "text-foreground/70"}`} />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      <Button
+        asChild
+        variant={highlighted ? "secondary" : "default"}
+        className="h-10 w-full"
+      >
+        <Link to="/login">Empezar</Link>
+      </Button>
     </Card>
   );
 }
 
-function FirstRunEmpty({ onStart }: { onStart: () => void }) {
+function Faq({ q, a }: { q: string; a: string }) {
   return (
-    <Card className="rounded-2xl p-10 text-center border-dashed bg-secondary/30">
-      <div className="h-11 w-11 rounded-xl bg-foreground text-background grid place-items-center mx-auto mb-4">
-        <Plus className="h-5 w-5" />
-      </div>
-      <div className="text-[16px] font-semibold mb-1.5">
-        Pega tu primer mensaje de WhatsApp para empezar.
-      </div>
-      <p className="text-[13px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-        Operia lo convierte en un pedido organizado con cliente, fecha, hora y lo que falta.
-      </p>
-      <Button onClick={onStart} className="mt-5 h-10">
-        <Plus className="h-4 w-4" /> Crear mi primer pedido
-      </Button>
-      <p className="text-[11.5px] text-muted-foreground mt-5">
-        Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
-      </p>
+    <Card className="p-5 rounded-xl">
+      <div className="text-[14.5px] font-semibold mb-1.5">{q}</div>
+      <p className="text-[13.5px] text-muted-foreground leading-relaxed">{a}</p>
     </Card>
   );
 }
