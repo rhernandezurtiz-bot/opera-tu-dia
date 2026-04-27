@@ -244,7 +244,7 @@ export const useOperia = create<State>()(
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
     }),
-    { name: "operia-store-v2" }
+    { name: "operia-store-v3" }
   )
 );
 
