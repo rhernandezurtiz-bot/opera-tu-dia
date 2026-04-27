@@ -24,9 +24,9 @@ const statusLabel: Record<WhatsappStatus, string> = {
 };
 
 const statusStyle: Record<WhatsappStatus, string> = {
-  nuevo: "bg-primary/15 text-primary border-primary/30",
-  analizado: "bg-warning/20 text-foreground border-warning/40",
-  convertido: "bg-success/15 text-success border-success/30",
+  nuevo: "bg-foreground/5 text-foreground/80 border-border",
+  analizado: "bg-warning/12 text-foreground/80 border-warning/25",
+  convertido: "bg-success/8 text-success/90 border-success/20",
   respondido: "bg-secondary text-muted-foreground border-border",
 };
 
