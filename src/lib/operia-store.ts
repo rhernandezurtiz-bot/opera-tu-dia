@@ -215,6 +215,16 @@ export const useOperia = create<State>()(
         tiposActivos: ["producto", "servicio", "cita", "personalizado"],
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
+      messages: seedMessages(),
+      whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/whatsapp/webhook", conectado: false },
+      addMessage: (m) => set((s) => ({ messages: [m, ...s.messages] })),
+      setMessageStatus: (id, estado) => set((s) => ({
+        messages: s.messages.map((m) => (m.id === id ? { ...m, estado } : m)),
+      })),
+      linkMessageOrder: (id, ordenId) => set((s) => ({
+        messages: s.messages.map((m) => (m.id === id ? { ...m, ordenId, estado: "convertido" } : m)),
+      })),
+      setWhatsapp: (c) => set((s) => ({ whatsapp: { ...s.whatsapp, ...c } })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
         orders: s.orders.map((o) => (o.id === id ? recompute({ ...o, ...patch }) : o)),
