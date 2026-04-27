@@ -157,12 +157,39 @@ function InboxDetail() {
         {/* Structured preview */}
         {draft && !orderLinked && (
           <Card className="p-5 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <CheckCircle2 className="h-4 w-4 text-success" />
               <span className="text-sm font-medium">Orden detectada</span>
               <RiskBadge level={draft.riesgo} />
+              {draft.fechaEntrega && draft.fechaConfirmada === false && (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30">
+                  <CalendarClock className="h-3 w-3" /> Fecha: {draft.fechaTextoOriginal} (no confirmada)
+                </span>
+              )}
+              {draft.horaAprox && !draft.horaEntrega && (
+                <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-warning/10 border border-warning/30">
+                  <Clock className="h-3 w-3" /> Hora: {draft.horaAprox} (aproximada)
+                </span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground mb-3">
+              <span className="font-medium text-foreground">Resumen:</span> {draft.descripcion || "Sin resumen"}
             </div>
             <DraftEditor draft={draft} onChange={setDraft} />
+
+            {/* Mensaje sugerido visible ANTES de los botones */}
+            <div className="mt-4 p-4 rounded-2xl border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageCircle className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Mensaje sugerido para el cliente</span>
+              </div>
+              <p className="text-sm leading-relaxed text-foreground/90 mb-3 whitespace-pre-wrap">
+                {buildSmartReply(draft)}
+              </p>
+              <Button size="sm" className="rounded-full" onClick={() => copiar(buildSmartReply(draft))}>
+                <Copy className="h-4 w-4 mr-1" /> Copiar mensaje
+              </Button>
+            </div>
 
             {draft.faltantes.length > 0 && (
               <div className="mt-3 p-3 rounded-2xl bg-warning/10 border border-warning/30">
