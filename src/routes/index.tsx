@@ -112,7 +112,7 @@ function Index() {
             </div>
           </div>
           <Button asChild size="sm">
-            <Link to="/pedidos" search={{ estado: "nuevo" } as never}>
+            <Link to="/pedidos">
               Ver pendientes <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </Button>
