@@ -6,6 +6,7 @@ import { useUI, urgency } from "@/lib/ui-store";
 import { useOperia } from "@/lib/operia-store";
 import { NewOrderModal } from "./NewOrderModal";
 import operiaLogo from "@/assets/operia-logo.png";
+import operiaIcon from "@/assets/operia-icon.png";
 
 const nav = [
   { to: "/", label: "Inicio", icon: Home },
