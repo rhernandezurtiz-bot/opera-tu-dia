@@ -227,6 +227,11 @@ export const useOperia = create<State>()(
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
       whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/whatsapp/webhook", conectado: false },
+      clientNotes: {
+        // Demo: clientes recurrentes con notas internas
+        "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
+      },
+      setClientNote: (key, note) => set((s) => ({ clientNotes: { ...s.clientNotes, [key]: note } })),
       addMessage: (m) => set((s) => ({ messages: [m, ...s.messages] })),
       setMessageStatus: (id, estado) => set((s) => ({
         messages: s.messages.map((m) => (m.id === id ? { ...m, estado } : m)),
