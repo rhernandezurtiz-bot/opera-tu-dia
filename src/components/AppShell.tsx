@@ -103,13 +103,13 @@ export function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     nuevo: "bg-secondary text-secondary-foreground",
     confirmado: "bg-accent text-accent-foreground",
-    en_produccion: "bg-warning/25 text-foreground",
+    en_proceso: "bg-warning/25 text-foreground",
     listo: "bg-success/20 text-success",
     entregado: "bg-primary/15 text-primary",
     cancelado: "bg-muted text-muted-foreground line-through",
   };
   const label: Record<string, string> = {
-    nuevo: "Nuevo", confirmado: "Confirmado", en_produccion: "En producción",
+    nuevo: "Nuevo", confirmado: "Confirmado", en_proceso: "En proceso",
     listo: "Listo", entregado: "Entregado", cancelado: "Cancelado",
   };
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] ${map[status] || "bg-muted"}`}>{label[status] || status}</span>;
