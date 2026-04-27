@@ -15,7 +15,7 @@ import {
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
 
-export const Route = createFileRoute("/landing")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Operia — Convierte mensajes de WhatsApp en órdenes organizadas" },
