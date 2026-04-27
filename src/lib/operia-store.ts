@@ -263,20 +263,52 @@ function recompute(o: Order): Order {
   return { ...o, faltantes, riesgo };
 }
 
+// Keyword sets for type classification
+const SERVICE_KW = /\b(arreglar|arreglo|reparar|reparaci[oó]n|instalar|instalaci[oó]n|servicio|fuga|limpieza|limpiar|sesi[oó]n|masaje|plomer[ií]a|plomero|electricista|electricidad|pintar|pintura|fumigaci[oó]n|jardiner[ií]a|mudanza|cerrajero|mantenimiento|revisar|revisi[oó]n|destap|desazolve)\b/i;
+const APPOINTMENT_KW = /\b(cita|agendar|agenda|reservar|reserva|turno|appointment|consulta|consultorio|corte de pelo|corte y color|manicure|pedicure|peinado|barber[ií]a|dentista|m[eé]dico|doctor|terapia)\b/i;
+const PRODUCT_KW = /\b(pastel|cupcakes?|galletas?|postre|comida|men[uú]|pizza|hamburguesa|ramo|flores|arreglo floral|producto|piezas?|unidades?|encargar|comprar|llevar)\b/i;
+const CUSTOM_KW = /\b(personaliza|a medida|custom|cotizar|cotizaci[oó]n|presupuesto|brief|dise[ñn]o especial)\b/i;
+
+function buildSummary(tipo: OrderType, rawDesc: string, fechaTxt: string, horaTxt: string, direccion: string, lower: string): string {
+  let core = rawDesc.trim();
+  // Clean filler words
+  core = core.replace(/^(que\s+me\s+|me\s+|de\s+|un[oa]?\s+|el\s+la\s+|los\s+|las\s+)/i, "").trim();
+  if (tipo === "servicio") {
+    if (/fuga/.test(lower)) core = "Reparación de fuga";
+    else if (/masaje/.test(lower)) core = "Sesión de masaje";
+    else if (/limpieza|limpiar/.test(lower)) core = "Servicio de limpieza";
+    else if (/instalar|instalaci[oó]n/.test(lower)) core = core || "Instalación";
+    else if (/(reparar|reparaci[oó]n|arreglar|arreglo)/.test(lower) && core) core = `Reparación: ${core}`;
+    else if (!core) core = "Servicio solicitado";
+  } else if (tipo === "cita" && !core) {
+    core = "Cita / reserva";
+  } else if (!core) {
+    core = "Pedido";
+  }
+  // Capitalize
+  core = core.charAt(0).toUpperCase() + core.slice(1);
+  const parts = [core];
+  if (fechaTxt) parts.push(fechaTxt + (horaTxt ? ` ${horaTxt}` : ""));
+  if (direccion) parts.push(direccion);
+  return parts.join(" — ");
+}
+
 export function parseWhatsapp(text: string): Order {
   const lower = text.toLowerCase();
   const id = "o" + Math.random().toString(36).slice(2, 9);
 
-  // Tipo
+  // Tipo — prioridad: cita > servicio > personalizado > producto
   let tipo: OrderType = "producto";
-  if (/\b(cita|agendar|reservar|reserva|turno|appointment)\b/i.test(text)) tipo = "cita";
-  else if (/\b(servicio|masaje|consulta|sesi[oó]n|clase|taller|asesor[ií]a)\b/i.test(text)) tipo = "servicio";
-  else if (/\b(personaliza|a medida|custom|cotizar|presupuesto|brief|dise[ñn]o especial)\b/i.test(text)) tipo = "personalizado";
+  let tipoDetectado = false;
+  if (APPOINTMENT_KW.test(text)) { tipo = "cita"; tipoDetectado = true; }
+  else if (SERVICE_KW.test(text)) { tipo = "servicio"; tipoDetectado = true; }
+  else if (CUSTOM_KW.test(text)) { tipo = "personalizado"; tipoDetectado = true; }
+  else if (PRODUCT_KW.test(text)) { tipo = "producto"; tipoDetectado = true; }
 
   // Descripción heurística
   let descripcion = "";
-  const descMatch = text.match(/(?:quiero|necesito|busco|me gustar[ií]a|quisiera|comprar|encargar|reservar|agendar)\s+(?:un[oa]?\s+|el\s+|la\s+)?([^\n.,]{3,80})/i);
-  if (descMatch) descripcion = descMatch[1].trim();
+  const descMatch = text.match(/(?:quiero|necesito|busco|me gustar[ií]a|quisiera|comprar|encargar|reservar|agendar|que me|pueden|podr[ií]an)\s+(?:un[oa]?\s+|el\s+|la\s+)?([^\n.!?]{3,100})/i);
+  if (descMatch) descripcion = descMatch[1].trim().replace(/[,;].*$/, "");
 
   // Cantidad
   const cantMatch = text.match(/(\d+)\s+(?:piezas?|unidades?|productos?|cupcakes?|galletas?|sesiones?|personas?)/i);
