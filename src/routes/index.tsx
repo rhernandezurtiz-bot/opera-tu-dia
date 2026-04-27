@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useOperia, todayStr, type Order } from "@/lib/operia-store";
-import { useUI, buildMissingMessage } from "@/lib/ui-store";
+import { useUI, buildMissingMessage, summarizeMoney, money } from "@/lib/ui-store";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,12 @@ import {
   ArrowRight,
   Plus,
   AlertCircle,
-  Package,
-  Wrench,
-  CalendarClock,
   CheckCircle2,
   Copy,
   ChevronRight,
+  TrendingUp,
+  AlertOctagon,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,79 +37,100 @@ function Index() {
     (o) => (o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado" && o.estado !== "cancelado",
   );
 
-  const aPreparar = todays
-    .filter((o) => o.tipo === "producto" || o.tipo === "personalizado")
-    .filter((o) => o.estado !== "entregado" && o.estado !== "listo").length;
-  const aEjecutar = todays
-    .filter((o) => o.tipo === "servicio" || o.tipo === "cita")
-    .filter((o) => o.estado !== "entregado").length;
   const aConfirmar = todays.filter((o) => o.estado === "nuevo").length;
-  const aEntregar = todays.filter((o) => o.estado === "listo" || o.estado === "en_proceso").length;
-
-  type Metric = { icon: any; label: string; value: number; hint: string };
-  const metrics: Metric[] = [
-    { icon: CheckCircle2, label: "Por confirmar", value: aConfirmar, hint: "Pedidos nuevos sin confirmar" },
-    { icon: Package, label: "Por preparar", value: aPreparar, hint: "Productos y trabajos personalizados" },
-    { icon: Wrench, label: "Por ejecutar", value: aEjecutar, hint: "Servicios y citas agendadas" },
-    { icon: CalendarClock, label: "Por entregar", value: aEntregar, hint: "Listos o en proceso final" },
-  ];
+  const porHacer = todays.filter((o) => o.estado !== "entregado").length;
+  const porEntregar = todays.filter((o) => o.estado === "listo" || o.estado === "en_proceso").length;
+  const dinero = summarizeMoney(orders);
 
   const sortedTodays = [...todays].sort((a, b) =>
     (a.horaEntrega || "99:99").localeCompare(b.horaEntrega || "99:99"),
   );
 
+  // Action-driven primary line
+  const headline =
+    aConfirmar > 0
+      ? `Confirmar ${aConfirmar} ${aConfirmar === 1 ? "pedido" : "pedidos"} ahora`
+      : porHacer > 0
+        ? `${porHacer} ${porHacer === 1 ? "cosa" : "cosas"} por hacer hoy`
+        : "Todo en orden por hoy";
+
   return (
     <AppShell>
       <PageHeader
-        title="Hoy en Operia"
-        subtitle="Tu centro de mando del día. Esto es lo que debes hacer."
+        title={headline}
+        subtitle="Tu centro de mando del día. Empieza por lo urgente."
         actions={
           <Button onClick={openNew} size="lg" className="rounded-lg">
             <Plus className="h-4 w-4" />
-            Nuevo pedido desde WhatsApp
+            Nuevo pedido
           </Button>
         }
       />
 
-      {/* Metrics */}
-      <section className="mb-12">
-        <Eyebrow>Resumen del día</Eyebrow>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {metrics.map((m) => {
-            const Icon = m.icon;
-            return (
-              <Card
-                key={m.label}
-                className="p-5 rounded-xl hover:border-foreground/15 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <div className="h-8 w-8 rounded-lg bg-secondary border border-border grid place-items-center">
-                    <Icon className="h-[15px] w-[15px] text-foreground/70" strokeWidth={2} />
-                  </div>
-                </div>
-                <div className="text-[32px] leading-none font-semibold tracking-tight tabular-nums">
-                  {m.value}
-                </div>
-                <div className="text-[13px] text-foreground/70 mt-2 font-medium">{m.label}</div>
-                <div className="text-[11.5px] text-muted-foreground mt-0.5">{m.hint}</div>
-              </Card>
-            );
-          })}
+      {/* Money */}
+      <section className="mb-10">
+        <Eyebrow>Dinero del día</Eyebrow>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <MoneyCard
+            icon={TrendingUp}
+            label="Ingresos estimados hoy"
+            value={money(dinero.ingresosHoy)}
+            hint={`${todays.filter((o) => o.estado !== "entregado").length} pedidos pendientes`}
+            tone="default"
+          />
+          <MoneyCard
+            icon={AlertOctagon}
+            label="Ingresos en riesgo"
+            value={money(dinero.ingresosEnRiesgo)}
+            hint={`${risky.length} pedidos con datos faltantes`}
+            tone="danger"
+          />
+          <MoneyCard
+            icon={Wallet}
+            label="Sin anticipo"
+            value={`${dinero.pedidosSinAnticipo}`}
+            hint={`${money(dinero.montoSinAnticipo)} pendientes de cobro`}
+            tone="warning"
+          />
         </div>
       </section>
+
+      {/* Quick action callout */}
+      {aConfirmar > 0 && (
+        <Card className="mb-8 p-4 md:p-5 rounded-xl border-foreground/15 bg-foreground/3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="h-9 w-9 rounded-lg bg-foreground text-background grid place-items-center shrink-0">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[14px] font-medium">
+                Tienes {aConfirmar} {aConfirmar === 1 ? "pedido nuevo sin confirmar" : "pedidos nuevos sin confirmar"}
+              </div>
+              <div className="text-[12.5px] text-muted-foreground">
+                Confírmalos para que entren al plan del día.
+              </div>
+            </div>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/pedidos" search={{ estado: "nuevo" } as never}>
+              Ver pendientes <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
         <section className="lg:col-span-2">
           <SectionHeading
-            title="Pedidos de hoy"
-            subtitle={`${sortedTodays.length} ${sortedTodays.length === 1 ? "pedido programado" : "pedidos programados"}`}
+            title={porEntregar > 0 ? `${porEntregar} ${porEntregar === 1 ? "entrega" : "entregas"} hoy` : "Pedidos de hoy"}
+            subtitle={`${sortedTodays.length} ${sortedTodays.length === 1 ? "programado" : "programados"} · ordenados por hora`}
             action={
               sortedTodays.length > 0 && (
                 <Link
-                  to="/pedidos"
+                  to="/produccion"
                   className="text-[13px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
                 >
-                  Ver todos <ChevronRight className="h-3.5 w-3.5" />
+                  Plan del día <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               )
             }
@@ -138,12 +159,20 @@ function Index() {
 
         <section>
           <SectionHeading
-            title="Necesitan atención"
-            subtitle={risky.length === 0 ? "Todo en orden" : `${risky.length} con datos faltantes`}
+            title={
+              risky.length === 0
+                ? "Sin alertas"
+                : `Resolver ${risky.length} ${risky.length === 1 ? "problema" : "problemas"}`
+            }
+            subtitle={
+              risky.length === 0
+                ? "Nada pendiente"
+                : "Datos faltantes que pueden costarte dinero"
+            }
           />
 
           {risky.length === 0 ? (
-            <EmptyState title="Sin alertas" hint="No hay pedidos en riesgo." compact />
+            <EmptyState title="Todo en orden" hint="No hay pedidos en riesgo." compact />
           ) : (
             <div className="space-y-1.5">
               {risky.slice(0, 5).map((o) => (
@@ -175,7 +204,7 @@ function Index() {
                   to="/riesgos"
                   className="block text-center text-[12.5px] text-muted-foreground hover:text-foreground py-2"
                 >
-                  Ver los {risky.length} pedidos en riesgo →
+                  Resolver los {risky.length} pendientes →
                 </Link>
               )}
             </div>
@@ -183,6 +212,41 @@ function Index() {
         </section>
       </div>
     </AppShell>
+  );
+}
+
+function MoneyCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  hint: string;
+  tone: "default" | "danger" | "warning";
+}) {
+  const styles =
+    tone === "danger"
+      ? "bg-danger/8 text-danger/90"
+      : tone === "warning"
+        ? "bg-warning/15 text-foreground/70"
+        : "bg-secondary text-foreground/70 border border-border";
+  return (
+    <Card className="p-5 rounded-xl">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`h-8 w-8 rounded-lg grid place-items-center ${styles}`}>
+          <Icon className="h-[15px] w-[15px]" strokeWidth={2} />
+        </div>
+      </div>
+      <div className="text-[26px] leading-none font-semibold tracking-tight tabular-nums">
+        {value}
+      </div>
+      <div className="text-[13px] text-foreground/70 mt-2 font-medium">{label}</div>
+      <div className="text-[11.5px] text-muted-foreground mt-0.5">{hint}</div>
+    </Card>
   );
 }
 
@@ -206,7 +270,14 @@ function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => 
               {order.descripcion || "Descripción pendiente"}
             </div>
           </div>
-          <RiskBadge level={order.riesgo} />
+          <div className="flex flex-col items-end gap-1">
+            <RiskBadge level={order.riesgo} />
+            {order.precio > 0 && (
+              <span className="text-[12.5px] font-semibold tabular-nums">
+                {money(order.precio)}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <UrgencyChip fecha={order.fechaEntrega} hora={order.horaEntrega} />
