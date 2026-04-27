@@ -65,27 +65,34 @@ function InboxDetail() {
 
   const replies = useMemo(() => {
     if (!message) return [];
-    const cliente = draft?.cliente || message.cliente.replace(/^\+?\d.*/, "").trim();
-    const fechaTxt = draft?.fechaEntrega
-      ? `${draft.fechaEntrega}${draft.horaEntrega ? ` a las ${draft.horaEntrega}` : ""}`
-      : "la fecha acordada";
-    const desc = draft?.descripcion || "tu pedido";
+    const base: Order = draft || ({
+      cliente: message.cliente,
+      telefono: message.telefono,
+      tipo: "producto",
+      descripcion: "",
+      fechaEntrega: "",
+      horaEntrega: "",
+      faltantes: [],
+      precio: 0,
+    } as unknown as Order);
+    const tipoLabel = draft ? typeLabels[draft.tipo] : "pedido";
     return [
       {
-        title: "Pedir información faltante",
-        body: buildMissingMessage(cliente, draft?.faltantes || ["fecha", "dirección", "pago"]),
+        title: `Sugerido para este ${tipoLabel.toLowerCase()}`,
+        body: buildSmartReply(base),
+        primary: true,
       },
       {
         title: "Confirmar pedido",
-        body: `¡Hola${cliente ? " " + cliente : ""}! ✅ Tu pedido de ${desc} queda confirmado para ${fechaTxt}. ¡Gracias por tu preferencia!`,
+        body: buildConfirmMessage(base),
       },
       {
         title: "Solicitar pago / anticipo",
-        body: `¡Hola${cliente ? " " + cliente : ""}! 💳 Para asegurar tu pedido necesitamos un anticipo. Te comparto los datos para realizar el pago. ¿Me confirmas cuando lo hagas? ¡Gracias!`,
+        body: buildPaymentMessage(base),
       },
       {
-        title: "Confirmar entrega lista",
-        body: `¡Hola${cliente ? " " + cliente : ""}! 🎉 Tu pedido está listo. Te lo entregamos según lo acordado para ${fechaTxt}. ¡Gracias por confiar en nosotros!`,
+        title: "Avisar que está listo",
+        body: buildReadyMessage(base),
       },
     ];
   }, [message, draft]);
