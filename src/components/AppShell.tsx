@@ -87,8 +87,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto pt-6 text-[11px] text-muted-foreground/80 px-2">
-          v1.0 · MVP
+        <div className="mt-auto pt-6 px-2 space-y-2">
+          {user && (
+            <div className="text-[11.5px] text-muted-foreground truncate" title={user.email}>
+              {user.name || user.email}
+            </div>
+          )}
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
+          </button>
+          <div className="text-[10.5px] text-muted-foreground/70">v1.0 · MVP</div>
         </div>
       </aside>
 
