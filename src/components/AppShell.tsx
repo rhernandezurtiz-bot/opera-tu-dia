@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
 import { useOperia } from "@/lib/operia-store";
 import { NewOrderModal } from "./NewOrderModal";
+import operiaLogo from "@/assets/operia-logo.png";
 
 const nav = [
   { to: "/", label: "Inicio", icon: Home },
@@ -24,14 +25,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background text-foreground flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-border bg-sidebar px-4 py-6 sticky top-0 h-screen">
-        <Link to="/" className="flex items-center gap-2.5 px-2 mb-8">
-          <div className="h-8 w-8 rounded-lg bg-foreground text-background grid place-items-center font-semibold text-sm tracking-tight">
-            O
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-semibold text-[15px] tracking-tight">Operia</span>
-            <span className="text-[11px] text-muted-foreground mt-1">Tu día, en orden</span>
-          </div>
+        <Link to="/" className="flex flex-col gap-1.5 px-2 mb-8" aria-label="Operia">
+          <img
+            src={operiaLogo}
+            alt="Operia"
+            width={1584}
+            height={672}
+            className="h-7 w-auto object-contain object-left"
+          />
+          <span className="text-[11px] text-muted-foreground pl-0.5">Tu día, en orden</span>
         </Link>
 
         <Button
@@ -77,10 +79,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1 min-w-0 pb-28 md:pb-10">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border px-4 h-14 flex items-center gap-2">
-          <div className="h-7 w-7 rounded-md bg-foreground text-background grid place-items-center font-semibold text-xs">
-            O
-          </div>
-          <div className="font-semibold tracking-tight flex-1">Operia</div>
+          <Link to="/" className="flex-1 flex items-center" aria-label="Operia">
+            <img
+              src={operiaLogo}
+              alt="Operia"
+              width={1584}
+              height={672}
+              className="h-6 w-auto object-contain object-left"
+            />
+          </Link>
           <Button onClick={openNew} size="sm" className="rounded-lg h-8 px-3 text-xs">
             <Plus className="h-3.5 w-3.5" /> Nuevo
           </Button>
