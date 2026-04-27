@@ -1,9 +1,10 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users } from "lucide-react";
+import { Link, useLocation, Navigate } from "@tanstack/react-router";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
 import { useOperia } from "@/lib/operia-store";
+import { useAuth } from "@/lib/auth-store";
 import { NewOrderModal } from "./NewOrderModal";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
@@ -22,6 +23,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const openNew = useUI((s) => s.openNewOrder);
   const unread = useOperia((s) => s.messages.filter((m) => m.estado === "nuevo").length);
+  const user = useAuth((s) => s.user);
+  const onboarded = useAuth((s) => s.onboarded);
+  const logout = useAuth((s) => s.logout);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  if (hydrated && !user) return <Navigate to="/landing" />;
+  if (hydrated && user && !onboarded) return <Navigate to="/onboarding" />;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
