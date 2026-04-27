@@ -83,6 +83,26 @@ export interface Negocio {
   tiposActivos: OrderType[];
 }
 
+export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
+
+export interface WhatsappMessage {
+  id: string;
+  cliente: string;
+  telefono: string;
+  texto: string;
+  recibidoAt: number;
+  estado: WhatsappStatus;
+  ordenId?: string;
+}
+
+export interface WhatsappConfig {
+  phoneNumberId: string;
+  accessToken: string;
+  verifyToken: string;
+  webhookUrl: string;
+  conectado: boolean;
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
 
@@ -133,11 +153,36 @@ const seedOrders = (): Order[] => [
   },
 ];
 
+const seedMessages = (): WhatsappMessage[] => [
+  {
+    id: "w1", cliente: "Lucía Fernández", telefono: "+52 55 4400 1122",
+    texto: "Hola! Quisiera encargar 24 cupcakes de vainilla para el sábado. ¿Cuánto sería?",
+    recibidoAt: Date.now() - 1000 * 60 * 8, estado: "nuevo",
+  },
+  {
+    id: "w2", cliente: "+52 55 7788 0011", telefono: "+52 55 7788 0011",
+    texto: "Buen día, necesito agendar una sesión de masaje hoy en la tarde, lo más pronto posible 🙏",
+    recibidoAt: Date.now() - 1000 * 60 * 22, estado: "nuevo",
+  },
+  {
+    id: "w3", cliente: "Roberto Salinas", telefono: "+52 55 9090 5050",
+    texto: "Hola, ¿pueden hacerme un arreglo floral para mañana? Es para regalo, presupuesto unos 1500.",
+    recibidoAt: Date.now() - 1000 * 60 * 60 * 2, estado: "analizado",
+  },
+  {
+    id: "w4", cliente: "Mariana López", telefono: "+52 55 1234 5678",
+    texto: "Hola, quiero el pastel de chocolate para hoy 5pm",
+    recibidoAt: Date.now() - 1000 * 60 * 60 * 20, estado: "convertido", ordenId: "o1",
+  },
+];
+
 interface State {
   orders: Order[];
   miembros: Miembro[];
   negocio: Negocio;
   riskRules: RiskRules;
+  messages: WhatsappMessage[];
+  whatsapp: WhatsappConfig;
   addOrder: (o: Order) => void;
   updateOrder: (id: string, patch: Partial<Order>) => void;
   removeOrder: (id: string) => void;
@@ -147,6 +192,10 @@ interface State {
   setNegocio: (n: Partial<Negocio>) => void;
   setRiskRules: (r: Partial<RiskRules>) => void;
   toggleTipo: (t: OrderType) => void;
+  addMessage: (m: WhatsappMessage) => void;
+  setMessageStatus: (id: string, estado: WhatsappStatus) => void;
+  linkMessageOrder: (id: string, ordenId: string) => void;
+  setWhatsapp: (c: Partial<WhatsappConfig>) => void;
 }
 
 export const useOperia = create<State>()(
