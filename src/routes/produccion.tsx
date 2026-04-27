@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useOperia, todayStr, typeLabels, type Order, type OrderType } from "@/lib/operia-store";
-import { urgency } from "@/lib/ui-store";
-import { Package, Wrench, CalendarClock, Sparkles, Flame, ArrowRight } from "lucide-react";
+import { urgency, money, buildMissingMessage, buildConfirmMessage, buildReadyMessage } from "@/lib/ui-store";
+import { Package, Wrench, CalendarClock, Sparkles, Flame, ArrowRight, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/produccion")({
