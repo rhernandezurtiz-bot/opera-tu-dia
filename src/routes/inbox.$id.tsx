@@ -38,12 +38,17 @@ function InboxDetail() {
   const analizar = () => {
     if (!message) return;
     const parsed = parseWhatsapp(message.texto);
-    // Pre-fill cliente / telefono from the message contact if missing
     if (!parsed.cliente && message.cliente && message.cliente !== message.telefono) parsed.cliente = message.cliente;
     if (!parsed.telefono && message.telefono) parsed.telefono = message.telefono;
     setDraft(parsed);
     if (message.estado === "nuevo") setMessageStatus(message.id, "analizado");
   };
+
+  // Auto-analyze on open so the user sees the order preview immediately
+  useEffect(() => {
+    if (message && !message.ordenId && !draft) analizar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message?.id]);
 
   const guardarOrden = () => {
     if (!draft || !message) return;
