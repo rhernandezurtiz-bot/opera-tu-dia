@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell, PageHeader, RiskBadge, StatusBadge } from "@/components/AppShell";
+import { AppShell, PageHeader, RiskBadge, StatusBadge, UrgencyChip } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useOperia, checklistByType, typeLabels, type OrderStatus } from "@/lib/operia-store";
-import { ArrowLeft, Copy, Check, Trash2, AlertTriangle } from "lucide-react";
+import { buildMissingMessage } from "@/lib/ui-store";
+import { ArrowLeft, Copy, Check, Trash2, AlertTriangle, CheckCircle2, PlayCircle, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pedidos/$id")({
@@ -58,24 +59,57 @@ function Detalle() {
         title={order.cliente || "Cliente sin nombre"}
         subtitle={`${typeLabels[order.tipo]} · ${order.descripcion || "Descripción pendiente"}`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <UrgencyChip fecha={order.fechaEntrega} hora={order.horaEntrega} />
             <StatusBadge status={order.estado} />
             <RiskBadge level={order.riesgo} />
           </div>
         }
       />
 
+      {/* Quick actions */}
+      <Card className="p-3 rounded-2xl mb-5 flex flex-wrap gap-2 items-center">
+        <span className="text-xs text-muted-foreground px-2">Acciones rápidas:</span>
+        {order.estado === "nuevo" && (
+          <Button size="sm" className="rounded-full" onClick={() => { updateOrder(order.id, { estado: "confirmado" }); toast.success("Confirmado"); }}>
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Marcar como confirmado
+          </Button>
+        )}
+        {(order.estado === "nuevo" || order.estado === "confirmado") && (
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={() => { updateOrder(order.id, { estado: "en_proceso" }); toast.success("En proceso"); }}>
+            <PlayCircle className="h-3.5 w-3.5 mr-1" /> En proceso
+          </Button>
+        )}
+        {order.estado !== "entregado" && order.estado !== "cancelado" && (
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={() => { updateOrder(order.id, { estado: "entregado" }); toast.success("Entregado"); }}>
+            <PackageCheck className="h-3.5 w-3.5 mr-1" /> Marcar como entregado
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" className="rounded-full" onClick={copiarResumen}>
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar resumen
+        </Button>
+      </Card>
+
       {order.faltantes.length > 0 && (
-        <div className="mb-5 p-3 rounded-2xl bg-warning/15 border border-warning/30 flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-          <div className="text-sm">
-            <div className="font-medium">Orden incompleta</div>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {order.faltantes.map((f) => (
-                <span key={f} className="text-[11px] px-2 py-0.5 rounded-full bg-card border border-warning/40">{f}</span>
-              ))}
+        <div className="mb-5 p-4 rounded-2xl bg-warning/15 border border-warning/30">
+          <div className="flex items-start gap-2 mb-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div className="text-sm">
+              <div className="font-medium">Faltan datos para este pedido</div>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {order.faltantes.map((f) => (
+                  <span key={f} className="text-[11px] px-2 py-0.5 rounded-full bg-card border border-warning/40">{f}</span>
+                ))}
+              </div>
             </div>
           </div>
+          <Button
+            size="sm"
+            className="rounded-full mt-2"
+            onClick={() => { navigator.clipboard.writeText(buildMissingMessage(order.cliente, order.faltantes)); toast.success("Mensaje copiado al portapapeles"); }}
+          >
+            <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje para el cliente
+          </Button>
         </div>
       )}
 

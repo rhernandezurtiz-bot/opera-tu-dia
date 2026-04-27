@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RiesgosRouteImport } from './routes/riesgos'
 import { Route as ProduccionRouteImport } from './routes/produccion'
-import { Route as NuevoRouteImport } from './routes/nuevo'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
@@ -25,11 +24,6 @@ const RiesgosRoute = RiesgosRouteImport.update({
 const ProduccionRoute = ProduccionRouteImport.update({
   id: '/produccion',
   path: '/produccion',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NuevoRoute = NuevoRouteImport.update({
-  id: '/nuevo',
-  path: '/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracionRoute = ConfiguracionRouteImport.update({
@@ -56,7 +50,6 @@ const PedidosIdRoute = PedidosIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
-  '/nuevo': typeof NuevoRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -65,7 +58,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
-  '/nuevo': typeof NuevoRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -75,7 +67,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
-  '/nuevo': typeof NuevoRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -86,7 +77,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/configuracion'
-    | '/nuevo'
     | '/produccion'
     | '/riesgos'
     | '/pedidos/$id'
@@ -95,7 +85,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/configuracion'
-    | '/nuevo'
     | '/produccion'
     | '/riesgos'
     | '/pedidos/$id'
@@ -104,7 +93,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/configuracion'
-    | '/nuevo'
     | '/produccion'
     | '/riesgos'
     | '/pedidos/$id'
@@ -114,7 +102,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfiguracionRoute: typeof ConfiguracionRoute
-  NuevoRoute: typeof NuevoRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
   PedidosIdRoute: typeof PedidosIdRoute
@@ -135,13 +122,6 @@ declare module '@tanstack/react-router' {
       path: '/produccion'
       fullPath: '/produccion'
       preLoaderRoute: typeof ProduccionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/nuevo': {
-      id: '/nuevo'
-      path: '/nuevo'
-      fullPath: '/nuevo'
-      preLoaderRoute: typeof NuevoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracion': {
@@ -178,7 +158,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfiguracionRoute: ConfiguracionRoute,
-  NuevoRoute: NuevoRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
   PedidosIdRoute: PedidosIdRoute,
