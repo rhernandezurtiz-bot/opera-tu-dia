@@ -91,35 +91,50 @@ export function buildMissingMessage(cliente: string, faltantes: string[]): strin
   return `¡Hola${n ? " " + n : ""}! 😊 Para confirmar tu pedido me faltaría: ${lista}. ¿Me lo puedes compartir, por favor? ¡Gracias!`;
 }
 
-// Mensaje sugerido dinámico según tipo de orden y datos faltantes
+// Mensaje sugerido dinámico según tipo de orden, datos faltantes y ambigüedad
 export function buildSmartReply(o: Order): string {
   const n = firstName(o.cliente);
   const saludo = `Hola${n ? " " + n : ""} 😊`;
+
+  // Mapear faltantes a frases naturales
   const faltan = (o.faltantes || []).map((f) => f.toLowerCase());
+  const phraseMap: Record<string, string> = {
+    "producto exacto": "qué producto necesitas",
+    "cantidad": "la cantidad exacta",
+    "fecha": "la fecha",
+    "fecha exacta": "la fecha exacta",
+    "hora": "el horario",
+    "hora exacta": "la hora final",
+    "dirección": "la dirección completa",
+    "dirección completa": "la dirección completa",
+    "pago": "el método de pago",
+    "contacto": "un teléfono de contacto",
+  };
+  const frases = faltan.map((f) => phraseMap[f] || f).filter(Boolean);
+  const lista = frases.length > 1
+    ? frases.slice(0, -1).join(", ") + " y " + frases[frases.length - 1]
+    : frases[0] || "algunos detalles";
 
   if (o.tipo === "cita") {
     if (faltan.length === 0) {
       const cuando = o.horaEntrega ? `el ${o.fechaEntrega} a las ${o.horaEntrega}` : "en la fecha indicada";
       return `${saludo} confirmo tu cita ${cuando}. ¿Te queda bien? ¡Te esperamos!`;
     }
-    const lista = faltan.includes("hora") ? "el horario exacto y tu confirmación" : faltan.join(", ");
-    return `${saludo} para agendar tu cita necesito ${lista}. ¿Me lo confirmas?`;
+    return `${saludo} para agendar tu cita necesito confirmar ${lista}. ¿Me lo puedes compartir?`;
   }
 
   if (o.tipo === "servicio") {
     if (faltan.length === 0) {
       return `${saludo} recibido tu solicitud de ${o.descripcion || "servicio"}. Te confirmo disponibilidad enseguida.`;
     }
-    const base = ["los detalles del trabajo", "tu dirección exacta", "un teléfono de contacto"];
-    const pedir = faltan.length ? faltan.join(", ") : base.join(", ");
-    return `${saludo} para coordinar tu servicio necesito: ${pedir}. ¿Me lo puedes compartir?`;
+    return `${saludo} para coordinar tu servicio necesito ${lista}. ¿Me lo puedes compartir?`;
   }
 
   // Producto / personalizado
   if (faltan.length === 0) {
     return `${saludo} confirmo tu pedido de ${o.descripcion || "producto"}. Coordinamos entrega según lo acordado. ¡Gracias!`;
   }
-  return `${saludo} para confirmar tu pedido me falta: ${faltan.join(", ")}. ¿Me lo puedes compartir? ¡Gracias!`;
+  return `${saludo} para poder ayudarte necesito confirmar ${lista}. ¿Me lo puedes compartir? ¡Gracias!`;
 }
 
 export function buildConfirmMessage(o: Order): string {
