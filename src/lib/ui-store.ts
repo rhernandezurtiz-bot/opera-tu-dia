@@ -163,3 +163,34 @@ export function buildReadyMessage(o: Order): string {
   const desc = o.descripcion || "tu pedido";
   return `¡Hola${n ? " " + n : ""}! 🎉 ${desc} ya está listo. Coordinamos la entrega según lo acordado. ¡Gracias!`;
 }
+
+// Recordatorio de anticipo / pago pendiente
+export function buildPaymentReminder(o: Order): string {
+  const n = firstName(o.cliente);
+  const monto = o.precio ? ` (${money(o.precio)})` : "";
+  return `Hola${n ? " " + n : ""} 😊 te recuerdo el anticipo${monto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+}
+
+// Recordatorio "1 día antes"
+export function buildDayBeforeReminder(o: Order): string {
+  const n = firstName(o.cliente);
+  const desc = o.descripcion?.split(" — ")[0] || "tu pedido";
+  const cuando = o.horaEntrega ? `mañana a las ${o.horaEntrega}` : "mañana";
+  if (o.tipo === "cita") {
+    return `Hola${n ? " " + n : ""} 😊 te recuerdo tu cita ${cuando}. ¿Confirmas que sigue en pie?`;
+  }
+  return `Hola${n ? " " + n : ""} 😊 te confirmo ${desc} para ${cuando}. ¿Todo sigue en orden?`;
+}
+
+// Recordatorio "2 horas antes"
+export function buildHoursBeforeReminder(o: Order): string {
+  const n = firstName(o.cliente);
+  const cuando = o.horaEntrega ? `a las ${o.horaEntrega}` : "hoy";
+  if (o.tipo === "cita") {
+    return `Hola${n ? " " + n : ""} 😊 te esperamos ${cuando}. ¿Me confirmas la dirección y que llegas a tiempo?`;
+  }
+  if (o.tipo === "servicio") {
+    return `Hola${n ? " " + n : ""} 😊 te confirmo nuestra visita ${cuando}. ¿Me confirmas la dirección exacta?`;
+  }
+  return `Hola${n ? " " + n : ""} 😊 vamos en camino con tu pedido ${cuando}. ¿Confirmas la dirección de entrega?`;
+}
