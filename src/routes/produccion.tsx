@@ -146,12 +146,33 @@ function PriorityGroup({ title, icon: Icon, accent, bg, orders, onAdvance }: {
                   {o.detalles && (
                     <div className="text-[12px] text-muted-foreground mt-2 truncate">"{o.detalles}"</div>
                   )}
-                  <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
+                  <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border items-center">
+                    {o.precio > 0 && (
+                      <span className="text-[12.5px] font-semibold tabular-nums mr-1">
+                        {money(o.precio)}
+                      </span>
+                    )}
                     {next && (
                       <Button size="sm" variant="secondary" onClick={() => onAdvance(o.id, next.value)}>
                         {next.label}
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const msg =
+                          o.faltantes.length > 0
+                            ? buildMissingMessage(o.cliente, o.faltantes)
+                            : o.estado === "listo"
+                              ? buildReadyMessage(o)
+                              : buildConfirmMessage(o);
+                        navigator.clipboard.writeText(msg);
+                        toast.success("Mensaje copiado");
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copiar mensaje
+                    </Button>
                     <Button size="sm" variant="ghost" className="ml-auto" asChild>
                       <Link to="/pedidos/$id" params={{ id: o.id }}>
                         Abrir <ArrowRight className="h-3.5 w-3.5" />
