@@ -63,8 +63,11 @@ export interface Order {
   createdAt: number;
   // Confianza de los datos detectados
   fechaConfirmada?: boolean;
-  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía"
-  fechaTextoOriginal?: string; // texto exacto que usó el cliente: "viernes", "mañana"
+  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía" | "4–5 pm"
+  horaConfirmada?: boolean; // false si la hora es ambigua o aproximada
+  fechaTextoOriginal?: string; // texto exacto: "viernes", "mañana"
+  ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
+  ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
@@ -254,16 +257,40 @@ export const useOperia = create<State>()(
 
 function recompute(o: Order): Order {
   const faltantes: string[] = [];
+  // Producto / descripción exacta
+  if (!o.descripcion || /producto por definir/i.test(o.descripcion)) faltantes.push("Producto exacto");
+  // Cantidad (sólo relevante para producto / personalizado)
+  if ((o.tipo === "producto" || o.tipo === "personalizado") && (!o.cantidad || o.cantidad === "1" && /por definir/i.test(o.descripcion))) {
+    if (!o.cantidad) faltantes.push("Cantidad");
+  }
+  // Fecha
   if (!o.fechaEntrega) faltantes.push("Fecha");
-  if (!o.horaEntrega) faltantes.push("Hora");
-  if (!o.direccion && o.tipo !== "cita") faltantes.push("Dirección");
+  else if (o.fechaConfirmada === false) faltantes.push("Fecha exacta");
+  // Hora
+  if (!o.horaEntrega) {
+    if (o.horaAprox) faltantes.push("Hora exacta");
+    else faltantes.push("Hora");
+  } else if (o.horaConfirmada === false) {
+    faltantes.push("Hora exacta");
+  }
+  // Dirección
+  if (o.tipo !== "cita") {
+    if (!o.direccion) faltantes.push("Dirección completa");
+    else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
+  }
+  // Pago
   if (o.pago === "pendiente") faltantes.push("Pago");
-  if (!o.descripcion) faltantes.push("Descripción");
-  if (!o.telefono) faltantes.push("Teléfono");
+  // Contacto
+  if (!o.telefono) faltantes.push("Contacto");
+
+  // Riesgo: >2 críticos => ALTO; 1–2 => MEDIO; 0 => BAJO
+  const criticos = faltantes.filter((f) =>
+    /Producto|Fecha|Hora|Dirección|Contacto/i.test(f)
+  ).length;
   let riesgo: RiskLevel = "bajo";
-  const isToday = o.fechaEntrega === today();
-  if (!o.fechaEntrega || !o.descripcion || (isToday && !o.horaEntrega)) riesgo = "alto";
+  if (criticos > 2 || o.ambiguo) riesgo = "alto";
   else if (faltantes.length >= 1) riesgo = "medio";
+
   return { ...o, faltantes, riesgo };
 }
 
@@ -403,25 +430,49 @@ export function parseWhatsapp(text: string): Order {
     fechaTextoOriginal = `${d}/${m}`;
   }
 
-  // Hora — exacta o aproximada
+  // Detectar marcadores de incertidumbre globales
+  const UNCERTAIN_RE = /\b(tal vez|quiz[aá]s?|aprox(imadamente)?|m[aá]s o menos|mas o menos|no s[eé] bien|no estoy segur[oa]|creo que|por ah[ií]|como a las|como en la|alrededor de|cerca de|entre las)\b/i;
+  const ambiguo = UNCERTAIN_RE.test(text);
+
+  // Hora — exacta, rango ambiguo, o aproximada
   let horaEntrega = "";
   let horaAprox = "";
-  const hMatch = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|hrs?|h)\b/i);
-  const hContext = text.match(/\ba las\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
-  const m1 = hMatch || hContext;
-  if (m1) {
-    let h = parseInt(m1[1], 10);
-    const m = m1[2] || "00";
-    const suf = m1[3] || "";
-    if (/pm/i.test(suf) && h < 12) h += 12;
-    if (/am/i.test(suf) && h === 12) h = 0;
-    if (h >= 0 && h <= 23) horaEntrega = `${String(h).padStart(2,"0")}:${m}`;
+  let horaConfirmada = true;
+
+  // Rango "como a las 4 o 5", "entre las 3 y 5", "4-5 pm"
+  const rango = text.match(/(?:como a las|entre las|de)\s*(\d{1,2})\s*(?:o|a|y|-|–)\s*(\d{1,2})\s*(am|pm)?/i)
+             || text.match(/\b(\d{1,2})\s*(?:-|–|a|o)\s*(\d{1,2})\s*(am|pm)\b/i);
+  if (rango) {
+    const a = rango[1]; const b = rango[2]; const suf = (rango[3] || "").toLowerCase();
+    horaAprox = `${a}–${b}${suf ? " " + suf : ""}`;
+    horaConfirmada = false;
+  } else {
+    const hMatch = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|hrs?|h)\b/i);
+    const hContext = text.match(/\ba las\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    const m1 = hMatch || hContext;
+    if (m1) {
+      let h = parseInt(m1[1], 10);
+      const m = m1[2] || "00";
+      const suf = m1[3] || "";
+      if (/pm/i.test(suf) && h < 12) h += 12;
+      if (/am/i.test(suf) && h === 12) h = 0;
+      if (h >= 0 && h <= 23) {
+        // Si la hora exacta vino acompañada de un marcador de incertidumbre cercano,
+        // tratarla como NO confirmada
+        if (ambiguo && /\b(como|tal vez|aprox|m[aá]s o menos|creo)\b/i.test(text)) {
+          horaAprox = `${String(h).padStart(2,"0")}:${m}`;
+          horaConfirmada = false;
+        } else {
+          horaEntrega = `${String(h).padStart(2,"0")}:${m}`;
+        }
+      }
+    }
   }
-  if (!horaEntrega) {
-    if (/\bpor la ma[ñn]ana\b|\ben la ma[ñn]ana\b/i.test(text)) horaAprox = "mañana";
-    else if (/\bpor la tarde\b|\ben la tarde\b/i.test(text)) horaAprox = "tarde";
-    else if (/\bpor la noche\b|\ben la noche\b|\bde noche\b/i.test(text)) horaAprox = "noche";
-    else if (/\bal mediod[ií]a\b/i.test(text)) horaAprox = "mediodía";
+  if (!horaEntrega && !horaAprox) {
+    if (/\bpor la ma[ñn]ana\b|\ben la ma[ñn]ana\b/i.test(text)) { horaAprox = "mañana"; horaConfirmada = false; }
+    else if (/\bpor la tarde\b|\ben la tarde\b/i.test(text)) { horaAprox = "tarde"; horaConfirmada = false; }
+    else if (/\bpor la noche\b|\ben la noche\b|\bde noche\b/i.test(text)) { horaAprox = "noche"; horaConfirmada = false; }
+    else if (/\bal mediod[ií]a\b/i.test(text)) { horaAprox = "mediodía"; horaConfirmada = false; }
   }
 
   // Cliente
@@ -446,6 +497,20 @@ export function parseWhatsapp(text: string): Order {
   const detMatch = text.match(/(?:que diga|texto|tema|mensaje|nota|detalle|incluir)[:\s]+([^\n.]+)/i);
   if (detMatch) detalles = detMatch[1].trim();
 
+  // Detectar ocasión (cumpleaños, boda, etc.)
+  const OCASIONES_RE = /\b(cumplea[ñn]os|boda|aniversario|bautizo|graduaci[oó]n|baby shower|despedida|reuni[oó]n|fiesta|evento|navidad|d[ií]a de las madres)\b/i;
+  const ocasionMatch = text.match(OCASIONES_RE);
+  const ocasion = ocasionMatch ? ocasionMatch[1].toLowerCase() : "";
+
+  // Si producto no es claro pero hay ocasión → resumen "Pedido para X (producto por definir)"
+  let descripcionFinal = descripcion;
+  const productoVago = !descripcion || /algo|alguna cosa|lo que tengan|no s[eé] bien|cualquier/i.test(descripcion);
+  if (tipo === "producto" && productoVago && ocasion) {
+    descripcionFinal = `Pedido para ${ocasion} (producto por definir)`;
+  } else if (tipo === "producto" && productoVago && !ocasion) {
+    descripcionFinal = "Producto por definir";
+  }
+
   // Construir resumen limpio
   const fechaTxt = fechaEntrega
     ? (fechaConfirmada
@@ -455,14 +520,21 @@ export function parseWhatsapp(text: string): Order {
   const horaTxt = horaEntrega
     ? `a las ${horaEntrega}`
     : horaAprox
-      ? `por la ${horaAprox}`
+      ? (/^\d/.test(horaAprox) ? horaAprox : `por la ${horaAprox}`)
       : "";
-  const resumen = buildSummary(tipo, descripcion, fechaTxt, horaTxt, direccion, lower);
 
-  // Notas: marcar confianza
+  // Para resumen, si la descripción ya es "Pedido para X (producto por definir)", úsala directa
+  const resumen = (descripcionFinal && /\(producto por definir\)/i.test(descripcionFinal))
+    ? [descripcionFinal, fechaTxt, direccion].filter(Boolean).join(" — ")
+    : buildSummary(tipo, descripcionFinal, fechaTxt, horaTxt, direccion, lower);
+
+  // Notas: marcar confianza explícita
   const notasArr: string[] = [];
   if (fechaEntrega && !fechaConfirmada) notasArr.push(`Fecha: ${fechaTextoOriginal} (no confirmada)`);
-  if (horaAprox) notasArr.push(`Hora: ${horaAprox} (aproximada)`);
+  if (horaAprox && /^\d/.test(horaAprox)) notasArr.push(`Hora: ${horaAprox} (no confirmada)`);
+  else if (horaAprox) notasArr.push(`Hora: ${horaAprox} (aproximada)`);
+  if (!horaEntrega && !horaAprox) notasArr.push("Hora: no definida");
+  if (ambiguo) notasArr.push("Mensaje con datos ambiguos");
   if (!tipoDetectado && !descripcion) notasArr.push("Datos no confirmados");
 
   return recompute({
@@ -473,7 +545,7 @@ export function parseWhatsapp(text: string): Order {
     pago, precio: 0, notas: notasArr.join(" · "), estado: "nuevo", riesgo: "bajo",
     faltantes: [], checklist: {},
     mensajeOriginal: text, createdAt: Date.now(),
-    fechaConfirmada, horaAprox, fechaTextoOriginal,
+    fechaConfirmada, horaAprox, horaConfirmada, fechaTextoOriginal, ocasion, ambiguo,
   });
 }
 
