@@ -146,12 +146,17 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 export function UrgencyChip({ fecha, hora }: { fecha: string; hora: string }) {
-  const u = urgency(fecha, hora);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const tones: Record<string, string> = {
     danger: "bg-danger/15 text-danger border-danger/30",
     warning: "bg-warning/25 text-foreground border-warning/40",
     muted: "bg-secondary text-muted-foreground border-border",
     success: "bg-success/15 text-success border-success/30",
   };
+  if (!mounted) {
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-secondary text-muted-foreground border-border">{fecha || "Sin fecha"}{hora ? ` · ${hora}` : ""}</span>;
+  }
+  const u = urgency(fecha, hora);
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border ${tones[u.tone]}`}>{u.label}</span>;
 }
