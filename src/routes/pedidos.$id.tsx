@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell, PageHeader, RiskBadge, StatusBadge } from "@/components/AppShell";
+import { AppShell, PageHeader, RiskBadge, StatusBadge, UrgencyChip } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useOperia, checklistByType, typeLabels, type OrderStatus } from "@/lib/operia-store";
-import { ArrowLeft, Copy, Check, Trash2, AlertTriangle } from "lucide-react";
+import { buildMissingMessage } from "@/lib/ui-store";
+import { ArrowLeft, Copy, Check, Trash2, AlertTriangle, CheckCircle2, PlayCircle, PackageCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pedidos/$id")({
