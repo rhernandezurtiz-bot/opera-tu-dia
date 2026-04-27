@@ -95,8 +95,14 @@ function InboxPage() {
       {filtered.length === 0 ? (
         <Card className="p-12 rounded-xl text-center text-muted-foreground border-dashed bg-secondary/30">
           <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-40" />
-          <div className="text-[14px] font-medium text-foreground/80">Sin mensajes</div>
-          <div className="text-[12.5px] mt-1">No hay mensajes que coincidan.</div>
+          <div className="text-[14px] font-medium text-foreground/80">
+            {messages.length === 0 ? "Sin mensajes todavía" : "Sin mensajes"}
+          </div>
+          <div className="text-[12.5px] mt-1">
+            {messages.length === 0
+              ? "Pega tu primer mensaje de WhatsApp para empezar."
+              : "No hay mensajes que coincidan."}
+          </div>
         </Card>
       ) : (
         <div className="space-y-2">

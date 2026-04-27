@@ -1,9 +1,10 @@
-import { Link, useLocation } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users } from "lucide-react";
+import { Link, useLocation, Navigate } from "@tanstack/react-router";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
 import { useOperia } from "@/lib/operia-store";
+import { useAuth } from "@/lib/auth-store";
 import { NewOrderModal } from "./NewOrderModal";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
@@ -22,6 +23,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const openNew = useUI((s) => s.openNewOrder);
   const unread = useOperia((s) => s.messages.filter((m) => m.estado === "nuevo").length);
+  const user = useAuth((s) => s.user);
+  const onboarded = useAuth((s) => s.onboarded);
+  const logout = useAuth((s) => s.logout);
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
+  if (hydrated && !user) return <Navigate to="/landing" />;
+  if (hydrated && user && !onboarded) return <Navigate to="/onboarding" />;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
@@ -78,8 +87,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto pt-6 text-[11px] text-muted-foreground/80 px-2">
-          v1.0 · MVP
+        <div className="mt-auto pt-6 px-2 space-y-2">
+          {user && (
+            <div className="text-[11.5px] text-muted-foreground truncate" title={user.email}>
+              {user.name || user.email}
+            </div>
+          )}
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
+          </button>
+          <div className="text-[10.5px] text-muted-foreground/70">v1.0 · MVP</div>
         </div>
       </aside>
 
