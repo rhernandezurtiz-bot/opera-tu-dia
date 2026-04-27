@@ -112,7 +112,7 @@ function InboxDetail() {
 
       <div className="grid lg:grid-cols-2 gap-5">
         {/* Original message */}
-        <Card className="p-5 rounded-3xl">
+        <Card className="p-5 rounded-xl">
           <div className="flex items-center gap-2 mb-3">
             <MessageCircle className="h-4 w-4 text-success" />
             <span className="text-sm font-medium">Mensaje original</span>
@@ -144,7 +144,7 @@ function InboxDetail() {
 
         {/* Structured preview */}
         {draft && !orderLinked && (
-          <Card className="p-5 rounded-3xl">
+          <Card className="p-5 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <CheckCircle2 className="h-4 w-4 text-success" />
               <span className="text-sm font-medium">Orden detectada</span>

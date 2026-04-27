@@ -50,7 +50,7 @@ export function NewOrderModal() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? null : handleClose())}>
-      <DialogContent className="max-w-2xl rounded-3xl p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl rounded-xl p-0 overflow-hidden">
         <div className="p-6 pb-4 border-b border-border">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">Nuevo pedido desde WhatsApp</DialogTitle>

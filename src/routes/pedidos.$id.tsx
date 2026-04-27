@@ -29,7 +29,7 @@ function Detalle() {
   const navigate = useNavigate();
 
   if (!order) {
-    return <AppShell><Card className="p-10 text-center rounded-3xl">Orden no encontrada. <Link to="/pedidos" className="underline">Volver</Link></Card></AppShell>;
+    return <AppShell><Card className="p-10 text-center rounded-xl">Orden no encontrada. <Link to="/pedidos" className="underline">Volver</Link></Card></AppShell>;
   }
 
   const items = checklistByType[order.tipo];
@@ -114,7 +114,7 @@ function Detalle() {
       )}
 
       <div className="grid lg:grid-cols-3 gap-5">
-        <Card className="p-5 rounded-3xl lg:col-span-2 space-y-3">
+        <Card className="p-5 rounded-xl lg:col-span-2 space-y-3">
           <h3 className="font-display text-lg mb-2">Información de la orden</h3>
           <Info label="Tipo" value={typeLabels[order.tipo]} />
           <Info label="Teléfono" value={order.telefono} />
@@ -157,7 +157,7 @@ function Detalle() {
           </div>
         </Card>
 
-        <Card className="p-5 rounded-3xl h-fit">
+        <Card className="p-5 rounded-xl h-fit">
           <h3 className="font-display text-lg mb-1">Checklist</h3>
           <div className="text-xs text-muted-foreground mb-2">
             {typeLabels[order.tipo]} · {done} de {items.length}

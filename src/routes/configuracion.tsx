@@ -44,7 +44,7 @@ function Config() {
       <PageHeader title="Configuración" subtitle="Personaliza Operia para tu negocio." />
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Card className="p-5 rounded-3xl">
+        <Card className="p-5 rounded-xl">
           <h3 className="font-display text-lg mb-4">Datos del negocio</h3>
           <div className="space-y-3">
             <FieldRow label="Nombre del negocio" value={negocio.nombre} onChange={(v) => setNegocio({ nombre: v })} />
@@ -55,7 +55,7 @@ function Config() {
           </div>
         </Card>
 
-        <Card className="p-5 rounded-3xl">
+        <Card className="p-5 rounded-xl">
           <h3 className="font-display text-lg mb-2">Tipos de órdenes activos</h3>
           <p className="text-sm text-muted-foreground mb-3">Define qué tipos de órdenes maneja tu negocio.</p>
           <div className="space-y-2">
@@ -68,7 +68,7 @@ function Config() {
           </div>
         </Card>
 
-        <Card className="p-5 rounded-3xl">
+        <Card className="p-5 rounded-xl">
           <h3 className="font-display text-lg mb-2">Reglas de riesgo</h3>
           <p className="text-sm text-muted-foreground mb-3">Activa los campos obligatorios para detectar órdenes en riesgo.</p>
           <div className="space-y-2">
@@ -81,7 +81,7 @@ function Config() {
           </div>
         </Card>
 
-        <Card className="p-5 rounded-3xl">
+        <Card className="p-5 rounded-xl">
           <h3 className="font-display text-lg mb-4">Equipo</h3>
           <div className="space-y-2 mb-4">
             {miembros.map((m) => (
@@ -106,7 +106,7 @@ function Config() {
           </div>
         </Card>
 
-        <Card className="p-5 rounded-3xl lg:col-span-2">
+        <Card className="p-5 rounded-xl lg:col-span-2">
           <div className="flex items-center gap-2 mb-1">
             <MessageCircle className="h-5 w-5 text-success" />
             <h3 className="font-display text-lg">Integración WhatsApp</h3>

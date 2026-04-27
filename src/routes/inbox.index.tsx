@@ -24,9 +24,9 @@ const statusLabel: Record<WhatsappStatus, string> = {
 };
 
 const statusStyle: Record<WhatsappStatus, string> = {
-  nuevo: "bg-primary/15 text-primary border-primary/30",
-  analizado: "bg-warning/20 text-foreground border-warning/40",
-  convertido: "bg-success/15 text-success border-success/30",
+  nuevo: "bg-foreground/5 text-foreground/80 border-border",
+  analizado: "bg-warning/12 text-foreground/80 border-warning/25",
+  convertido: "bg-success/8 text-success/90 border-success/20",
   respondido: "bg-secondary text-muted-foreground border-border",
 };
 
@@ -51,30 +51,39 @@ function InboxPage() {
       />
 
       {!whatsapp.conectado && (
-        <div className="mb-5 p-3 rounded-2xl border border-warning/40 bg-warning/10 text-sm">
-          <span className="font-medium">Modo simulación.</span> Estás viendo mensajes de prueba.
-          Para activar la integración real, conecta WhatsApp Business Cloud API en{" "}
-          <Link to="/configuracion" className="underline">Ajustes</Link>.
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/8 text-[13px] flex items-start gap-3">
+          <div className="h-6 w-6 rounded-md bg-warning/20 grid place-items-center shrink-0">
+            <MessageCircle className="h-3.5 w-3.5 text-foreground/70" />
+          </div>
+          <div>
+            <span className="font-medium text-foreground">Modo simulación.</span>{" "}
+            <span className="text-muted-foreground">
+              Estás viendo mensajes de prueba. Para activar la integración real, conecta WhatsApp Business Cloud API en{" "}
+              <Link to="/configuracion" className="underline text-foreground">Ajustes</Link>.
+            </span>
+          </div>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 mb-5">
         <div className="relative flex-1">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar por cliente, teléfono o texto…"
-            className="pl-9 rounded-full"
+            className="pl-9 rounded-lg h-10"
           />
         </div>
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="flex gap-1 overflow-x-auto -mx-1 px-1">
           {(["todos", "nuevo", "analizado", "convertido", "respondido"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3 py-2 rounded-full text-xs whitespace-nowrap border transition ${
-                filter === s ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground"
+              className={`px-3 h-10 rounded-lg text-[12.5px] font-medium whitespace-nowrap border transition-colors ${
+                filter === s
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground"
               }`}
             >
               {s === "todos" ? "Todos" : statusLabel[s]}
@@ -84,9 +93,10 @@ function InboxPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <Card className="p-10 rounded-3xl text-center text-muted-foreground">
-          <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          No hay mensajes que coincidan.
+        <Card className="p-12 rounded-xl text-center text-muted-foreground border-dashed bg-secondary/30">
+          <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-40" />
+          <div className="text-[14px] font-medium text-foreground/80">Sin mensajes</div>
+          <div className="text-[12.5px] mt-1">No hay mensajes que coincidan.</div>
         </Card>
       ) : (
         <div className="space-y-2">
@@ -97,26 +107,26 @@ function InboxPage() {
               params={{ id: m.id }}
               className="block"
             >
-              <Card className="p-4 rounded-2xl hover:bg-secondary/40 transition-colors">
+              <Card className="p-4 md:p-5 rounded-xl hover:border-foreground/15 transition-colors">
                 <div className="flex items-start gap-3">
-                  <div className="h-10 w-10 rounded-full bg-success/15 text-success grid place-items-center shrink-0">
-                    <MessageCircle className="h-5 w-5" />
+                  <div className="h-9 w-9 rounded-lg bg-secondary border border-border grid place-items-center shrink-0">
+                    <MessageCircle className="h-4 w-4 text-foreground/70" strokeWidth={2} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium truncate">{m.cliente}</span>
+                      <span className="font-medium text-[14.5px] truncate">{m.cliente}</span>
                       {m.telefono && m.cliente !== m.telefono && (
-                        <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                        <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1">
                           <Phone className="h-3 w-3" />
                           {m.telefono}
                         </span>
                       )}
-                      <span className={`ml-auto text-[11px] px-2 py-0.5 rounded-full border ${statusStyle[m.estado]}`}>
+                      <span className={`ml-auto text-[11px] font-medium px-2 h-[22px] inline-flex items-center rounded-full border ${statusStyle[m.estado]}`}>
                         {statusLabel[m.estado]}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{m.texto}</p>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-[13px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{m.texto}</p>
+                    <div className="text-[11px] text-muted-foreground mt-2">
                       <RelativeTime ts={m.recibidoAt} />
                     </div>
                   </div>
