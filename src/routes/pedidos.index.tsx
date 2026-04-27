@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { AppShell, PageHeader, RiskBadge, StatusBadge } from "@/components/AppShell";
+import { AppShell, PageHeader, RiskBadge, StatusBadge, UrgencyChip } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -63,8 +63,8 @@ function Pedidos() {
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground uppercase tracking-wide">{typeLabels[o.tipo]}</span>
                     </div>
                     <div className="text-sm text-muted-foreground">{o.descripcion || "Descripción pendiente"}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {o.fechaEntrega || "Sin fecha"} {o.horaEntrega && `· ${o.horaEntrega}`}
+                    <div className="mt-2">
+                      <UrgencyChip fecha={o.fechaEntrega} hora={o.horaEntrega} />
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1.5">
