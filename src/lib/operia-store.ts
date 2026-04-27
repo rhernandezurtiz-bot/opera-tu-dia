@@ -63,8 +63,11 @@ export interface Order {
   createdAt: number;
   // Confianza de los datos detectados
   fechaConfirmada?: boolean;
-  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía"
-  fechaTextoOriginal?: string; // texto exacto que usó el cliente: "viernes", "mañana"
+  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía" | "4–5 pm"
+  horaConfirmada?: boolean; // false si la hora es ambigua o aproximada
+  fechaTextoOriginal?: string; // texto exacto: "viernes", "mañana"
+  ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
+  ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
