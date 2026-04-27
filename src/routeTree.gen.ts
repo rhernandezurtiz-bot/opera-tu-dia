@@ -15,8 +15,10 @@ import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
 import { Route as InboxIndexRouteImport } from './routes/inbox.index'
+import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
+import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
 
 const RiesgosRoute = RiesgosRouteImport.update({
   id: '/riesgos',
@@ -48,6 +50,11 @@ const InboxIndexRoute = InboxIndexRouteImport.update({
   path: '/inbox/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesIndexRoute = ClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PedidosIdRoute = PedidosIdRouteImport.update({
   id: '/pedidos/$id',
   path: '/pedidos/$id',
@@ -58,14 +65,21 @@ const InboxIdRoute = InboxIdRouteImport.update({
   path: '/inbox/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesKeyRoute = ClientesKeyRouteImport.update({
+  id: '/clientes/$key',
+  path: '/clientes/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
@@ -74,8 +88,10 @@ export interface FileRoutesByTo {
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
   '/pedidos': typeof PedidosIndexRoute
 }
@@ -85,8 +101,10 @@ export interface FileRoutesById {
   '/configuracion': typeof ConfiguracionRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
 }
@@ -97,8 +115,10 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
+    | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
   fileRoutesByTo: FileRoutesByTo
@@ -107,8 +127,10 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
+    | '/clientes'
     | '/inbox'
     | '/pedidos'
   id:
@@ -117,8 +139,10 @@ export interface FileRouteTypes {
     | '/configuracion'
     | '/produccion'
     | '/riesgos'
+    | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
+    | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
   fileRoutesById: FileRoutesById
@@ -128,8 +152,10 @@ export interface RootRouteChildren {
   ConfiguracionRoute: typeof ConfiguracionRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
+  ClientesKeyRoute: typeof ClientesKeyRoute
   InboxIdRoute: typeof InboxIdRoute
   PedidosIdRoute: typeof PedidosIdRoute
+  ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
 }
@@ -178,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InboxIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes/': {
+      id: '/clientes/'
+      path: '/clientes'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof ClientesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pedidos/$id': {
       id: '/pedidos/$id'
       path: '/pedidos/$id'
@@ -192,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InboxIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clientes/$key': {
+      id: '/clientes/$key'
+      path: '/clientes/$key'
+      fullPath: '/clientes/$key'
+      preLoaderRoute: typeof ClientesKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -200,8 +240,10 @@ const rootRouteChildren: RootRouteChildren = {
   ConfiguracionRoute: ConfiguracionRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
+  ClientesKeyRoute: ClientesKeyRoute,
   InboxIdRoute: InboxIdRoute,
   PedidosIdRoute: PedidosIdRoute,
+  ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
 }
