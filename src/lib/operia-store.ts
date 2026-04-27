@@ -558,3 +558,65 @@ export function parseWhatsapp(text: string): Order {
 }
 
 export const todayStr = today;
+
+/* ---------- Client identity & stats ---------- */
+
+// Clave única por cliente: prioriza teléfono normalizado, si no, nombre normalizado.
+export function clientKey(cliente: string, telefono: string): string {
+  const phone = (telefono || "").replace(/[^\d+]/g, "");
+  if (phone.length >= 7) return phone;
+  const name = (cliente || "").trim().toLowerCase().replace(/\s+/g, " ");
+  return name ? `name:${name}` : "";
+}
+
+export interface ClientStats {
+  key: string;
+  nombre: string;
+  telefono: string;
+  totalPedidos: number;
+  totalGastado: number;
+  ultimaFecha: string; // ISO yyyy-mm-dd
+  comunes: string[]; // descripciones más frecuentes
+  esRecurrente: boolean;
+}
+
+export function getClientStats(orders: Order[], key: string): ClientStats | null {
+  if (!key) return null;
+  const items = orders.filter((o) => clientKey(o.cliente, o.telefono) === key);
+  if (items.length === 0) return null;
+  const sorted = [...items].sort((a, b) => (b.fechaEntrega || "").localeCompare(a.fechaEntrega || ""));
+  const totalGastado = items.reduce((acc, o) => acc + (o.estado !== "cancelado" ? (o.precio || 0) : 0), 0);
+  // Top 2 descripciones más repetidas (normalizadas a la primera frase)
+  const counts = new Map<string, number>();
+  for (const o of items) {
+    const d = (o.descripcion || "").split(" — ")[0].trim();
+    if (!d) continue;
+    counts.set(d, (counts.get(d) || 0) + 1);
+  }
+  const comunes = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([d]) => d);
+  const last = sorted[0];
+  return {
+    key,
+    nombre: items.find((o) => o.cliente)?.cliente || "Cliente",
+    telefono: items.find((o) => o.telefono)?.telefono || "",
+    totalPedidos: items.length,
+    totalGastado,
+    ultimaFecha: last.fechaEntrega || "",
+    comunes,
+    esRecurrente: items.length >= 2,
+  };
+}
+
+// Lista de clientes únicos derivada de las órdenes
+export function getAllClients(orders: Order[]): ClientStats[] {
+  const map = new Map<string, true>();
+  const result: ClientStats[] = [];
+  for (const o of orders) {
+    const k = clientKey(o.cliente, o.telefono);
+    if (!k || map.has(k)) continue;
+    map.set(k, true);
+    const stats = getClientStats(orders, k);
+    if (stats) result.push(stats);
+  }
+  return result.sort((a, b) => b.totalPedidos - a.totalPedidos);
+}
