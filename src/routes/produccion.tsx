@@ -59,7 +59,7 @@ function Produccion() {
         title="Urgente — atender ya"
         icon={Flame}
         accent="text-danger"
-        bg="bg-danger/5 border-danger/20"
+        bg="bg-card border-danger/20"
         orders={urgentes}
         onAdvance={(id, next) => { updateOrder(id, { estado: next }); toast.success("Estado actualizado"); }}
       />
@@ -77,13 +77,16 @@ function Produccion() {
         title="Próximas"
         icon={Sparkles}
         accent="text-muted-foreground"
-        bg="bg-secondary/40 border-border"
+        bg="bg-card border-border"
         orders={proximas}
         onAdvance={(id, next) => { updateOrder(id, { estado: next }); toast.success("Estado actualizado"); }}
       />
 
       {active.length === 0 && (
-        <Card className="p-10 text-center text-muted-foreground rounded-3xl">No hay trabajo pendiente. ✨</Card>
+        <Card className="p-12 text-center text-muted-foreground rounded-xl border-dashed bg-secondary/30">
+          <div className="text-[14px] font-medium text-foreground/80">Sin trabajo pendiente</div>
+          <div className="text-[12.5px] mt-1">Todo en orden.</div>
+        </Card>
       )}
     </AppShell>
   );
@@ -95,17 +98,20 @@ function PriorityGroup({ title, icon: Icon, accent, bg, orders, onAdvance }: {
 }) {
   if (orders.length === 0) return null;
   return (
-    <section className="mb-8">
-      <div className={`flex items-center gap-2 mb-3 ${accent}`}>
+    <section className="mb-10">
+      <div className={`flex items-center gap-2 mb-4 ${accent}`}>
         <Icon className="h-4 w-4" />
-        <h2 className="font-display text-lg">{title} <span className="text-muted-foreground text-sm">· {orders.length}</span></h2>
+        <h2 className="text-[17px] font-semibold tracking-tight">
+          {title}
+          <span className="text-muted-foreground text-[13px] font-normal ml-2">· {orders.length}</span>
+        </h2>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {orders.map((o) => {
           const TypeIcon = typeIcon[o.tipo];
           const next = nextStatus(o.estado);
           return (
-            <Card key={o.id} className={`p-4 rounded-2xl border ${bg}`}>
+            <Card key={o.id} className={`p-4 md:p-5 rounded-xl border ${bg} hover:border-foreground/20 transition-colors`}>
               <div className="flex items-start gap-3">
                 <Checkbox
                   className="mt-1"
@@ -115,12 +121,14 @@ function PriorityGroup({ title, icon: Icon, accent, bg, orders, onAdvance }: {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{typeLabels[o.tipo]}</span>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <TypeIcon className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2} />
+                        <span className="text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground font-medium">
+                          {typeLabels[o.tipo]}
+                        </span>
                       </div>
-                      <div className="font-medium truncate">{o.cliente || "Sin nombre"}</div>
-                      <div className="text-sm text-muted-foreground">{o.descripcion || "Descripción pendiente"}</div>
+                      <div className="font-medium text-[15px] truncate">{o.cliente || "Sin nombre"}</div>
+                      <div className="text-[13px] text-muted-foreground mt-0.5">{o.descripcion || "Descripción pendiente"}</div>
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       <UrgencyChip fecha={o.fechaEntrega} hora={o.horaEntrega} />
@@ -128,17 +136,17 @@ function PriorityGroup({ title, icon: Icon, accent, bg, orders, onAdvance }: {
                     </div>
                   </div>
                   {o.detalles && (
-                    <div className="text-xs text-muted-foreground italic mt-1 truncate">"{o.detalles}"</div>
+                    <div className="text-[12px] text-muted-foreground mt-2 truncate">"{o.detalles}"</div>
                   )}
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
                     {next && (
-                      <Button size="sm" variant="secondary" className="rounded-full" onClick={() => onAdvance(o.id, next.value)}>
+                      <Button size="sm" variant="secondary" onClick={() => onAdvance(o.id, next.value)}>
                         {next.label}
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" className="rounded-full ml-auto" asChild>
+                    <Button size="sm" variant="ghost" className="ml-auto" asChild>
                       <Link to="/pedidos/$id" params={{ id: o.id }}>
-                        Abrir <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                        Abrir <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>
                   </div>
