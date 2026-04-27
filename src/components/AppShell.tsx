@@ -10,7 +10,7 @@ import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
 
 const nav = [
-  { to: "/", label: "Inicio", icon: Home },
+  { to: "/app", label: "Inicio", icon: Home },
   { to: "/inbox", label: "Inbox", icon: MessageCircle },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered },
   { to: "/produccion", label: "Plan del día", icon: ChefHat },
