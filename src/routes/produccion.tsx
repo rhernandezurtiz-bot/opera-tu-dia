@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useOperia, todayStr, typeLabels, type Order, type OrderType } from "@/lib/operia-store";
-import { urgency } from "@/lib/ui-store";
-import { Package, Wrench, CalendarClock, Sparkles, Flame, ArrowRight } from "lucide-react";
+import { urgency, money, buildMissingMessage, buildConfirmMessage, buildReadyMessage } from "@/lib/ui-store";
+import { Package, Wrench, CalendarClock, Sparkles, Flame, ArrowRight, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/produccion")({
@@ -48,11 +48,19 @@ function Produccion() {
   const hoy = active.filter((o) => o.fechaEntrega === today && !urgentes.includes(o));
   const proximas = active.filter((o) => o.fechaEntrega && o.fechaEntrega > today);
 
+  const totalActive = active.length;
+  const headline =
+    urgentes.length > 0
+      ? `${urgentes.length} ${urgentes.length === 1 ? "cosa urgente" : "cosas urgentes"} ahora`
+      : totalActive > 0
+        ? `${totalActive} ${totalActive === 1 ? "cosa" : "cosas"} por hacer`
+        : "Sin trabajo pendiente";
+
   return (
     <AppShell>
       <PageHeader
-        title="Plan del día"
-        subtitle="Tu trabajo, ordenado por prioridad. Empieza por lo urgente."
+        title={headline}
+        subtitle="Tu plan del día. Marca cada paso a medida que avanzas."
       />
 
       <PriorityGroup
@@ -138,12 +146,33 @@ function PriorityGroup({ title, icon: Icon, accent, bg, orders, onAdvance }: {
                   {o.detalles && (
                     <div className="text-[12px] text-muted-foreground mt-2 truncate">"{o.detalles}"</div>
                   )}
-                  <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
+                  <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border items-center">
+                    {o.precio > 0 && (
+                      <span className="text-[12.5px] font-semibold tabular-nums mr-1">
+                        {money(o.precio)}
+                      </span>
+                    )}
                     {next && (
                       <Button size="sm" variant="secondary" onClick={() => onAdvance(o.id, next.value)}>
                         {next.label}
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const msg =
+                          o.faltantes.length > 0
+                            ? buildMissingMessage(o.cliente, o.faltantes)
+                            : o.estado === "listo"
+                              ? buildReadyMessage(o)
+                              : buildConfirmMessage(o);
+                        navigator.clipboard.writeText(msg);
+                        toast.success("Mensaje copiado");
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" /> Copiar mensaje
+                    </Button>
                     <Button size="sm" variant="ghost" className="ml-auto" asChild>
                       <Link to="/pedidos/$id" params={{ id: o.id }}>
                         Abrir <ArrowRight className="h-3.5 w-3.5" />
