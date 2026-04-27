@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { parseWhatsapp, useOperia, typeLabels, type Order, type OrderType } from "@/lib/operia-store";
-import { buildMissingMessage } from "@/lib/ui-store";
-import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone } from "lucide-react";
+import { buildSmartReply, buildConfirmMessage, buildPaymentMessage, buildReadyMessage } from "@/lib/ui-store";
+import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone, Clock, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/inbox/$id")({
