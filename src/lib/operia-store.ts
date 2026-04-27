@@ -61,6 +61,10 @@ export interface Order {
   checklist: Record<string, boolean>;
   mensajeOriginal: string;
   createdAt: number;
+  // Confianza de los datos detectados
+  fechaConfirmada?: boolean;
+  horaAprox?: string; // "mañana" | "tarde" | "noche" | "mediodía"
+  fechaTextoOriginal?: string; // texto exacto que usó el cliente: "viernes", "mañana"
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
