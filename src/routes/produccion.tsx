@@ -48,11 +48,19 @@ function Produccion() {
   const hoy = active.filter((o) => o.fechaEntrega === today && !urgentes.includes(o));
   const proximas = active.filter((o) => o.fechaEntrega && o.fechaEntrega > today);
 
+  const totalActive = active.length;
+  const headline =
+    urgentes.length > 0
+      ? `${urgentes.length} ${urgentes.length === 1 ? "cosa urgente" : "cosas urgentes"} ahora`
+      : totalActive > 0
+        ? `${totalActive} ${totalActive === 1 ? "cosa" : "cosas"} por hacer`
+        : "Sin trabajo pendiente";
+
   return (
     <AppShell>
       <PageHeader
-        title="Plan del día"
-        subtitle="Tu trabajo, ordenado por prioridad. Empieza por lo urgente."
+        title={headline}
+        subtitle="Tu plan del día. Marca cada paso a medida que avanzas."
       />
 
       <PriorityGroup
