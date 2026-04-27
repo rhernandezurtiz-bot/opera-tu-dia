@@ -30,7 +30,7 @@ function Login() {
   useEffect(() => setHydrated(true), []);
   useEffect(() => {
     if (hydrated && user) {
-      navigate({ to: onboarded ? "/" : "/onboarding" });
+      navigate({ to: onboarded ? "/app" : "/onboarding" });
     }
   }, [hydrated, user, onboarded, navigate]);
 

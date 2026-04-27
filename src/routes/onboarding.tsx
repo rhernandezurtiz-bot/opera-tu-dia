@@ -48,7 +48,7 @@ function Onboarding() {
   const [oferta, setOferta] = useState("");
 
   if (hydrated && !user) return <Navigate to="/login" />;
-  if (hydrated && onboarded) return <Navigate to="/" />;
+  if (hydrated && onboarded) return <Navigate to="/app" />;
 
   const steps = [
     { label: "Nombre", valid: !!nombre.trim() },
@@ -72,7 +72,7 @@ function Onboarding() {
         horarios: horarios.trim(),
       });
       completeOnboarding();
-      navigate({ to: "/" });
+      navigate({ to: "/app" });
     }
   };
 
