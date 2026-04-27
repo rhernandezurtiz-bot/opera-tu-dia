@@ -69,7 +69,7 @@ function Index() {
 
       {/* Money */}
       <section className="mb-10">
-        <Eyebrow>Dinero del día</Eyebrow>
+        <Eyebrow>💰 Dinero del día</Eyebrow>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <MoneyCard
             icon={TrendingUp}
@@ -79,18 +79,18 @@ function Index() {
             tone="default"
           />
           <MoneyCard
+            icon={Wallet}
+            label="Pendientes de pago"
+            value={money(dinero.montoSinAnticipo)}
+            hint={`${dinero.pedidosSinAnticipo} ${dinero.pedidosSinAnticipo === 1 ? "pedido sin anticipo" : "pedidos sin anticipo"}`}
+            tone="warning"
+          />
+          <MoneyCard
             icon={AlertOctagon}
             label="Ingresos en riesgo"
             value={money(dinero.ingresosEnRiesgo)}
-            hint={`${risky.length} pedidos con datos faltantes`}
+            hint={`${risky.length} con datos faltantes`}
             tone="danger"
-          />
-          <MoneyCard
-            icon={Wallet}
-            label="Sin anticipo"
-            value={`${dinero.pedidosSinAnticipo}`}
-            hint={`${money(dinero.montoSinAnticipo)} pendientes de cobro`}
-            tone="warning"
           />
         </div>
       </section>
