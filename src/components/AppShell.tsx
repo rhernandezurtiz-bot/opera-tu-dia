@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  if (hydrated && !user) return <Navigate to="/landing" />;
+  if (hydrated && !user) return <Navigate to="/" />;
   if (hydrated && user && !onboarded) return <Navigate to="/onboarding" />;
 
   return (

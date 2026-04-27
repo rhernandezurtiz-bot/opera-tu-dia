@@ -41,7 +41,7 @@ function Landing() {
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
-          <Link to="/landing" className="flex items-center gap-2.5" aria-label="Operia">
+          <Link to="/" className="flex items-center gap-2.5" aria-label="Operia">
             <img src={operiaIcon} alt="" className="h-7 w-7 rounded-full" />
             <img src={operiaLogo} alt="Operia" className="h-[16px] w-auto object-contain" />
           </Link>

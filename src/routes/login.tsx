@@ -44,7 +44,7 @@ function Login() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-5 md:px-8 h-14 flex items-center border-b border-border">
-        <Link to="/landing" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5">
           <img src={operiaIcon} alt="" className="h-7 w-7 rounded-full" />
           <img src={operiaLogo} alt="Operia" className="h-[16px] w-auto" />
         </Link>
@@ -100,7 +100,7 @@ function Login() {
           </p>
           <p className="text-[12px] text-muted-foreground text-center mt-3">
             ¿Aún no conoces Operia?{" "}
-            <Link to="/landing" className="text-foreground underline">Ver cómo funciona</Link>
+            <Link to="/" className="text-foreground underline">Ver cómo funciona</Link>
           </p>
         </div>
       </main>
