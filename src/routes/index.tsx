@@ -334,3 +334,25 @@ function EmptyState({
     </Card>
   );
 }
+
+function FirstRunEmpty({ onStart }: { onStart: () => void }) {
+  return (
+    <Card className="rounded-2xl p-10 text-center border-dashed bg-secondary/30">
+      <div className="h-11 w-11 rounded-xl bg-foreground text-background grid place-items-center mx-auto mb-4">
+        <Plus className="h-5 w-5" />
+      </div>
+      <div className="text-[16px] font-semibold mb-1.5">
+        Pega tu primer mensaje de WhatsApp para empezar.
+      </div>
+      <p className="text-[13px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+        Operia lo convierte en un pedido organizado con cliente, fecha, hora y lo que falta.
+      </p>
+      <Button onClick={onStart} className="mt-5 h-10">
+        <Plus className="h-4 w-4" /> Crear mi primer pedido
+      </Button>
+      <p className="text-[11.5px] text-muted-foreground mt-5">
+        Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
+      </p>
+    </Card>
+  );
+}
