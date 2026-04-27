@@ -91,6 +91,37 @@ export function buildMissingMessage(cliente: string, faltantes: string[]): strin
   return `¡Hola${n ? " " + n : ""}! 😊 Para confirmar tu pedido me faltaría: ${lista}. ¿Me lo puedes compartir, por favor? ¡Gracias!`;
 }
 
+// Mensaje sugerido dinámico según tipo de orden y datos faltantes
+export function buildSmartReply(o: Order): string {
+  const n = firstName(o.cliente);
+  const saludo = `Hola${n ? " " + n : ""} 😊`;
+  const faltan = (o.faltantes || []).map((f) => f.toLowerCase());
+
+  if (o.tipo === "cita") {
+    if (faltan.length === 0) {
+      const cuando = o.horaEntrega ? `el ${o.fechaEntrega} a las ${o.horaEntrega}` : "en la fecha indicada";
+      return `${saludo} confirmo tu cita ${cuando}. ¿Te queda bien? ¡Te esperamos!`;
+    }
+    const lista = faltan.includes("hora") ? "el horario exacto y tu confirmación" : faltan.join(", ");
+    return `${saludo} para agendar tu cita necesito ${lista}. ¿Me lo confirmas?`;
+  }
+
+  if (o.tipo === "servicio") {
+    if (faltan.length === 0) {
+      return `${saludo} recibido tu solicitud de ${o.descripcion || "servicio"}. Te confirmo disponibilidad enseguida.`;
+    }
+    const base = ["los detalles del trabajo", "tu dirección exacta", "un teléfono de contacto"];
+    const pedir = faltan.length ? faltan.join(", ") : base.join(", ");
+    return `${saludo} para coordinar tu servicio necesito: ${pedir}. ¿Me lo puedes compartir?`;
+  }
+
+  // Producto / personalizado
+  if (faltan.length === 0) {
+    return `${saludo} confirmo tu pedido de ${o.descripcion || "producto"}. Coordinamos entrega según lo acordado. ¡Gracias!`;
+  }
+  return `${saludo} para confirmar tu pedido me falta: ${faltan.join(", ")}. ¿Me lo puedes compartir? ¡Gracias!`;
+}
+
 export function buildConfirmMessage(o: Order): string {
   const n = firstName(o.cliente);
   const desc = o.descripcion || "tu pedido";
