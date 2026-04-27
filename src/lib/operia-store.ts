@@ -263,20 +263,52 @@ function recompute(o: Order): Order {
   return { ...o, faltantes, riesgo };
 }
 
+// Keyword sets for type classification
+const SERVICE_KW = /\b(arreglar|arreglo|reparar|reparaci[oó]n|instalar|instalaci[oó]n|servicio|fuga|limpieza|limpiar|sesi[oó]n|masaje|plomer[ií]a|plomero|electricista|electricidad|pintar|pintura|fumigaci[oó]n|jardiner[ií]a|mudanza|cerrajero|mantenimiento|revisar|revisi[oó]n|destap|desazolve)\b/i;
+const APPOINTMENT_KW = /\b(cita|agendar|agenda|reservar|reserva|turno|appointment|consulta|consultorio|corte de pelo|corte y color|manicure|pedicure|peinado|barber[ií]a|dentista|m[eé]dico|doctor|terapia)\b/i;
+const PRODUCT_KW = /\b(pastel|cupcakes?|galletas?|postre|comida|men[uú]|pizza|hamburguesa|ramo|flores|arreglo floral|producto|piezas?|unidades?|encargar|comprar|llevar)\b/i;
+const CUSTOM_KW = /\b(personaliza|a medida|custom|cotizar|cotizaci[oó]n|presupuesto|brief|dise[ñn]o especial)\b/i;
+
+function buildSummary(tipo: OrderType, rawDesc: string, fechaTxt: string, horaTxt: string, direccion: string, lower: string): string {
+  let core = rawDesc.trim();
+  // Clean filler words
+  core = core.replace(/^(que\s+me\s+|me\s+|de\s+|un[oa]?\s+|el\s+la\s+|los\s+|las\s+)/i, "").trim();
+  if (tipo === "servicio") {
+    if (/fuga/.test(lower)) core = "Reparación de fuga";
+    else if (/masaje/.test(lower)) core = "Sesión de masaje";
+    else if (/limpieza|limpiar/.test(lower)) core = "Servicio de limpieza";
+    else if (/instalar|instalaci[oó]n/.test(lower)) core = core || "Instalación";
+    else if (/(reparar|reparaci[oó]n|arreglar|arreglo)/.test(lower) && core) core = `Reparación: ${core}`;
+    else if (!core) core = "Servicio solicitado";
+  } else if (tipo === "cita" && !core) {
+    core = "Cita / reserva";
+  } else if (!core) {
+    core = "Pedido";
+  }
+  // Capitalize
+  core = core.charAt(0).toUpperCase() + core.slice(1);
+  const parts = [core];
+  if (fechaTxt) parts.push(fechaTxt + (horaTxt ? ` ${horaTxt}` : ""));
+  if (direccion) parts.push(direccion);
+  return parts.join(" — ");
+}
+
 export function parseWhatsapp(text: string): Order {
   const lower = text.toLowerCase();
   const id = "o" + Math.random().toString(36).slice(2, 9);
 
-  // Tipo
+  // Tipo — prioridad: cita > servicio > personalizado > producto
   let tipo: OrderType = "producto";
-  if (/\b(cita|agendar|reservar|reserva|turno|appointment)\b/i.test(text)) tipo = "cita";
-  else if (/\b(servicio|masaje|consulta|sesi[oó]n|clase|taller|asesor[ií]a)\b/i.test(text)) tipo = "servicio";
-  else if (/\b(personaliza|a medida|custom|cotizar|presupuesto|brief|dise[ñn]o especial)\b/i.test(text)) tipo = "personalizado";
+  let tipoDetectado = false;
+  if (APPOINTMENT_KW.test(text)) { tipo = "cita"; tipoDetectado = true; }
+  else if (SERVICE_KW.test(text)) { tipo = "servicio"; tipoDetectado = true; }
+  else if (CUSTOM_KW.test(text)) { tipo = "personalizado"; tipoDetectado = true; }
+  else if (PRODUCT_KW.test(text)) { tipo = "producto"; tipoDetectado = true; }
 
   // Descripción heurística
   let descripcion = "";
-  const descMatch = text.match(/(?:quiero|necesito|busco|me gustar[ií]a|quisiera|comprar|encargar|reservar|agendar)\s+(?:un[oa]?\s+|el\s+|la\s+)?([^\n.,]{3,80})/i);
-  if (descMatch) descripcion = descMatch[1].trim();
+  const descMatch = text.match(/(?:quiero|necesito|busco|me gustar[ií]a|quisiera|comprar|encargar|reservar|agendar|que me|pueden|podr[ií]an)\s+(?:un[oa]?\s+|el\s+|la\s+)?([^\n.!?]{3,100})/i);
+  if (descMatch) descripcion = descMatch[1].trim().replace(/[,;].*$/, "");
 
   // Cantidad
   const cantMatch = text.match(/(\d+)\s+(?:piezas?|unidades?|productos?|cupcakes?|galletas?|sesiones?|personas?)/i);
@@ -300,15 +332,25 @@ export function parseWhatsapp(text: string): Order {
     }
   }
 
-  // Hora
+  // Hora — exacta o aproximada
   let horaEntrega = "";
-  const hMatch = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|hrs?|h)?/i);
-  if (hMatch && (hMatch[3] || /\b(a las|hora|cita|entrega)\b/i.test(text))) {
-    let h = parseInt(hMatch[1], 10);
-    const m = hMatch[2] || "00";
-    if (/pm/i.test(hMatch[3] || "") && h < 12) h += 12;
-    if (/am/i.test(hMatch[3] || "") && h === 12) h = 0;
+  let horaAprox = "";
+  const hMatch = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm|hrs?|h)\b/i);
+  const hContext = text.match(/\ba las\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  const m1 = hMatch || hContext;
+  if (m1) {
+    let h = parseInt(m1[1], 10);
+    const m = m1[2] || "00";
+    const suf = m1[3] || "";
+    if (/pm/i.test(suf) && h < 12) h += 12;
+    if (/am/i.test(suf) && h === 12) h = 0;
     if (h >= 0 && h <= 23) horaEntrega = `${String(h).padStart(2,"0")}:${m}`;
+  }
+  if (!horaEntrega) {
+    if (/\bpor la ma[ñn]ana\b|\ben la ma[ñn]ana\b/i.test(text)) horaAprox = "mañana";
+    else if (/\bpor la tarde\b|\ben la tarde\b/i.test(text)) horaAprox = "tarde";
+    else if (/\bpor la noche\b|\ben la noche\b|\bde noche\b/i.test(text)) horaAprox = "noche";
+    else if (/\bal mediod[ií]a\b/i.test(text)) horaAprox = "mediodía";
   }
 
   // Cliente
@@ -327,18 +369,42 @@ export function parseWhatsapp(text: string): Order {
 
   // Dirección
   let direccion = "";
-  const dirMatch = text.match(/(?:direcci[oó]n|env[ií]o a|entrega en|llevar a|domicilio en)[:\s]+([^\n.,]+)/i);
+  const dirMatch = text.match(/(?:direcci[oó]n|env[ií]o a|entrega en|llevar a|domicilio en|en)\s+((?:la\s+|el\s+)?(?:colonia\s+|col\.\s+)?[A-ZÁÉÍÓÚÑa-záéíóúñ][^\n.,]{2,60})/i);
   if (dirMatch) direccion = dirMatch[1].trim();
+  // Reconocer barrios/zonas comunes mencionadas sueltas
+  if (!direccion) {
+    const zonas = text.match(/\b(Providencia|Polanco|Condesa|Roma|Coyoac[aá]n|Satélite|Las Lomas|Centro|Norte|Sur)\b/);
+    if (zonas) direccion = zonas[1];
+  }
 
   // Detalles
   let detalles = "";
   const detMatch = text.match(/(?:que diga|texto|tema|mensaje|nota|detalle|incluir)[:\s]+([^\n.]+)/i);
   if (detMatch) detalles = detMatch[1].trim();
 
+  // Construir resumen limpio
+  const fechaTxt = fechaEntrega
+    ? (fechaEntrega === today() ? "hoy" : fechaEntrega === tomorrow() ? "mañana" : fechaEntrega)
+    : "";
+  const horaTxt = horaEntrega
+    ? `a las ${horaEntrega}`
+    : horaAprox
+      ? `por la ${horaAprox}`
+      : "";
+  const rawForSummary = descripcion || (tipoDetectado ? "" : "");
+  const resumen = buildSummary(tipo, rawForSummary, fechaTxt, horaTxt, direccion, lower);
+
+  // Notas: marcar hora aproximada y baja confianza
+  const notasArr: string[] = [];
+  if (horaAprox) notasArr.push(`Hora aproximada: ${horaAprox}`);
+  if (!tipoDetectado && !descripcion) notasArr.push("Datos no confirmados");
+
   return recompute({
-    id, cliente, telefono, tipo, descripcion, cantidad,
+    id, cliente, telefono, tipo,
+    descripcion: resumen,
+    cantidad,
     fechaEntrega, horaEntrega, direccion, detalles,
-    pago, precio: 0, notas: "", estado: "nuevo", riesgo: "bajo",
+    pago, precio: 0, notas: notasArr.join(" · "), estado: "nuevo", riesgo: "bajo",
     faltantes: [], checklist: {},
     mensajeOriginal: text, createdAt: Date.now(),
   });
