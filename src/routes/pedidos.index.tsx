@@ -4,7 +4,7 @@ import { AppShell, PageHeader, RiskBadge, StatusBadge, UrgencyChip } from "@/com
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useOperia, typeLabels } from "@/lib/operia-store";
+import { useOperia, typeLabels, type PaymentStatus } from "@/lib/operia-store";
 
 export const Route = createFileRoute("/pedidos/")({
   head: () => ({
@@ -90,7 +90,7 @@ function Pedidos() {
                     <div className="text-[14.5px] font-semibold tabular-nums mt-1">
                       ${(o.precio || 0).toLocaleString("es-MX")}
                     </div>
-                    <div className="text-[11px] text-muted-foreground capitalize">Pago: {o.pago}</div>
+                    <PayPill status={o.pago} />
                   </div>
                 </div>
               </Card>
@@ -113,5 +113,21 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
         </SelectContent>
       </Select>
     </div>
+  );
+}
+
+function PayPill({ status }: { status: PaymentStatus }) {
+  const map: Record<PaymentStatus, { label: string; cls: string }> = {
+    pendiente: { label: "Pendiente", cls: "bg-danger/8 text-danger/90 border-danger/25" },
+    anticipo_solicitado: { label: "Anticipo solicitado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
+    anticipo: { label: "Anticipo recibido", cls: "bg-warning/12 text-foreground/80 border-warning/30" },
+    pagado: { label: "Pagado", cls: "bg-success/10 text-success/90 border-success/20" },
+    vencido: { label: "Vencido", cls: "bg-danger/15 text-danger border-danger/40" },
+  };
+  const m = map[status];
+  return (
+    <span className={`inline-flex items-center px-2 h-[20px] rounded-full text-[10.5px] font-medium border ${m.cls}`}>
+      {m.label}
+    </span>
   );
 }

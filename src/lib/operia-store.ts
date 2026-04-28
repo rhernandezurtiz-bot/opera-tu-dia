@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type RiskLevel = "bajo" | "medio" | "alto";
 export type OrderStatus = "nuevo" | "confirmado" | "en_proceso" | "listo" | "entregado" | "cancelado";
-export type PaymentStatus = "pendiente" | "anticipo" | "pagado";
+export type PaymentStatus = "pendiente" | "anticipo_solicitado" | "anticipo" | "pagado" | "vencido";
 export type OrderType = "producto" | "servicio" | "cita" | "personalizado";
 
 export const typeLabels: Record<OrderType, string> = {
@@ -68,6 +68,7 @@ export interface Order {
   fechaTextoOriginal?: string; // texto exacto: "viernes", "mañana"
   ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
   ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
+  paymentLink?: string; // link de pago generado (simulado)
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
@@ -206,6 +207,7 @@ interface State {
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setClientNote: (key: string, note: string) => void;
+  generatePaymentLink: (id: string) => string;
 }
 
 export const useOperia = create<State>()(
@@ -258,6 +260,18 @@ export const useOperia = create<State>()(
         const has = s.negocio.tiposActivos.includes(t);
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
+      generatePaymentLink: (id) => {
+        const token = Math.random().toString(36).slice(2, 10);
+        const link = `https://pay.operia.app/${id}/${token}`;
+        set((s) => ({
+          orders: s.orders.map((o) =>
+            o.id === id
+              ? recompute({ ...o, paymentLink: link, pago: o.pago === "pagado" ? o.pago : "anticipo_solicitado" })
+              : o
+          ),
+        }));
+        return link;
+      },
     }),
     { name: "operia-store-v4" }
   )
@@ -287,19 +301,32 @@ function recompute(o: Order): Order {
     else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
   }
   // Pago
-  if (o.pago === "pendiente") faltantes.push("Pago");
+  if (o.pago !== "pagado" && o.pago !== "anticipo") faltantes.push("Pago");
   // Contacto
   if (!o.telefono) faltantes.push("Contacto");
+
+  // Auto-vencimiento: si hay fecha pasada y no está pagado/entregado/cancelado
+  let pago = o.pago;
+  const todayISO = new Date().toISOString().slice(0, 10);
+  if (
+    pago !== "pagado" &&
+    o.fechaEntrega &&
+    o.fechaEntrega < todayISO &&
+    o.estado !== "entregado" &&
+    o.estado !== "cancelado"
+  ) {
+    pago = "vencido";
+  }
 
   // Riesgo: >2 críticos => ALTO; 1–2 => MEDIO; 0 => BAJO
   const criticos = faltantes.filter((f) =>
     /Producto|Fecha|Hora|Dirección|Contacto/i.test(f)
   ).length;
   let riesgo: RiskLevel = "bajo";
-  if (criticos > 2 || o.ambiguo) riesgo = "alto";
+  if (criticos > 2 || o.ambiguo || pago === "vencido") riesgo = "alto";
   else if (faltantes.length >= 1) riesgo = "medio";
 
-  return { ...o, faltantes, riesgo };
+  return { ...o, pago, faltantes, riesgo };
 }
 
 // Keyword sets for type classification

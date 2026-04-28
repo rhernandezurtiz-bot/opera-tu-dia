@@ -71,7 +71,7 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
     if ((o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado") {
       ingresosEnRiesgo += monto;
     }
-    if (o.pago === "pendiente" && o.estado !== "entregado") {
+    if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado" || o.pago === "vencido") && o.estado !== "entregado") {
       pedidosSinAnticipo += 1;
       montoSinAnticipo += monto;
     }
@@ -168,6 +168,9 @@ export function buildReadyMessage(o: Order): string {
 export function buildPaymentReminder(o: Order): string {
   const n = firstName(o.cliente);
   const monto = o.precio ? ` (${money(o.precio)})` : "";
+  if (o.paymentLink) {
+    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido${monto}, puedes realizar el anticipo aquí: ${o.paymentLink}`;
+  }
   return `Hola${n ? " " + n : ""} 😊 te recuerdo el anticipo${monto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
 }
 
@@ -228,12 +231,23 @@ export function nextAction(o: Order): NextAction | null {
     };
   }
 
+  // 2.5) Pago vencido → prioridad máxima
+  if (o.pago === "vencido") {
+    return {
+      kind: "recordar_pago",
+      label: "Cobrar pago vencido",
+      reason: "Pago vencido — fecha de entrega ya pasó",
+      message: buildPaymentReminder(o),
+      tone: "danger",
+    };
+  }
+
   // 3) Confirmado pero sin anticipo → solicitar anticipo
-  if (o.estado === "confirmado" && o.pago === "pendiente") {
+  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "anticipo_solicitado")) {
     return {
       kind: "solicitar_anticipo",
-      label: "Solicitar anticipo",
-      reason: "Sin anticipo recibido",
+      label: o.pago === "anticipo_solicitado" ? "Reenviar link de pago" : "Solicitar anticipo",
+      reason: o.pago === "anticipo_solicitado" ? "Link enviado, sin pago aún" : "Sin anticipo recibido",
       message: buildPaymentReminder(o),
       tone: "warning",
     };
@@ -286,7 +300,7 @@ export function nextAction(o: Order): NextAction | null {
   }
 
   // 7) Pago pendiente sin urgencia → recordar pago
-  if (o.pago === "pendiente") {
+  if (o.pago === "pendiente" || o.pago === "anticipo_solicitado") {
     return {
       kind: "recordar_pago",
       label: "Recordar pago",

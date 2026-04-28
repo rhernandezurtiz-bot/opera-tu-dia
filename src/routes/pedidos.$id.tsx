@@ -63,6 +63,7 @@ function Detalle() {
   const setClientNote = useOperia((s) => s.setClientNote);
   const toggleChecklist = useOperia((s) => s.toggleChecklist);
   const updateOrder = useOperia((s) => s.updateOrder);
+  const generatePaymentLink = useOperia((s) => s.generatePaymentLink);
   const removeOrder = useOperia((s) => s.removeOrder);
   const navigate = useNavigate();
 
@@ -276,15 +277,66 @@ function Detalle() {
               </div>
             </div>
 
+            {order.pago === "vencido" && (
+              <div className="p-3 rounded-2xl bg-danger/10 border border-danger/30 mb-3 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 mt-0.5 text-danger shrink-0" />
+                <div className="text-[13px]">
+                  <div className="font-medium text-danger">Pago vencido</div>
+                  <div className="text-foreground/80">
+                    La fecha de entrega ya pasó y no hay pago registrado. Contacta al cliente cuanto antes.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {order.pago !== "pagado" && (
-              <div className="p-3 rounded-2xl bg-secondary/40 border border-border">
-                <div className="text-[12.5px] text-muted-foreground mb-2">Mensaje de recordatorio:</div>
-                <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-2">
-                  {buildPaymentReminder(order)}
-                </p>
-                <Button size="sm" className="rounded-full" onClick={() => copiar(buildPaymentReminder(order))}>
-                  <Copy className="h-3.5 w-3.5 mr-1" /> Recordar pago
-                </Button>
+              <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
+                <div>
+                  <div className="text-[12.5px] text-muted-foreground mb-1.5">Link de pago:</div>
+                  {order.paymentLink ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-[12px] px-2 py-1 rounded bg-background border border-border break-all flex-1 min-w-0">
+                        {order.paymentLink}
+                      </code>
+                      <Button size="sm" variant="ghost" className="rounded-full h-8" onClick={() => copiar(order.paymentLink!)}>
+                        <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="rounded-full h-8"
+                        onClick={() => {
+                          const link = generatePaymentLink(order.id);
+                          toast.success("Link regenerado");
+                          copiar(link);
+                        }}
+                      >
+                        Regenerar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => {
+                        generatePaymentLink(order.id);
+                        toast.success("Link de pago generado");
+                      }}
+                    >
+                      <Wallet className="h-3.5 w-3.5 mr-1" /> Generar link de pago
+                    </Button>
+                  )}
+                </div>
+
+                <div className="border-t border-border pt-3">
+                  <div className="text-[12.5px] text-muted-foreground mb-1.5">Mensaje sugerido:</div>
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-2">
+                    {buildPaymentReminder(order)}
+                  </p>
+                  <Button size="sm" className="rounded-full" onClick={() => copiar(buildPaymentReminder(order))}>
+                    <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
+                  </Button>
+                </div>
               </div>
             )}
           </Card>
@@ -444,9 +496,11 @@ function PipelineButton({
 
 function PaymentBadge({ status }: { status: PaymentStatus }) {
   const map: Record<PaymentStatus, { label: string; cls: string }> = {
-    pendiente: { label: "Sin anticipo", cls: "bg-danger/8 text-danger/90 border-danger/25" },
+    pendiente: { label: "Pendiente", cls: "bg-danger/8 text-danger/90 border-danger/25" },
+    anticipo_solicitado: { label: "Anticipo solicitado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
     anticipo: { label: "Anticipo recibido", cls: "bg-warning/12 text-foreground/80 border-warning/30" },
-    pagado: { label: "Pagado completo", cls: "bg-success/10 text-success/90 border-success/20" },
+    pagado: { label: "Pagado", cls: "bg-success/10 text-success/90 border-success/20" },
+    vencido: { label: "Vencido", cls: "bg-danger/15 text-danger border-danger/40" },
   };
   const m = map[status];
   return (
