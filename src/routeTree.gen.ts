@@ -26,6 +26,7 @@ import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
 import { Route as InboxIndexRouteImport } from './routes/inbox.index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
+import { Route as InboxMetaRouteImport } from './routes/inbox.meta'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
 import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
@@ -33,6 +34,7 @@ import { Route as ApiSendMessageRouteImport } from './routes/api/send-message'
 import { Route as ApiSendInstagramRouteImport } from './routes/api/send-instagram'
 import { Route as ApiSendFacebookRouteImport } from './routes/api/send-facebook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
+import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicWebhooksInstagramRouteImport } from './routes/api/public/webhooks/instagram'
 import { Route as ApiPublicWebhooksFacebookRouteImport } from './routes/api/public/webhooks/facebook'
@@ -122,6 +124,11 @@ const PedidosIdRoute = PedidosIdRouteImport.update({
   path: '/pedidos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxMetaRoute = InboxMetaRouteImport.update({
+  id: '/inbox/meta',
+  path: '/inbox/meta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InboxIdRoute = InboxIdRouteImport.update({
   id: '/inbox/$id',
   path: '/inbox/$id',
@@ -155,6 +162,11 @@ const ApiSendFacebookRoute = ApiSendFacebookRouteImport.update({
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   id: '/api/public/webhooks/stripe',
   path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksMetaRoute = ApiPublicWebhooksMetaRouteImport.update({
+  id: '/api/public/webhooks/meta',
+  path: '/api/public/webhooks/meta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicWebhooksMercadopagoRoute =
@@ -196,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
@@ -203,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesByTo {
@@ -225,6 +239,7 @@ export interface FileRoutesByTo {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
@@ -232,6 +247,7 @@ export interface FileRoutesByTo {
   '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesById {
@@ -255,6 +271,7 @@ export interface FileRoutesById {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
@@ -262,6 +279,7 @@ export interface FileRoutesById {
   '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRouteTypes {
@@ -286,6 +304,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes/'
     | '/inbox/'
@@ -293,6 +312,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -315,6 +335,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes'
     | '/inbox'
@@ -322,6 +343,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
   id:
     | '__root__'
@@ -344,6 +366,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes/'
     | '/inbox/'
@@ -351,6 +374,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
 }
@@ -374,6 +398,7 @@ export interface RootRouteChildren {
   ApiSendWhatsappRoute: typeof ApiSendWhatsappRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
   InboxIdRoute: typeof InboxIdRoute
+  InboxMetaRoute: typeof InboxMetaRoute
   PedidosIdRoute: typeof PedidosIdRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
@@ -381,6 +406,7 @@ export interface RootRouteChildren {
   ApiPublicWebhooksFacebookRoute: typeof ApiPublicWebhooksFacebookRoute
   ApiPublicWebhooksInstagramRoute: typeof ApiPublicWebhooksInstagramRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
+  ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
@@ -505,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PedidosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox/meta': {
+      id: '/inbox/meta'
+      path: '/inbox/meta'
+      fullPath: '/inbox/meta'
+      preLoaderRoute: typeof InboxMetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inbox/$id': {
       id: '/inbox/$id'
       path: '/inbox/$id'
@@ -554,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/meta': {
+      id: '/api/public/webhooks/meta'
+      path: '/api/public/webhooks/meta'
+      fullPath: '/api/public/webhooks/meta'
+      preLoaderRoute: typeof ApiPublicWebhooksMetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/mercadopago': {
       id: '/api/public/webhooks/mercadopago'
       path: '/api/public/webhooks/mercadopago'
@@ -598,6 +638,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSendWhatsappRoute: ApiSendWhatsappRoute,
   ClientesKeyRoute: ClientesKeyRoute,
   InboxIdRoute: InboxIdRoute,
+  InboxMetaRoute: InboxMetaRoute,
   PedidosIdRoute: PedidosIdRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
@@ -605,6 +646,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksFacebookRoute: ApiPublicWebhooksFacebookRoute,
   ApiPublicWebhooksInstagramRoute: ApiPublicWebhooksInstagramRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
+  ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport

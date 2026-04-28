@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      meta_channels: {
+        Row: {
+          account_label: string | null
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          connected: boolean
+          created_at: string
+          external_account_id: string | null
+          id: string
+          last_message_at: string | null
+          owner_id: string
+          reply_mode: Database["public"]["Enums"]["meta_reply_mode"]
+          updated_at: string
+        }
+        Insert: {
+          account_label?: string | null
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          connected?: boolean
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          owner_id: string
+          reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
+          updated_at?: string
+        }
+        Update: {
+          account_label?: string | null
+          channel?: Database["public"]["Enums"]["meta_channel_type"]
+          connected?: boolean
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          owner_id?: string
+          reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_conversations: {
+        Row: {
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          created_at: string
+          external_conversation_id: string
+          external_sender_id: string
+          id: string
+          last_message_at: string
+          last_message_preview: string | null
+          owner_id: string
+          sender_name: string | null
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          created_at?: string
+          external_conversation_id: string
+          external_sender_id: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          owner_id: string
+          sender_name?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["meta_channel_type"]
+          created_at?: string
+          external_conversation_id?: string
+          external_sender_id?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          owner_id?: string
+          sender_name?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_message_logs: {
+        Row: {
+          channel: Database["public"]["Enums"]["meta_channel_type"] | null
+          created_at: string
+          direction: Database["public"]["Enums"]["meta_message_direction"]
+          id: string
+          info: Json | null
+          ok: boolean
+          owner_id: string | null
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["meta_channel_type"] | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["meta_message_direction"]
+          id?: string
+          info?: Json | null
+          ok: boolean
+          owner_id?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["meta_channel_type"] | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["meta_message_direction"]
+          id?: string
+          info?: Json | null
+          ok?: boolean
+          owner_id?: string | null
+        }
+        Relationships: []
+      }
+      meta_messages: {
+        Row: {
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          conversation_id: string
+          created_at: string
+          decision: Json | null
+          direction: Database["public"]["Enums"]["meta_message_direction"]
+          external_message_id: string | null
+          id: string
+          owner_id: string
+          raw_payload: Json | null
+          status: Database["public"]["Enums"]["meta_message_status"]
+          text: string | null
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["meta_channel_type"]
+          conversation_id: string
+          created_at?: string
+          decision?: Json | null
+          direction: Database["public"]["Enums"]["meta_message_direction"]
+          external_message_id?: string | null
+          id?: string
+          owner_id: string
+          raw_payload?: Json | null
+          status?: Database["public"]["Enums"]["meta_message_status"]
+          text?: string | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["meta_channel_type"]
+          conversation_id?: string
+          created_at?: string
+          decision?: Json | null
+          direction?: Database["public"]["Enums"]["meta_message_direction"]
+          external_message_id?: string | null
+          id?: string
+          owner_id?: string
+          raw_payload?: Json | null
+          status?: Database["public"]["Enums"]["meta_message_status"]
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "meta_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +183,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      meta_channel_type: "whatsapp" | "instagram" | "facebook"
+      meta_message_direction: "inbound" | "outbound"
+      meta_message_status:
+        | "received"
+        | "pending"
+        | "sent"
+        | "failed"
+        | "delivered"
+        | "read"
+      meta_reply_mode: "manual" | "suggested" | "auto"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +319,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      meta_channel_type: ["whatsapp", "instagram", "facebook"],
+      meta_message_direction: ["inbound", "outbound"],
+      meta_message_status: [
+        "received",
+        "pending",
+        "sent",
+        "failed",
+        "delivered",
+        "read",
+      ],
+      meta_reply_mode: ["manual", "suggested", "auto"],
+    },
   },
 } as const
