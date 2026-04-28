@@ -239,6 +239,17 @@ function Detalle() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
+          {/* Validación contra catálogo */}
+          <CatalogValidationBlock
+            validation={validation}
+            onCopy={(t) => copiar(t)}
+            onWhatsApp={(t) => {
+              if (!order.telefono) { toast.error("Falta teléfono del cliente"); return; }
+              window.open(`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(t)}`, "_blank", "noopener,noreferrer");
+            }}
+            onAlternative={() => buildAlternativeOffer(catalog, order.tipo)}
+          />
+
           {/* Cobro del pedido */}
           <Card className="p-5 rounded-xl">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
