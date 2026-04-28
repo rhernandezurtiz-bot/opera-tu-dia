@@ -315,6 +315,8 @@ export function isReadyForAutoPayment(o: Order): boolean {
   const cobrable = o.pago !== "pagado" && o.pago !== "no_requerido";
   return fechaOk && direccionOk && montoOk && cobrable;
 }
+
+// Mensaje automático tras confirmar pago
 export function buildPaymentReceivedMessage(o: Order): string {
   const n = firstName(o.cliente);
   const fechaTxt = o.fechaEntrega
