@@ -344,6 +344,7 @@ interface State {
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setInstagram: (c: Partial<InstagramConfig>) => void;
+  setFacebook: (c: Partial<FacebookConfig>) => void;
   setChannelMode: (m: ChannelMode) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
