@@ -10,6 +10,7 @@ import { useOperia, typeLabels, type RiskRules, type OrderType, type AutoReplyMo
 import { DECISION_LABELS, INTENT_LABELS } from "@/lib/auto-reply";
 import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook, Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { MetaChannelsPanel } from "@/components/MetaChannelsPanel";
 
 export const Route = createFileRoute("/configuracion")({
   head: () => ({
@@ -54,6 +55,10 @@ function Config() {
   return (
     <AppShell>
       <PageHeader title="Configuración" subtitle="Personaliza Operia para tu negocio." />
+
+      <div className="mb-5">
+        <MetaChannelsPanel />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
         <Card className="p-5 rounded-xl">
