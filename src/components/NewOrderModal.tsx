@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2, Wallet, MessageCircle } from "lucide-react";
 import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
+import { useCatalog } from "@/lib/catalog-store";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
 import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
 import { toast } from "sonner";
@@ -100,6 +102,13 @@ export function NewOrderModal() {
 function PreviewPanel({ draft, onBack, onSave, onEdit, onCopy }: {
   draft: Order; onBack: () => void; onSave: () => void; onEdit: () => void; onCopy: () => void;
 }) {
+  const catalog = useCatalog((s) => s.items);
+  const allOrders = useOperia((s) => s.orders);
+  const decision = useMemo(
+    () => evaluateOrderDecision({ order: draft, catalog, allOrders }),
+    [draft, catalog, allOrders],
+  );
+
   const fechaTxt = draft.fechaEntrega
     ? `${draft.fechaEntrega}${draft.horaEntrega ? ` a las ${draft.horaEntrega}` : ""}`
     : "fecha pendiente";
@@ -121,11 +130,16 @@ function PreviewPanel({ draft, onBack, onSave, onEdit, onCopy }: {
         {draft.detalles && <Row label="Detalles" value={draft.detalles} />}
       </div>
 
+      <DecisionPanel decision={decision} onCopyMessage={() => {
+        navigator.clipboard.writeText(decision.customerMessage);
+        toast.success("Mensaje copiado");
+      }} />
+
       {draft.faltantes.length > 0 && (
-        <div className="p-4 rounded-2xl bg-warning/15 border border-warning/40">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-4 w-4" />
-            <span className="font-medium text-sm">Faltan datos</span>
+        <div className="p-4 rounded-2xl bg-warning/10 border border-warning/30">
+          <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground uppercase tracking-wide">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>Datos pendientes (interno)</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {draft.faltantes.map((f) => (
@@ -143,11 +157,71 @@ function PreviewPanel({ draft, onBack, onSave, onEdit, onCopy }: {
           <Pencil className="h-4 w-4 mr-2" /> Editar
         </Button>
         {draft.faltantes.length > 0 && (
-          <Button onClick={onCopy} variant="secondary" className="rounded-full">
-            <Copy className="h-4 w-4 mr-2" /> Copiar mensaje para datos faltantes
+          <Button onClick={onCopy} variant="ghost" className="rounded-full">
+            <Copy className="h-4 w-4 mr-2" /> Copiar pedido de datos
           </Button>
         )}
         <Button onClick={onBack} variant="ghost" className="rounded-full">Volver</Button>
+      </div>
+    </div>
+  );
+}
+
+const TONE_CLASS: Record<string, string> = {
+  success: "bg-success/10 border-success/30 text-success",
+  warning: "bg-warning/10 border-warning/30 text-warning-foreground",
+  danger: "bg-danger/10 border-danger/30 text-danger",
+  muted: "bg-muted border-border text-muted-foreground",
+};
+
+function DecisionPanel({ decision, onCopyMessage }: { decision: OrderDecision; onCopyMessage: () => void }) {
+  const tone = DECISION_TONE[decision.decisionType];
+  return (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-wrap">
+        <Sparkles className="h-4 w-4 text-primary" />
+        <span className="font-medium text-sm">Decisión de Operia</span>
+        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${TONE_CLASS[tone]}`}>
+          {DECISION_LABEL[decision.decisionType]}
+        </span>
+        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${decision.canCharge ? "bg-success/10 border-success/30 text-success" : "bg-muted border-border text-muted-foreground"}`}>
+          {decision.canCharge ? "Puede cobrarse" : "No cobrar aún"}
+        </span>
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="text-[12.5px] text-muted-foreground">
+          <span className="font-medium text-foreground">Motivo:</span> {decision.reason}
+        </div>
+        {decision.alternatives.length > 0 && (
+          <div>
+            <div className="text-[11.5px] uppercase tracking-wide text-muted-foreground mb-1">Alternativas sugeridas</div>
+            <ul className="space-y-1">
+              {decision.alternatives.map((a, i) => (
+                <li key={i} className="text-sm bg-secondary/40 border border-border rounded-lg px-3 py-1.5">
+                  {a.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <div>
+          <div className="text-[11.5px] uppercase tracking-wide text-muted-foreground mb-1 flex items-center gap-1">
+            <MessageCircle className="h-3 w-3" /> Mensaje listo para enviar
+          </div>
+          <p className="text-[13.5px] whitespace-pre-wrap bg-background border border-border rounded-lg p-3">
+            {decision.customerMessage}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={onCopyMessage}>
+            <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
+          </Button>
+          {decision.canCharge && (
+            <span className="inline-flex items-center text-[11.5px] text-success gap-1 px-2">
+              <Wallet className="h-3.5 w-3.5" /> Listo para generar cobro
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -161,3 +235,4 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
     </div>
   );
 }
+

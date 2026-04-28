@@ -30,6 +30,7 @@ import {
   nextAction,
 } from "@/lib/ui-store";
 import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer, AVAILABILITY_LABEL, type CatalogValidation, type CheckResult, type AvailabilityStatus } from "@/lib/catalog-store";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
 import {
   ArrowLeft,
   Copy,
@@ -108,6 +109,9 @@ function Detalle() {
   const validation = validateOrder(order, catalog, allOrders);
   const fueraCatalogo = validation.status === "fuera_catalogo";
   const blockPayment = validation.blockPayment;
+
+  // Motor de decisión comercial
+  const decision = evaluateOrderDecision({ order, catalog, allOrders });
 
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
@@ -240,6 +244,18 @@ function Detalle() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
+          {/* Decisión comercial */}
+          <DecisionCard
+            decision={decision}
+            telefono={order.telefono}
+            canCharge={decision.canCharge && !blockPayment}
+            onGenerarCobro={() => {
+              const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
+              generatePaymentLink(order.id, provider);
+              toast.success("Link de pago generado");
+            }}
+          />
+
           {/* Validación contra catálogo */}
           <CatalogValidationBlock
             validation={validation}
@@ -891,6 +907,102 @@ function CatalogValidationBlock({
         }}>
           <Sparkles className="h-3.5 w-3.5 mr-1" /> Ofrecer alternativa
         </Button>
+      </div>
+    </Card>
+  );
+}
+
+/* ============== Decisión comercial ============== */
+
+const DECISION_TONE_CLASS: Record<string, string> = {
+  success: "bg-success/10 border-success/30 text-success",
+  warning: "bg-warning/10 border-warning/30",
+  danger: "bg-danger/10 border-danger/30 text-danger",
+  muted: "bg-muted border-border text-muted-foreground",
+};
+
+function DecisionCard({
+  decision, telefono, canCharge, onGenerarCobro,
+}: {
+  decision: OrderDecision;
+  telefono: string;
+  canCharge: boolean;
+  onGenerarCobro: () => void;
+}) {
+  const tone = DECISION_TONE[decision.decisionType];
+
+  const enviarWhatsApp = () => {
+    if (!telefono) { toast.error("Falta teléfono del cliente"); return; }
+    const url = `https://wa.me/${telefono.replace(/\D/g, "")}?text=${encodeURIComponent(decision.customerMessage)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const copiarMensaje = () => {
+    navigator.clipboard.writeText(decision.customerMessage);
+    toast.success("Mensaje copiado");
+  };
+
+  const copiarAlternativa = () => {
+    if (!decision.alternatives.length) return;
+    const txt = decision.alternatives.map((a) => `• ${a.label}`).join("\n");
+    navigator.clipboard.writeText(`Te puedo ofrecer estas opciones:\n\n${txt}\n\n¿Cuál te late?`);
+    toast.success("Alternativa copiada");
+  };
+
+  return (
+    <Card className="p-5 rounded-xl">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <Sparkles className="h-4 w-4 text-primary" />
+        <h3 className="font-display text-lg">Decisión comercial</h3>
+        <span className={`text-[11.5px] px-2 py-0.5 rounded-full border ${DECISION_TONE_CLASS[tone]}`}>
+          {DECISION_LABEL[decision.decisionType]}
+        </span>
+        <span className={`text-[11.5px] px-2 py-0.5 rounded-full border ${canCharge ? "bg-success/10 border-success/30 text-success" : "bg-muted border-border text-muted-foreground"}`}>
+          {canCharge ? "Puede cobrarse" : "No cobrar aún"}
+        </span>
+      </div>
+
+      <div className="text-[13px] text-muted-foreground mb-3">
+        <span className="font-medium text-foreground">Motivo:</span> {decision.reason}
+        <span className="mx-2">·</span>
+        <span className="font-medium text-foreground">Siguiente acción:</span> {decision.recommendedAction}
+      </div>
+
+      {decision.alternatives.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[11.5px] uppercase tracking-wide text-muted-foreground mb-1.5">Alternativas sugeridas</div>
+          <ul className="space-y-1">
+            {decision.alternatives.map((a, i) => (
+              <li key={i} className="text-sm bg-secondary/40 border border-border rounded-lg px-3 py-1.5">{a.label}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mb-3">
+        <div className="text-[11.5px] uppercase tracking-wide text-muted-foreground mb-1.5">Mensaje listo para enviar</div>
+        <p className="text-[13.5px] whitespace-pre-wrap bg-background border border-border rounded-lg p-3">
+          {decision.customerMessage}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" className="rounded-full" onClick={enviarWhatsApp}>
+          <Send className="h-3.5 w-3.5 mr-1" /> Enviar respuesta
+        </Button>
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={copiarMensaje}>
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+        </Button>
+        {decision.alternatives.length > 0 && (
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={copiarAlternativa}>
+            <Sparkles className="h-3.5 w-3.5 mr-1" /> Ofrecer alternativa
+          </Button>
+        )}
+        {canCharge && (
+          <Button size="sm" variant="secondary" className="rounded-full" onClick={onGenerarCobro}>
+            <Wallet className="h-3.5 w-3.5 mr-1" /> Generar cobro
+          </Button>
+        )}
       </div>
     </Card>
   );
