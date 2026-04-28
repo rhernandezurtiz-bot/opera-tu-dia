@@ -325,9 +325,8 @@ export const useOperia = create<State>()(
         const has = s.negocio.tiposActivos.includes(t);
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
-      generatePaymentLink: (id, providerArg) => {
-        const state = useOperia.getState();
-        const order = state.orders.find((o) => o.id === id);
+      generatePaymentLink: (id: string, providerArg?: PaymentProvider): string => {
+        const state = get();
         const cfg = state.negocio.payments;
         // Si el config dice "ambos", default = mercadopago a menos que se pase explícito
         const provider: PaymentProvider =
