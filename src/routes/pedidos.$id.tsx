@@ -260,19 +260,19 @@ function Detalle() {
               <div className="flex items-end gap-2 flex-wrap">
                 <Button
                   size="sm"
-                  variant={order.pago === "anticipo" ? "default" : "secondary"}
+                  variant={order.pago === "pagado" ? "default" : "secondary"}
                   className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "anticipo" }); toast.success("Anticipo recibido"); }}
+                  onClick={() => { updateOrder(order.id, { pago: "pagado", paymentPaidAt: Date.now(), checklist: { ...order.checklist, pago: true } }); toast.success("Pago marcado como recibido"); }}
                 >
-                  Marcar anticipo recibido
+                  Marcar como pagado
                 </Button>
                 <Button
                   size="sm"
-                  variant={order.pago === "pagado" ? "default" : "secondary"}
+                  variant="ghost"
                   className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "pagado" }); toast.success("Pago completo"); }}
+                  onClick={() => { updateOrder(order.id, { pago: "no_requerido" }); toast.success("Cobro marcado como no requerido"); }}
                 >
-                  Marcar como pagado
+                  Sin cobro
                 </Button>
               </div>
             </div>
