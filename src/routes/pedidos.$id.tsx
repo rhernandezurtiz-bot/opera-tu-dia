@@ -16,6 +16,7 @@ import {
   getClientStats,
   type OrderStatus,
   type PaymentStatus,
+  type PaymentProvider,
 } from "@/lib/operia-store";
 import {
   buildMissingMessage,
