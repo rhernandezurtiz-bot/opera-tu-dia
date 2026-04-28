@@ -527,7 +527,30 @@ export const useOperia = create<State>()(
       setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
-    { name: "operia-store-v6", version: 6 }
+    {
+      name: "operia-store-v7",
+      version: 7,
+      migrate: (persisted: any, version) => {
+        if (!persisted) return persisted;
+        if (version < 7) {
+          if (Array.isArray(persisted.messages)) {
+            persisted.messages = persisted.messages.map((m: any) => ({ canal: "whatsapp", ...m }));
+          }
+          if (Array.isArray(persisted.orders)) {
+            persisted.orders = persisted.orders.map((o: any) => ({ canal: o.canal ?? "whatsapp", ...o }));
+          }
+          if (!persisted.instagram) {
+            persisted.instagram = {
+              igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "",
+              webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram",
+              conectado: false,
+            };
+          }
+          if (!persisted.channelMode) persisted.channelMode = "demo";
+        }
+        return persisted;
+      },
+    }
   )
 );
 
