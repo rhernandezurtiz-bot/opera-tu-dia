@@ -808,10 +808,8 @@ function Landing() {
             tu operación.
           </p>
           <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-            <Button asChild size="lg" className="h-12 px-6">
-              <a href="mailto:hola@operia.app?subject=Solicitar%20demo%20Operia">
-                Solicitar demo <ArrowRight className="h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-12 px-6" onClick={openDemo}>
+              Solicitar demo <ArrowRight className="h-4 w-4" />
             </Button>
             <Button asChild size="lg" variant="ghost" className="h-12 px-5">
               <Link to="/login">Ver demo de plataforma</Link>
