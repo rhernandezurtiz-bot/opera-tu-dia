@@ -94,7 +94,21 @@ export interface Order {
   paymentReminderAt?: number; // último recordatorio enviado
   paymentEvents?: PaymentEvent[];
   paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
+  paymentProvider?: PaymentProvider; // proveedor usado para el link
+  anticipoMonto?: number; // monto del anticipo cobrado/solicitado (calculado)
 }
+
+export type PaymentProvider = "mercadopago" | "stripe";
+
+export interface PaymentsConfig {
+  proveedorPrincipal: "mercadopago" | "stripe" | "ambos";
+  moneda: "MXN" | "USD";
+  modo: "simulacion" | "produccion";
+  // Las credenciales reales NUNCA viven en el store ni en frontend.
+  // Estos campos son solo placeholders visuales para Ajustes.
+  mercadopagoConectado: boolean;
+  stripeConectado: boolean;
+  webhookUrl: string;
 
 export interface Miembro { id: string; nombre: string; rol: string; }
 
