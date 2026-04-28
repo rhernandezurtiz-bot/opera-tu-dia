@@ -3,14 +3,15 @@ import { useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useOperia, type WhatsappStatus } from "@/lib/operia-store";
+import { ChannelBadge } from "@/components/ChannelBadge";
+import { useOperia, type WhatsappStatus, type Channel, CHANNEL_LABELS } from "@/lib/operia-store";
 import { MessageCircle, Search, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/inbox/")({
   head: () => ({
     meta: [
-      { title: "WhatsApp Inbox — Operia" },
-      { name: "description", content: "Mensajes entrantes de WhatsApp listos para convertir en órdenes." },
+      { title: "Inbox multicanal — Operia" },
+      { name: "description", content: "Mensajes entrantes de WhatsApp, Instagram y Facebook listos para convertir en órdenes." },
     ],
   }),
   component: InboxPage,
@@ -35,13 +36,21 @@ function InboxPage() {
   const whatsapp = useOperia((s) => s.whatsapp);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<WhatsappStatus | "todos">("todos");
+  const [canalFilter, setCanalFilter] = useState<Channel | "todos">("todos");
 
   const filtered = messages
     .filter((m) => (filter === "todos" ? true : m.estado === filter))
+    .filter((m) => (canalFilter === "todos" ? true : (m.canal ?? "whatsapp") === canalFilter))
     .filter((m) =>
       !q ? true : (m.cliente + " " + m.telefono + " " + m.texto).toLowerCase().includes(q.toLowerCase())
     )
     .sort((a, b) => b.recibidoAt - a.recibidoAt);
+
+  const countsByCanal = messages.reduce<Record<string, number>>((acc, m) => {
+    const c = m.canal ?? "whatsapp";
+    acc[c] = (acc[c] ?? 0) + 1;
+    return acc;
+  }, {});
 
   return (
     <AppShell>
