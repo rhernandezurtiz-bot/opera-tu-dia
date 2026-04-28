@@ -201,15 +201,15 @@ function Landing() {
       <section id="contacto" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
         <Card className="p-8 md:p-12 rounded-2xl text-center">
           <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight max-w-2xl mx-auto">
-            Empieza a ordenar tu día en menos de 2 minutos.
+            Cada pedido perdido es dinero que ya no vuelve.
           </h2>
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-[14.5px]">
-            Sin tarjeta. Sin instalación. Pega tu primer mensaje y verás la diferencia.
+            Empieza gratis hoy. Pega tu primer mensaje y deja de perder pedidos en WhatsApp.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
               <Link to="/login">
-                Probar Operia <ArrowRight className="h-4 w-4" />
+                Empieza gratis <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <a
