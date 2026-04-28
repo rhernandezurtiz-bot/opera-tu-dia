@@ -1100,6 +1100,7 @@ function Plan({
   enterprise,
   ctaLabel,
   ctaHref,
+  onCta,
 }: {
   name: string;
   price: string;
@@ -1109,6 +1110,7 @@ function Plan({
   enterprise?: boolean;
   ctaLabel?: string;
   ctaHref?: string;
+  onCta?: () => void;
 }) {
   const dark = highlighted;
   return (
