@@ -1,30 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { sendViaMeta } from "@/lib/meta-send";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
- * POST /api/send-message — endpoint UNIFICADO multicanal (stub).
+ * POST /api/send-message — endpoint unificado multicanal.
+ * Despacha al canal Meta correspondiente y registra en meta_message_logs.
  *
- * Cuerpo: { canal: "whatsapp"|"instagram"|"facebook", to: string, message: string }
+ * Cuerpo: { canal, to, message, ownerId? }
  *
- * Hoy: valida y devuelve respuesta simulada (provider=null).
- *
- * Para producción, despachar al proveedor del canal:
- *  - whatsapp  → Meta WhatsApp Cloud API o Twilio (ver /api/send-whatsapp)
- *  - instagram → Meta Graph API /me/messages (ver /api/send-instagram)
- *  - facebook  → Meta Graph API Messenger (ver /api/send-facebook)
- *
- * Mantener un solo endpoint público facilita la auditoría y el rate-limit.
+ * Nota de seguridad: este endpoint NO está bajo /api/public/, requiere ser
+ * llamado con el bearer del usuario autenticado por el front. Para flujos de
+ * envío server-side se prefiere `sendMetaMessage` (server function).
  */
 
 const Body = z.object({
   canal: z.enum(["whatsapp", "instagram", "facebook"]),
   to: z.string().min(1).max(64),
   message: z.string().min(1).max(4096),
+  ownerId: z.string().uuid().optional(),
 });
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
 
 export const Route = createFileRoute("/api/send-message")({
   server: {
     handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
+
       POST: async ({ request }) => {
         let parsed;
         try {
@@ -32,25 +39,38 @@ export const Route = createFileRoute("/api/send-message")({
         } catch (err: any) {
           return Response.json(
             { ok: false, error: "Invalid payload", details: err?.issues ?? null },
-            { status: 400 },
+            { status: 400, headers: CORS },
           );
         }
 
-        // eslint-disable-next-line no-console
-        console.log("[/api/send-message] (stub) →", {
-          canal: parsed.canal,
+        const result = await sendViaMeta({
+          channel: parsed.canal,
           to: parsed.to,
-          preview: parsed.message.slice(0, 80),
+          message: parsed.message,
         });
 
-        return Response.json({
-          ok: true,
-          mode: "simulation",
-          canal: parsed.canal,
-          provider: null,
-          messageId: `sim_${Date.now().toString(36)}`,
-          sentAt: Date.now(),
-        });
+        // Log mejor esfuerzo (sin owner si no se pasó)
+        try {
+          await supabaseAdmin.from("meta_message_logs").insert({
+            owner_id: parsed.ownerId ?? null,
+            channel: parsed.canal,
+            direction: "outbound",
+            ok: result.ok,
+            info: { mode: result.mode, provider: result.provider, to: parsed.to, preview: parsed.message.slice(0, 80), error: result.error },
+          });
+        } catch {/* no romper la respuesta por un fallo de log */}
+
+        return Response.json(
+          {
+            ok: result.ok,
+            mode: result.mode,
+            provider: result.provider,
+            messageId: result.messageId,
+            error: result.error,
+            sentAt: Date.now(),
+          },
+          { status: result.ok ? 200 : 502, headers: CORS },
+        );
       },
     },
   },
