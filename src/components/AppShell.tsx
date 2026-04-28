@@ -12,6 +12,7 @@ import operiaIcon from "@/assets/operia-icon.png";
 const nav = [
   { to: "/app", label: "Inicio", icon: Home },
   { to: "/inbox", label: "Inbox", icon: MessageCircle },
+  { to: "/inbox/meta", label: "Inbox Meta", icon: MessageCircle },
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered },
   { to: "/produccion", label: "Plan del día", icon: ChefHat },
   { to: "/catalogo", label: "Catálogo", icon: Package },
