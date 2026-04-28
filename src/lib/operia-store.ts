@@ -373,8 +373,6 @@ export const useOperia = create<State>()(
             });
           }),
         }));
-        // Suprimir warning unused
-        void order;
         return link;
       },
       markPaymentPaid: (id) => {
