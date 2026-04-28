@@ -124,7 +124,7 @@ function Landing() {
           Mensajes reales. Pedidos listos. Acción clara.
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
-          <Example
+          <LandingExample
             icon={Cake}
             input="Hola quiero un pastel mañana para 20 personas"
             tipo="Producto · Pastel"
@@ -137,7 +137,7 @@ function Landing() {
             action="Solicitar anticipo"
             message="Hola 😊 para confirmar tu pastel para 20 personas necesito el sabor, la dirección y un anticipo. ¿Me ayudas?"
           />
-          <Example
+          <LandingExample
             icon={Wrench}
             input="¿Me arreglan una fuga el viernes en Providencia?"
             tipo="Servicio · Plomería"
@@ -150,7 +150,7 @@ function Landing() {
             action="Confirmar horario"
             message="Hola 😊 confirmo tu visita por la fuga el viernes en Providencia. ¿A qué hora te queda mejor?"
           />
-          <Example
+          <LandingExample
             icon={Users}
             input="¿Tienes lugar mañana 4pm para corte y tinte?"
             tipo="Cita · Salón"
