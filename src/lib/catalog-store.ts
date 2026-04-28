@@ -192,8 +192,8 @@ export const useCatalog = create<State>()(
         })),
     }),
     {
-      name: "operia-catalog-v3",
-      version: 3,
+      name: "operia-catalog-v4",
+      version: 4,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 2 && Array.isArray(persisted.items)) {
@@ -219,6 +219,40 @@ export const useCatalog = create<State>()(
             unidad: it.tipo === "servicio" || it.tipo === "cita" ? "espacios" : "piezas",
             ...it,
           }));
+        }
+        if (version < 4 && Array.isArray(persisted.items)) {
+          persisted.items = persisted.items.map((it: any) => {
+            if (Array.isArray(it.variantesDetalle) && it.variantesDetalle.length > 0) return it;
+            // Sintetiza variantesDetalle desde el campo legacy
+            const personasFromCap = (() => {
+              const m = (it.capacidad || "").match(/(\d+)/);
+              return m ? parseInt(m[1], 10) : 0;
+            })();
+            const fromLegacy: CatalogVariant[] = (Array.isArray(it.variantes) ? it.variantes : [])
+              .filter((s: any) => typeof s === "string" && s.trim())
+              .map((nombre: string) => {
+                const mp = nombre.match(/(\d+)/);
+                return newVariant({
+                  nombre,
+                  personas: mp ? parseInt(mp[1], 10) : personasFromCap,
+                  precio: it.precioBase || 0,
+                  sabores: Array.isArray(it.opciones) ? it.opciones : [],
+                  stockDiario: it.capacidadDiaria || 0,
+                  tiempoPreparacion: it.prepMinutos || 0,
+                });
+              });
+            const variantesDetalle = fromLegacy.length > 0 ? fromLegacy : [
+              newVariant({
+                nombre: it.nombre || "Estándar",
+                personas: personasFromCap,
+                precio: it.precioBase || 0,
+                sabores: Array.isArray(it.opciones) ? it.opciones : [],
+                stockDiario: it.capacidadDiaria || 0,
+                tiempoPreparacion: it.prepMinutos || 0,
+              }),
+            ];
+            return { ...it, variantesDetalle };
+          });
         }
         return persisted;
       },
