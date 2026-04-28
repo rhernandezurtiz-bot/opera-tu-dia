@@ -318,6 +318,8 @@ interface State {
   setMessageStatus: (id: string, estado: WhatsappStatus) => void;
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
+  setInstagram: (c: Partial<InstagramConfig>) => void;
+  setChannelMode: (m: ChannelMode) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
   markPaymentPaid: (id: string) => void;
