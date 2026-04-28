@@ -31,6 +31,12 @@ function Config() {
   const setRiskRules = useOperia((s) => s.setRiskRules);
   const whatsapp = useOperia((s) => s.whatsapp);
   const setWhatsapp = useOperia((s) => s.setWhatsapp);
+  const instagram = useOperia((s) => s.instagram);
+  const setInstagram = useOperia((s) => s.setInstagram);
+  const facebook = useOperia((s) => s.facebook);
+  const setFacebook = useOperia((s) => s.setFacebook);
+  const channelMode = useOperia((s) => s.channelMode);
+  const setChannelMode = useOperia((s) => s.setChannelMode);
   const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
   const payments = negocio.payments;
 
