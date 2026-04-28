@@ -73,6 +73,7 @@ function Detalle() {
   const markPaymentFailed = useOperia((s) => s.markPaymentFailed);
   const paymentsCfg = useOperia((s) => s.negocio.payments);
   const removeOrder = useOperia((s) => s.removeOrder);
+  const catalog = useCatalog((s) => s.items);
   const navigate = useNavigate();
 
   // Internal notes drafts
