@@ -759,7 +759,7 @@ function Landing() {
               "Soporte prioritario",
             ]}
             ctaLabel="Solicitar demo"
-            ctaHref="#contacto"
+            onCta={openDemo}
             enterprise
           />
         </div>
