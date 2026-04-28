@@ -28,6 +28,12 @@ export type DecisionType =
   | "TIME_NOT_AVAILABLE"
   | "NEEDS_MANUAL_REVIEW";
 
+export type ClosingAction =
+  | "SEND_PAYMENT_LINK"
+  | "ASK_CONFIRMATION"
+  | "OFFER_ALTERNATIVE"
+  | "ASK_MINIMAL_INFO";
+
 export type RiskLevelDec = "low" | "medium" | "high";
 
 export type MissingField =
