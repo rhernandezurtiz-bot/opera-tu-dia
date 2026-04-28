@@ -361,3 +361,128 @@ function FirstRunEmpty({ onStart }: { onStart: () => void }) {
     </Card>
   );
 }
+
+/* -------- Tu día en Operia: priority command center -------- */
+
+type Priority = "alta" | "media" | "baja";
+
+function priorityOf(o: Order): Priority {
+  if (o.estado === "entregado" || o.estado === "cancelado") return "baja";
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+  if (o.fechaEntrega && o.fechaEntrega < today) return "alta";
+  if (o.fechaEntrega === today) return "alta";
+  if ((o.faltantes || []).length > 0) return "alta";
+  if (o.pago === "pendiente" && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
+  if (o.fechaEntrega === tomorrow) return "media";
+  if ((o.faltantes || []).length > 0) return "media";
+  return "baja";
+}
+
+function CommandCenter({
+  orders,
+  updateOrder,
+}: {
+  orders: Order[];
+  updateOrder: (id: string, patch: Partial<Order>) => void;
+}) {
+  const active = orders.filter((o) => o.estado !== "entregado" && o.estado !== "cancelado");
+  const ranked = active
+    .map((o) => ({ o, action: nextAction(o), p: priorityOf(o) }))
+    .filter((x) => x.action)
+    .sort((a, b) => {
+      const order = { alta: 0, media: 1, baja: 2 } as const;
+      if (order[a.p] !== order[b.p]) return order[a.p] - order[b.p];
+      return (a.o.fechaEntrega + (a.o.horaEntrega || "")).localeCompare(
+        b.o.fechaEntrega + (b.o.horaEntrega || ""),
+      );
+    });
+
+  if (ranked.length === 0) return null;
+
+  const top = ranked.slice(0, 5);
+  const counts = {
+    alta: ranked.filter((r) => r.p === "alta").length,
+    media: ranked.filter((r) => r.p === "media").length,
+    baja: ranked.filter((r) => r.p === "baja").length,
+  };
+
+  const advanceAfter: Partial<Record<NonNullable<ReturnType<typeof nextAction>>["kind"], Order["estado"]>> = {
+    confirmar_pedido: "confirmado",
+    avisar_listo: "entregado",
+    marcar_listo: "listo",
+  };
+
+  return (
+    <section className="mb-10">
+      <SectionHeading
+        title="Tu día en Operia"
+        subtitle="Lo que hay que hacer ahora, ordenado por prioridad"
+        action={
+          <div className="flex items-center gap-2 text-[11.5px]">
+            {counts.alta > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20">
+                🔴 {counts.alta} urgente{counts.alta === 1 ? "" : "s"}
+              </span>
+            )}
+            {counts.media > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning/15 text-foreground/70 border border-warning/30">
+                🟡 {counts.media} medio{counts.media === 1 ? "" : "s"}
+              </span>
+            )}
+            {counts.baja > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success/90 border border-success/20">
+                🟢 {counts.baja} bajo{counts.baja === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+        }
+      />
+      <div className="space-y-2">
+        {top.map(({ o, action, p }) => {
+          if (!action) return null;
+          const dot = p === "alta" ? "bg-danger" : p === "media" ? "bg-warning" : "bg-success";
+          const next = advanceAfter[action.kind];
+          return (
+            <Card
+              key={o.id}
+              className="p-3.5 md:p-4 rounded-xl flex items-center gap-3 hover:border-foreground/15 transition-colors"
+            >
+              <span className={`h-2.5 w-2.5 rounded-full ${dot} shrink-0`} />
+              <Link
+                to="/pedidos/$id"
+                params={{ id: o.id }}
+                className="min-w-0 flex-1 block"
+              >
+                <div className="text-[14px] font-medium truncate">
+                  {action.label} · {o.cliente || "Cliente"}
+                </div>
+                <div className="text-[12px] text-muted-foreground truncate">
+                  {action.reason}
+                </div>
+              </Link>
+              <Button
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(action.message);
+                  toast.success("Mensaje copiado · listo para enviar");
+                  if (next) updateOrder(o.id, { estado: next });
+                }}
+              >
+                <Send className="h-3.5 w-3.5" /> Copiar y enviar
+              </Button>
+            </Card>
+          );
+        })}
+        {ranked.length > top.length && (
+          <Link
+            to="/pedidos"
+            className="block text-center text-[12.5px] text-muted-foreground hover:text-foreground py-2"
+          >
+            Ver las {ranked.length} acciones pendientes →
+          </Link>
+        )}
+      </div>
+    </section>
+  );
+}
