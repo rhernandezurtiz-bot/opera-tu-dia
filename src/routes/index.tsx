@@ -112,11 +112,11 @@ function Landing() {
             <span className="bg-foreground text-background px-2 rounded-md">
               ejecuta
             </span>{" "}
-            tus ventas de WhatsApp.
+            tus ventas de WhatsApp, Instagram y Facebook.
           </h1>
           <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
-            Operia convierte conversaciones en operaciones claras para equipos.
-            Evita pérdidas, mejora tiempos de respuesta y escala sin caos.
+            Operia no solo trabaja con WhatsApp: también centraliza y responde mensajes
+            de Instagram y Facebook desde un solo Inbox, con respuesta sugerida o automática.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button size="lg" className="h-12 px-6 text-[14px]" onClick={openDemo}>
