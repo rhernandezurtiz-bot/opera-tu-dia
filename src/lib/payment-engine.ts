@@ -94,13 +94,27 @@ export function usePaymentEngine() {
           continue;
         }
 
-        // Regla 3: ≥30 min sin pago → registrar recordatorio (no envía solo)
+        // Regla 3: ≥30 min sin pago → enviar recordatorio automático por canal de origen
         if (
           o.pago === "link_enviado" &&
           o.paymentLinkAt &&
           now - o.paymentLinkAt >= reminderMs &&
           (!o.paymentReminderAt || now - o.paymentReminderAt >= reminderMs)
         ) {
+          const baseMsg = buildAutoPaymentReminder(o);
+          const msg = adaptMessageForChannel(baseMsg, o.canal);
+          const canal = o.canal ?? "whatsapp";
+          try {
+            if (canal === "instagram" && o.canalUserId) {
+              await sendInstagramDM({ userId: o.canalUserId, message: msg });
+            } else if (canal === "facebook" && o.canalUserId) {
+              await sendFacebookMessage({ userId: o.canalUserId, message: msg });
+            } else if (o.telefono) {
+              await sendWhatsAppMessage({ phone: o.telefono, message: msg });
+            }
+          } catch {
+            // silencioso: el log de eventos lo registra sendPaymentReminder
+          }
           sendPaymentReminder(o.id);
         }
       }
