@@ -300,7 +300,7 @@ export function nextAction(o: Order): NextAction | null {
   }
 
   // 7) Pago pendiente sin urgencia → recordar pago
-  if (o.pago === "pendiente") {
+  if (o.pago === "pendiente" || o.pago === "anticipo_solicitado") {
     return {
       kind: "recordar_pago",
       label: "Recordar pago",
