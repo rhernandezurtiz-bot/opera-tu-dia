@@ -121,6 +121,11 @@ function CatalogCard({ item, onRemove, onUpdate }: { item: CatalogItem; onRemove
         {item.precioBase > 0 && <Field label="Precio base" value={`$${item.precioBase.toLocaleString("es-MX")}`} />}
         {item.capacidad && <Field label="Capacidad" value={item.capacidad} />}
         {item.anticipacionHoras > 0 && <Field label="Anticipación" value={`${item.anticipacionHoras}h`} />}
+        {item.prepMinutos > 0 && <Field label="Preparación" value={`${item.prepMinutos} min`} />}
+        {item.stockDisponible > 0 && <Field label="Stock" value={String(item.stockDisponible)} />}
+        {item.capacidadDiaria > 0 && <Field label="Cap. diaria" value={String(item.capacidadDiaria)} />}
+        {(item.horarioDesde && item.horarioHasta) && <Field label="Horario" value={`${item.horarioDesde}–${item.horarioHasta}`} />}
+        {item.diasDisponibles.length > 0 && <Field label="Días" value={item.diasDisponibles.map((d) => DAY_LABELS[d]).join(", ")} />}
       </div>
       {item.opciones.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
