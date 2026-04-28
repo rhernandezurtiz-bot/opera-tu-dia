@@ -29,6 +29,7 @@ import {
   money,
   nextAction,
 } from "@/lib/ui-store";
+import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer } from "@/lib/catalog-store";
 import {
   ArrowLeft,
   Copy,
@@ -72,6 +73,7 @@ function Detalle() {
   const markPaymentFailed = useOperia((s) => s.markPaymentFailed);
   const paymentsCfg = useOperia((s) => s.negocio.payments);
   const removeOrder = useOperia((s) => s.removeOrder);
+  const catalog = useCatalog((s) => s.items);
   const navigate = useNavigate();
 
   // Internal notes drafts
@@ -101,6 +103,10 @@ function Detalle() {
 
   // Historial del cliente: excluir la orden actual
   const stats = cKey ? getClientStats(allOrders.filter((o) => o.id !== order.id), cKey) : null;
+
+  // Validación contra catálogo
+  const validation = validateOrder(order, catalog);
+  const fueraCatalogo = validation.status === "fuera_catalogo";
 
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
@@ -233,6 +239,17 @@ function Detalle() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
+          {/* Validación contra catálogo */}
+          <CatalogValidationBlock
+            validation={validation}
+            onCopy={(t: string) => copiar(t)}
+            onWhatsApp={(t: string) => {
+              if (!order.telefono) { toast.error("Falta teléfono del cliente"); return; }
+              window.open(`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(t)}`, "_blank", "noopener,noreferrer");
+            }}
+            onAlternative={() => buildAlternativeOffer(catalog, order.tipo)}
+          />
+
           {/* Cobro del pedido */}
           <Card className="p-5 rounded-xl">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -303,11 +320,20 @@ function Detalle() {
               </div>
             ) : (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
+                {fueraCatalogo && (
+                  <div className="p-3 rounded-2xl bg-warning/15 border border-warning/30 text-[13px]">
+                    <div className="font-medium mb-0.5">Este pedido necesita ajuste antes de cobrarse.</div>
+                    <div className="text-muted-foreground text-[12px]">
+                      Resuelve las alertas del catálogo arriba para habilitar el cobro automático.
+                    </div>
+                  </div>
+                )}
                 {/* Acciones principales */}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     className="rounded-full"
+                    disabled={fueraCatalogo}
                     onClick={() => {
                       const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
                       generatePaymentLink(order.id, provider);
@@ -337,8 +363,8 @@ function Detalle() {
                   )}
                 </div>
 
-                {/* Auto-envío: cuando se cumplen los 3 criterios (fecha confirmada + dirección + monto) */}
-                {isReadyForAutoPayment(order) && order.telefono && (
+                {/* Auto-envío: cuando se cumplen los criterios + catálogo OK */}
+                {!fueraCatalogo && isReadyForAutoPayment(order) && order.telefono && (
                   <div className="p-3 rounded-2xl bg-primary/5 border border-primary/25">
                     <div className="flex items-start gap-2 mb-2">
                       <Sparkles className="h-4 w-4 mt-0.5 text-primary shrink-0" />
@@ -752,6 +778,73 @@ function NextActionPanel({
             )}
           </div>
         </div>
+      </div>
+    </Card>
+  );
+}
+
+/* -------- Validación contra catálogo -------- */
+import type { CatalogValidation } from "@/lib/catalog-store";
+
+function CatalogValidationBlock({
+  validation,
+  onCopy,
+  onWhatsApp,
+  onAlternative,
+}: {
+  validation: CatalogValidation;
+  onCopy: (text: string) => void;
+  onWhatsApp: (text: string) => void;
+  onAlternative: () => string;
+}) {
+  if (validation.status === "sin_match") return null;
+
+  if (validation.status === "ok") {
+    return (
+      <Card className="p-3.5 rounded-xl border-success/30 bg-success/8 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+        <div className="text-[13px]">
+          <span className="font-medium text-success">Coincide con tu catálogo</span>
+          {validation.match && <> · {validation.match.nombre}</>}
+        </div>
+      </Card>
+    );
+  }
+
+  // fuera_catalogo
+  const msg = buildOutOfCatalogMessage(validation);
+  return (
+    <Card className="p-4 rounded-xl border-warning/40 bg-warning/10">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-4 w-4 text-foreground/70" />
+        <h3 className="font-display text-[15px]">Solicitud fuera de catálogo</h3>
+        <span className="ml-auto text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/15 text-danger border border-danger/30">
+          No confirmable todavía
+        </span>
+      </div>
+      <ul className="space-y-1 mb-3">
+        {validation.alerts.map((a, i) => (
+          <li key={i} className="text-[13px] text-foreground/85 flex gap-2">
+            <span className="text-danger">•</span> {a}
+          </li>
+        ))}
+      </ul>
+      <div className="bg-background border border-border rounded-lg p-2.5 text-[13px] whitespace-pre-wrap mb-3">
+        {msg}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={() => onCopy(msg)}>
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
+        </Button>
+        <Button size="sm" className="rounded-full" onClick={() => onWhatsApp(msg)}>
+          <Send className="h-3.5 w-3.5 mr-1" /> Enviar por WhatsApp
+        </Button>
+        <Button size="sm" variant="ghost" className="rounded-full" onClick={() => {
+          const alt = onAlternative();
+          onCopy(alt);
+        }}>
+          <Sparkles className="h-3.5 w-3.5 mr-1" /> Ofrecer alternativa
+        </Button>
       </div>
     </Card>
   );
