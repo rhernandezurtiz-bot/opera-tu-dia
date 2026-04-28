@@ -40,6 +40,8 @@ import {
   Save,
   ArrowRight,
   History,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
