@@ -25,6 +25,7 @@ import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
 import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
+import { Route as ApiSendMessageRouteImport } from './routes/api/send-message'
 import { Route as ApiSendInstagramRouteImport } from './routes/api/send-instagram'
 import { Route as ApiSendFacebookRouteImport } from './routes/api/send-facebook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
@@ -112,6 +113,11 @@ const ApiSendWhatsappRoute = ApiSendWhatsappRouteImport.update({
   path: '/api/send-whatsapp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSendMessageRoute = ApiSendMessageRouteImport.update({
+  id: '/api/send-message',
+  path: '/api/send-message',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSendInstagramRoute = ApiSendInstagramRouteImport.update({
   id: '/api/send-instagram',
   path: '/api/send-instagram',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/riesgos': typeof RiesgosRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
+  '/api/send-message': typeof ApiSendMessageRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/riesgos': typeof RiesgosRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
+  '/api/send-message': typeof ApiSendMessageRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
@@ -207,6 +215,7 @@ export interface FileRoutesById {
   '/riesgos': typeof RiesgosRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
+  '/api/send-message': typeof ApiSendMessageRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/riesgos'
     | '/api/send-facebook'
     | '/api/send-instagram'
+    | '/api/send-message'
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/riesgos'
     | '/api/send-facebook'
     | '/api/send-instagram'
+    | '/api/send-message'
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/riesgos'
     | '/api/send-facebook'
     | '/api/send-instagram'
+    | '/api/send-message'
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
@@ -306,6 +318,7 @@ export interface RootRouteChildren {
   RiesgosRoute: typeof RiesgosRoute
   ApiSendFacebookRoute: typeof ApiSendFacebookRoute
   ApiSendInstagramRoute: typeof ApiSendInstagramRoute
+  ApiSendMessageRoute: typeof ApiSendMessageRoute
   ApiSendWhatsappRoute: typeof ApiSendWhatsappRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
   InboxIdRoute: typeof InboxIdRoute
@@ -433,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSendWhatsappRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/send-message': {
+      id: '/api/send-message'
+      path: '/api/send-message'
+      fullPath: '/api/send-message'
+      preLoaderRoute: typeof ApiSendMessageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/send-instagram': {
       id: '/api/send-instagram'
       path: '/api/send-instagram'
@@ -490,6 +510,7 @@ const rootRouteChildren: RootRouteChildren = {
   RiesgosRoute: RiesgosRoute,
   ApiSendFacebookRoute: ApiSendFacebookRoute,
   ApiSendInstagramRoute: ApiSendInstagramRoute,
+  ApiSendMessageRoute: ApiSendMessageRoute,
   ApiSendWhatsappRoute: ApiSendWhatsappRoute,
   ClientesKeyRoute: ClientesKeyRoute,
   InboxIdRoute: InboxIdRoute,
