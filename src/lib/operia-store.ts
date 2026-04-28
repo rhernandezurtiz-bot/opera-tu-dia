@@ -337,7 +337,7 @@ function recompute(o: Order): Order {
     else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
   }
   // Pago
-  if (o.pago !== "pagado" && o.pago !== "anticipo") faltantes.push("Pago");
+  if (o.pago !== "pagado" && o.pago !== "no_requerido") faltantes.push("Pago");
   // Contacto
   if (!o.telefono) faltantes.push("Contacto");
 
@@ -346,6 +346,7 @@ function recompute(o: Order): Order {
   const todayISO = new Date().toISOString().slice(0, 10);
   if (
     pago !== "pagado" &&
+    pago !== "no_requerido" &&
     o.fechaEntrega &&
     o.fechaEntrega < todayISO &&
     o.estado !== "entregado" &&
