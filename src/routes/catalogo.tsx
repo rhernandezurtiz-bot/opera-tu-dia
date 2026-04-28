@@ -290,3 +290,70 @@ function Labeled({ label, children, full }: { label: string; children: React.Rea
     </div>
   );
 }
+
+function VariantEditor({ variants, onChange }: { variants: CatalogVariant[]; onChange: (vs: CatalogVariant[]) => void }) {
+  const update = (id: string, patch: Partial<CatalogVariant>) =>
+    onChange(variants.map((v) => (v.id === id ? { ...v, ...patch } : v)));
+  const remove = (id: string) => onChange(variants.filter((v) => v.id !== id));
+  const add = () => onChange([...variants, newVariant({ nombre: "Nueva variante" })]);
+
+  return (
+    <div className="space-y-2">
+      {variants.length === 0 && (
+        <div className="text-[12px] text-muted-foreground italic px-1">
+          Sin variantes — agrega tamaños/paquetes con sus precios y capacidad para que Operia decida automáticamente la mejor opción.
+        </div>
+      )}
+      {variants.map((v) => (
+        <div key={v.id} className="rounded-lg border border-border bg-secondary/30 p-2.5 space-y-2">
+          <div className="flex items-center gap-2">
+            <Input
+              value={v.nombre}
+              onChange={(e) => update(v.id, { nombre: e.target.value })}
+              placeholder="12 personas"
+              className="h-8 text-[13px] font-medium"
+            />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Switch checked={v.disponible} onCheckedChange={(d) => update(v.id, { disponible: d })} />
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(v.id)}>
+                <Trash2 className="h-3.5 w-3.5 text-danger" />
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <NumField label="Personas" value={v.personas} onChange={(n) => update(v.id, { personas: n })} />
+            <NumField label="Precio" value={v.precio} onChange={(n) => update(v.id, { precio: n })} />
+            <NumField label="Stock/día" value={v.stockDiario} onChange={(n) => update(v.id, { stockDiario: n })} />
+            <NumField label="Prep (min)" value={v.tiempoPreparacion} onChange={(n) => update(v.id, { tiempoPreparacion: n })} />
+          </div>
+          <div>
+            <label className="text-[10.5px] text-muted-foreground uppercase tracking-wide">Sabores</label>
+            <Input
+              value={v.sabores.join(", ")}
+              onChange={(e) => update(v.id, { sabores: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+              placeholder="Lotus, Chocolate, Tres leches"
+              className="h-8 text-[12.5px] mt-0.5"
+            />
+          </div>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={add} className="w-full">
+        <Plus className="h-3.5 w-3.5 mr-1" /> Agregar variante
+      </Button>
+    </div>
+  );
+}
+
+function NumField({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
+  return (
+    <div>
+      <label className="text-[10.5px] text-muted-foreground uppercase tracking-wide">{label}</label>
+      <Input
+        type="number"
+        value={value || ""}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        className="h-8 text-[12.5px] mt-0.5"
+      />
+    </div>
+  );
+}
