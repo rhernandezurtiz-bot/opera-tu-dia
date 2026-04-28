@@ -49,6 +49,7 @@ function emptyDraft(): Omit<CatalogItem, "id" | "createdAt"> {
     precioBase: 0,
     capacidad: "",
     variantes: [],
+    variantesDetalle: [],
     opciones: [],
     anticipacionHoras: 0,
     disponible: true,

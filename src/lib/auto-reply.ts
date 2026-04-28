@@ -28,8 +28,13 @@ import {
   validateAgainstCatalog,
   validateOrder,
   buildAlternativeOffer,
+  selectBestOption,
+  suggestVariantCombo,
+  remainingCapacity,
   type CatalogItem,
   type CatalogValidation,
+  type ScoredOption,
+  type ComboSuggestion,
 } from "./catalog-store";
 import { adaptMessageForChannel } from "./ui-store";
 
@@ -70,51 +75,39 @@ export interface AutoReplyResult {
 
 /* --------------------- Helpers de catálogo / alternativas ----------------- */
 
-function capacityNumber(cap: string): number | null {
-  const m = (cap || "").match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : null;
+function formatCombo(combo: ComboSuggestion): string {
+  const partes = combo.pieces.map((p) =>
+    p.cantidad > 1
+      ? `${p.cantidad} ${p.variant.nombre.toLowerCase()}`
+      : `1 ${p.variant.nombre.toLowerCase()}`,
+  );
+  const lista = partes.length === 1
+    ? partes[0]
+    : `${partes.slice(0, -1).join(", ")} + ${partes[partes.length - 1]}`;
+  const precio = combo.totalPrecio
+    ? ` ($${combo.totalPrecio.toLocaleString("es-MX")} total)`
+    : "";
+  return `${lista}${precio}`;
 }
 
-/**
- * Sugiere combinación de productos para cubrir N personas usando los items
- * disponibles del catálogo. Ej: 25 personas con tope de 12 → "2 de 12 + 1 chico".
- */
-function suggestCombo(catalog: CatalogItem[], personas: number, match?: CatalogItem): string | null {
-  if (!personas || personas <= 0) return null;
-  const candidates = catalog
-    .filter((c) => c.disponible && capacityNumber(c.capacidad))
-    .map((c) => ({ item: c, cap: capacityNumber(c.capacidad)! }))
-    .sort((a, b) => b.cap - a.cap);
-  if (candidates.length === 0) return null;
-
-  const big = match
-    ? candidates.find((c) => c.item.id === match.id) ?? candidates[0]
-    : candidates[0];
-  const n = Math.floor(personas / big.cap);
-  const resto = personas - n * big.cap;
-
-  if (n >= 1 && resto === 0) {
-    return `${n} ${big.item.nombre.toLowerCase()}`;
-  }
-  if (n >= 1 && resto > 0) {
-    const small = candidates
-      .filter((c) => c.cap >= resto && c.cap < big.cap)
-      .pop() // más chico que cubra el resto
-      ?? candidates[candidates.length - 1];
-    return `${n} ${big.item.nombre.toLowerCase()} + 1 ${small.item.nombre.toLowerCase()} (cubre los ${resto} restantes)`;
-  }
-  return null;
+function formatBest(best: ScoredOption): string {
+  const precio = best.variant.precio
+    ? ` ($${best.variant.precio.toLocaleString("es-MX")})`
+    : "";
+  return `${best.item.nombre} — ${best.variant.nombre}${precio}`;
 }
 
-function nextAvailableDate(item: CatalogItem): string | null {
-  // Próxima fecha que respete prepMinutos + anticipacionHoras y caiga en día disponible
+function nextAvailableDate(item: CatalogItem, orders: Order[]): string | null {
+  // Próxima fecha que respete prepMinutos + anticipacionHoras, día disponible y capacidad libre
   const minMs = (item.anticipacionHoras * 60 + item.prepMinutos) * 60 * 1000;
   const base = new Date(Date.now() + minMs);
   const map: ("dom"|"lun"|"mar"|"mie"|"jue"|"vie"|"sab")[] = ["dom","lun","mar","mie","jue","vie","sab"];
   for (let i = 0; i < 14; i++) {
     const d = new Date(base.getTime() + i * 86400000);
     const dk = map[d.getDay()];
-    if (item.diasDisponibles.length === 0 || item.diasDisponibles.includes(dk)) {
+    if (item.diasDisponibles.length > 0 && !item.diasDisponibles.includes(dk)) continue;
+    const iso = d.toISOString().slice(0, 10);
+    if (remainingCapacity(item, iso, orders) > 0) {
       return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
     }
   }
@@ -160,36 +153,53 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
 
   // --- B. Bloqueos duros → respuestas específicas con alternativa ---
 
-  // 1. Producto no existe en catálogo
+  const sabor = validation.parsed.sabor;
+  const fechaISO = matchedOrder?.fechaEntrega || draftOrder?.fechaEntrega;
+
+  // 1. Producto no existe en catálogo → recomendar la mejor opción disponible
   if (p.producto || (!m && validation.parsed.productoTexto)) {
+    const best = selectBestOption(catalog, { personas, sabor, fechaISO, tipo: draftOrder?.tipo }, orders);
+    if (best) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Eso no lo manejamos, pero te recomiendo: ${formatBest(best)}. ${capitalize(best.reason)}. ¿Te lo aparto?`,
+        { validation, draftOrder });
+    }
     const opciones = buildAlternativeOffer(catalog);
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Por ahora no manejamos eso, pero te puedo ofrecer:\n\n${stripHeader(opciones)}\n\n¿Te late alguna?`,
+      `Hola 👋 Eso no lo manejamos, pero te puedo ofrecer:\n\n${stripHeader(opciones)}\n\n¿Te late alguna?`,
       { validation, draftOrder });
   }
 
-  // 2. Capacidad excedida (ej. 25 personas, máx 12)
+  // 2. Capacidad excedida (ej. 25 personas, máx 12) → combinación real de variantes
   if (p.capacidad && m && personas) {
-    const combo = suggestCombo(catalog, personas, m);
-    const alt = combo
-      ? `puedo ofrecerte ${combo}`
-      : `puedo ofrecerte varias piezas para cubrir el total`;
+    const combo = suggestVariantCombo(catalog, personas, fechaISO, orders, { sabor, tipo: draftOrder?.tipo });
+    if (combo) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Para ${personas} personas no manejamos ese tamaño, pero puedo armarte ${formatCombo(combo)}. ¿Te funciona?`,
+        { validation, draftOrder });
+    }
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Para ${personas} personas no manejamos ese tamaño, pero ${alt}. ¿Te funciona?`,
+      `Hola 👋 Para ${personas} personas no manejamos ese tamaño. ¿Quieres que te proponga varias piezas que sumen el total?`,
       { validation, draftOrder });
   }
 
-  // 3. Stock insuficiente
+  // 3. Stock insuficiente → mejor alternativa disponible
   if (p.stock && m) {
+    const best = selectBestOption(catalog, { personas, sabor, fechaISO, tipo: draftOrder?.tipo }, orders);
+    if (best && best.item.id !== m.id) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo: ${formatBest(best)}. ¿Te lo aparto?`,
+        { validation, draftOrder });
+    }
     const alt = buildAlternativeOffer(catalog, draftOrder?.tipo);
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo disponible:\n\n${stripHeader(alt)}\n\n¿Te interesa alguno?`,
+      `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo:\n\n${stripHeader(alt)}\n\n¿Te interesa alguno?`,
       { validation, draftOrder });
   }
 
-  // 4. Tiempo de preparación / anticipación insuficiente
+  // 4. Tiempo de preparación / anticipación insuficiente → próxima fecha real
   if ((p.anticipacion || p.prep) && m) {
-    const next = nextAvailableDate(m);
+    const next = nextAvailableDate(m, orders);
     const cuando = next ? `la fecha más cercana sería el ${next}` : `necesitamos un poco más de tiempo`;
     return finalize(intent, "sin_disponibilidad", canal,
       `Hola 👋 Para esa fecha ya no alcanzamos a prepararlo, pero ${cuando}. ¿Te lo aparto?`,
@@ -211,9 +221,9 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
       { validation, draftOrder });
   }
 
-  // 7. Capacidad diaria llena
+  // 7. Capacidad diaria llena → siguiente fecha con cupo real
   if (p.capacidadDiaria && m) {
-    const next = nextAvailableDate(m);
+    const next = nextAvailableDate(m, orders);
     return finalize(intent, "sin_disponibilidad", canal,
       `Hola 👋 Para esa fecha ya no tenemos cupo, pero ${next ? `te lo aparto para el ${next}` : `te ofrezco la siguiente fecha disponible`}. ¿Va?`,
       { validation, draftOrder });

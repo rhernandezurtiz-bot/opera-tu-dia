@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCatalog, type CatalogItem, type CatalogKind, type DayKey, ALL_DAYS, DAY_LABELS } from "@/lib/catalog-store";
+import { useCatalog, type CatalogItem, type CatalogKind, type CatalogVariant, type DayKey, ALL_DAYS, DAY_LABELS, newVariant } from "@/lib/catalog-store";
 import { Plus, Trash2, Save, Package } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,6 +29,7 @@ function emptyDraft(): Omit<CatalogItem, "id" | "createdAt"> {
     precioBase: 0,
     capacidad: "",
     variantes: [],
+    variantesDetalle: [],
     opciones: [],
     anticipacionHoras: 24,
     disponible: true,
@@ -138,6 +139,25 @@ function CatalogCard({ item, onRemove, onUpdate }: { item: CatalogItem; onRemove
           ))}
         </div>
       )}
+      {item.variantesDetalle.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/60">
+          <div className="text-[10.5px] uppercase tracking-wide text-muted-foreground mb-1.5">Variantes</div>
+          <div className="space-y-1">
+            {item.variantesDetalle.map((v) => (
+              <div key={v.id} className="flex items-center justify-between text-[12px]">
+                <span className="font-medium truncate">
+                  {v.nombre}
+                  {v.personas > 0 && <span className="text-muted-foreground"> · {v.personas} pers</span>}
+                </span>
+                <span className="text-muted-foreground tabular-nums">
+                  {v.precio > 0 && `$${v.precio.toLocaleString("es-MX")}`}
+                  {v.stockDiario > 0 && <span className="ml-2">· stock {v.stockDiario}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {item.notas && <div className="mt-2 text-[11.5px] text-muted-foreground italic">{item.notas}</div>}
     </Card>
   );
@@ -178,11 +198,15 @@ function ItemForm({ value, onChange }: { value: Omit<CatalogItem, "id" | "create
       <Labeled label="Capacidad o tamaño">
         <Input value={value.capacidad} onChange={(e) => set("capacidad", e.target.value)} placeholder="12 personas" />
       </Labeled>
-      <Labeled label="Variantes (separadas por coma)">
-        <Input
-          value={value.variantes.join(", ")}
-          onChange={(e) => set("variantes", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-          placeholder="Mediano, Grande"
+      <Labeled label="Variantes (tamaño · precio · sabores · stock · prep)" full>
+        <VariantEditor
+          variants={value.variantesDetalle}
+          onChange={(vs) => onChange({
+            ...value,
+            variantesDetalle: vs,
+            // Mantén legacy `variantes` (string[]) sincronizado con los nombres
+            variantes: vs.map((v) => v.nombre).filter(Boolean),
+          })}
         />
       </Labeled>
       <Labeled label="Sabores / opciones (separadas por coma)">
@@ -263,6 +287,73 @@ function Labeled({ label, children, full }: { label: string; children: React.Rea
     <div className={full ? "sm:col-span-2" : ""}>
       <label className="text-[11.5px] text-muted-foreground font-medium">{label}</label>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function VariantEditor({ variants, onChange }: { variants: CatalogVariant[]; onChange: (vs: CatalogVariant[]) => void }) {
+  const update = (id: string, patch: Partial<CatalogVariant>) =>
+    onChange(variants.map((v) => (v.id === id ? { ...v, ...patch } : v)));
+  const remove = (id: string) => onChange(variants.filter((v) => v.id !== id));
+  const add = () => onChange([...variants, newVariant({ nombre: "Nueva variante" })]);
+
+  return (
+    <div className="space-y-2">
+      {variants.length === 0 && (
+        <div className="text-[12px] text-muted-foreground italic px-1">
+          Sin variantes — agrega tamaños/paquetes con sus precios y capacidad para que Operia decida automáticamente la mejor opción.
+        </div>
+      )}
+      {variants.map((v) => (
+        <div key={v.id} className="rounded-lg border border-border bg-secondary/30 p-2.5 space-y-2">
+          <div className="flex items-center gap-2">
+            <Input
+              value={v.nombre}
+              onChange={(e) => update(v.id, { nombre: e.target.value })}
+              placeholder="12 personas"
+              className="h-8 text-[13px] font-medium"
+            />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Switch checked={v.disponible} onCheckedChange={(d) => update(v.id, { disponible: d })} />
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => remove(v.id)}>
+                <Trash2 className="h-3.5 w-3.5 text-danger" />
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            <NumField label="Personas" value={v.personas} onChange={(n) => update(v.id, { personas: n })} />
+            <NumField label="Precio" value={v.precio} onChange={(n) => update(v.id, { precio: n })} />
+            <NumField label="Stock/día" value={v.stockDiario} onChange={(n) => update(v.id, { stockDiario: n })} />
+            <NumField label="Prep (min)" value={v.tiempoPreparacion} onChange={(n) => update(v.id, { tiempoPreparacion: n })} />
+          </div>
+          <div>
+            <label className="text-[10.5px] text-muted-foreground uppercase tracking-wide">Sabores</label>
+            <Input
+              value={v.sabores.join(", ")}
+              onChange={(e) => update(v.id, { sabores: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
+              placeholder="Lotus, Chocolate, Tres leches"
+              className="h-8 text-[12.5px] mt-0.5"
+            />
+          </div>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={add} className="w-full">
+        <Plus className="h-3.5 w-3.5 mr-1" /> Agregar variante
+      </Button>
+    </div>
+  );
+}
+
+function NumField({ label, value, onChange }: { label: string; value: number; onChange: (n: number) => void }) {
+  return (
+    <div>
+      <label className="text-[10.5px] text-muted-foreground uppercase tracking-wide">{label}</label>
+      <Input
+        type="number"
+        value={value || ""}
+        onChange={(e) => onChange(Number(e.target.value) || 0)}
+        className="h-8 text-[12.5px] mt-0.5"
+      />
     </div>
   );
 }
