@@ -123,83 +123,158 @@ function firstName(name: string): string {
   return (name || "").trim().split(/\s+/)[0] || "";
 }
 
-export function buildMissingMessage(cliente: string, faltantes: string[]): string {
-  const lista = faltantes.length ? faltantes.map((f) => f.toLowerCase()).join(", ") : "algunos detalles";
-  const n = firstName(cliente);
-  return `¡Hola${n ? " " + n : ""}! 😊 Para confirmar tu pedido me faltaría: ${lista}. ¿Me lo puedes compartir, por favor? ¡Gracias!`;
+// ---------- Helpers de tono conversacional ----------
+
+// Mapea un campo faltante a una pregunta natural y corta (estilo WhatsApp)
+const askMap: Record<string, string> = {
+  "producto exacto": "qué te gustaría exactamente",
+  "cantidad": "cuántas piezas necesitas",
+  "fecha": "para qué fecha lo quieres",
+  "fecha exacta": "el día exacto",
+  "hora": "a qué hora lo necesitas",
+  "hora exacta": "la hora",
+  "dirección": "si es entrega o lo recoges",
+  "dirección completa": "la dirección de entrega",
+  "pago": "cómo te queda mejor el pago",
+  "contacto": "un número donde contactarte",
+};
+
+// Convierte faltantes a bullets cortos (máximo 2)
+function topAsks(faltantes: string[]): string[] {
+  const priority = ["hora", "hora exacta", "fecha", "fecha exacta", "cantidad", "dirección", "dirección completa", "producto exacto", "contacto", "pago"];
+  const lower = (faltantes || []).map((f) => f.toLowerCase());
+  const sorted = [...lower].sort((a, b) => {
+    const ia = priority.indexOf(a); const ib = priority.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
+  return sorted.slice(0, 2).map((f) => askMap[f] || f);
 }
 
-// Mensaje sugerido dinámico según tipo de orden, datos faltantes y ambigüedad
+// Frase corta tipo "para este viernes", "para mañana", "para hoy"
+function whenPhrase(o: Order): string {
+  if (!o.fechaEntrega) return "";
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+  if (o.fechaEntrega === today) return "para hoy";
+  if (o.fechaEntrega === tomorrow) return "para mañana";
+  const d = new Date(o.fechaEntrega + "T00:00:00");
+  const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const diff = Math.round((d.getTime() - new Date(new Date().toDateString()).getTime()) / 86400000);
+  if (diff > 0 && diff <= 7) return `para este ${days[d.getDay()]}`;
+  return `para el ${d.toLocaleDateString("es-MX", { day: "numeric", month: "long" })}`;
+}
+
+// Sustantivo corto del pedido: "tu pastel", "tu cita", "tu pedido"
+function itemNoun(o: Order): string {
+  const desc = (o.descripcion || "").split(" — ")[0].trim();
+  if (o.tipo === "cita") return "tu cita";
+  if (o.tipo === "servicio") return desc ? `tu ${desc.toLowerCase()}` : "tu servicio";
+  if (desc) return `tu ${desc.toLowerCase()}`;
+  return "tu pedido";
+}
+
+// Emoji sutil según tipo
+function typeEmoji(o: Order): string {
+  if (o.tipo === "cita") return "📅";
+  if (o.tipo === "servicio") return "✨";
+  const d = (o.descripcion || "").toLowerCase();
+  if (/pastel|cake|postre|cupcake/.test(d)) return "🎂";
+  if (/flor|ramo|bouquet/.test(d)) return "💐";
+  if (/comida|almuerzo|cena|menú/.test(d)) return "🍽️";
+  return "🙌";
+}
+
+// Construye el bloque de "solo necesito confirmar" con bullets (máx 2)
+function confirmBlock(asks: string[]): string {
+  if (asks.length === 0) return "";
+  if (asks.length === 1) {
+    return `Para asegurarte la fecha, solo necesito confirmar:\n• ${cap(asks[0])}`;
+  }
+  return `Para asegurarte la fecha, solo necesito confirmar:\n• ${cap(asks[0])}\n• ${cap(asks[1])}`;
+}
+
+function cap(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
+// ---------- Builders públicos (nuevo tono) ----------
+
+// Mensaje genérico cuando faltan datos — usado en pocos lugares legacy
+export function buildMissingMessage(cliente: string, faltantes: string[]): string {
+  const n = firstName(cliente);
+  const asks = topAsks(faltantes);
+  const intro = `Hola${n ? " " + n : ""} 😊\n\n¡Sí podemos ayudarte! 🙌`;
+  const block = confirmBlock(asks);
+  const outro = "En cuanto me confirmes, te aparto el lugar.";
+  return [intro, block, outro].filter(Boolean).join("\n\n");
+}
+
+// Mensaje sugerido inicial — confirma viabilidad, pide 1-2 datos, anuncia pago como siguiente paso natural
 export function buildSmartReply(o: Order): string {
   const n = firstName(o.cliente);
   const saludo = `Hola${n ? " " + n : ""} 😊`;
+  const cuando = whenPhrase(o);
+  const noun = itemNoun(o);
+  const emoji = typeEmoji(o);
+  const asks = topAsks(o.faltantes || []);
 
-  // Mapear faltantes a frases naturales
-  const faltan = (o.faltantes || []).map((f) => f.toLowerCase());
-  const phraseMap: Record<string, string> = {
-    "producto exacto": "qué producto necesitas",
-    "cantidad": "la cantidad exacta",
-    "fecha": "la fecha",
-    "fecha exacta": "la fecha exacta",
-    "hora": "el horario",
-    "hora exacta": "la hora final",
-    "dirección": "la dirección completa",
-    "dirección completa": "la dirección completa",
-    "pago": "el método de pago",
-    "contacto": "un teléfono de contacto",
-  };
-  const frases = faltan.map((f) => phraseMap[f] || f).filter(Boolean);
-  const lista = frases.length > 1
-    ? frases.slice(0, -1).join(", ") + " y " + frases[frases.length - 1]
-    : frases[0] || "algunos detalles";
-
-  if (o.tipo === "cita") {
-    if (faltan.length === 0) {
-      const cuando = o.horaEntrega ? `el ${o.fechaEntrega} a las ${o.horaEntrega}` : "en la fecha indicada";
-      return `${saludo} confirmo tu cita ${cuando}. ¿Te queda bien? ¡Te esperamos!`;
-    }
-    return `${saludo} para agendar tu cita necesito confirmar ${lista}. ¿Me lo puedes compartir?`;
+  // Caso 1: tenemos todo → confirmación cálida + pago como siguiente paso natural
+  if (asks.length === 0) {
+    const linea1 = cuando
+      ? `¡${noun.charAt(0).toUpperCase() + noun.slice(1)} queda confirmado ${cuando}! ${emoji}`
+      : `¡${noun.charAt(0).toUpperCase() + noun.slice(1)} queda confirmado! ${emoji}`;
+    const cierre = o.precio
+      ? "Ahora te paso el link para apartarlo y queda todo listo 🙌"
+      : "Cualquier detalle adicional me avisas. ¡Gracias!";
+    return `${saludo}\n\n${linea1}\n\n${cierre}`;
   }
 
-  if (o.tipo === "servicio") {
-    if (faltan.length === 0) {
-      return `${saludo} recibido tu solicitud de ${o.descripcion || "servicio"}. Te confirmo disponibilidad enseguida.`;
-    }
-    return `${saludo} para coordinar tu servicio necesito ${lista}. ¿Me lo puedes compartir?`;
-  }
-
-  // Producto / personalizado
-  if (faltan.length === 0) {
-    return `${saludo} confirmo tu pedido de ${o.descripcion || "producto"}. Coordinamos entrega según lo acordado. ¡Gracias!`;
-  }
-  return `${saludo} para poder ayudarte necesito confirmar ${lista}. ¿Me lo puedes compartir? ¡Gracias!`;
+  // Caso 2: faltan datos → confirmar viabilidad primero, pedir solo 1-2
+  const viabilidad = cuando
+    ? `¡Sí podemos hacer ${noun} ${cuando}! ${emoji}`
+    : `¡Sí podemos ayudarte con ${noun}! ${emoji}`;
+  const block = confirmBlock(asks);
+  const cierre = "En cuanto me confirmes, te mando el link para apartarlo 🙌";
+  return `${saludo}\n\n${viabilidad}\n\n${block}\n\n${cierre}`;
 }
 
+// Confirmación final tras tener todos los datos
 export function buildConfirmMessage(o: Order): string {
   const n = firstName(o.cliente);
-  const desc = o.descripcion || "tu pedido";
-  const fecha = o.fechaEntrega
-    ? `${o.fechaEntrega}${o.horaEntrega ? ` a las ${o.horaEntrega}` : ""}`
-    : "la fecha acordada";
-  return `¡Hola${n ? " " + n : ""}! ✅ Confirmado: ${desc} para ${fecha}. ¡Gracias por tu preferencia!`;
+  const noun = itemNoun(o);
+  const cuando = whenPhrase(o);
+  const hora = o.horaEntrega ? ` a las ${o.horaEntrega}` : "";
+  const linea1 = cuando
+    ? `¡${noun.charAt(0).toUpperCase() + noun.slice(1)} queda confirmado ${cuando}${hora}! ✅`
+    : `¡${noun.charAt(0).toUpperCase() + noun.slice(1)} queda confirmado! ✅`;
+  const cierre = o.precio
+    ? "Te paso el link de pago y con eso aseguramos tu lugar 🙌"
+    : "Cualquier cambio me avisas. ¡Gracias por tu preferencia!";
+  return `Hola${n ? " " + n : ""} 😊\n\n${linea1}\n\n${cierre}`;
 }
 
+// Recordatorio el día de la entrega/cita
 export function buildReminderMessage(o: Order): string {
   const n = firstName(o.cliente);
   const cuando = o.horaEntrega ? `hoy a las ${o.horaEntrega}` : "hoy";
-  return `¡Hola${n ? " " + n : ""}! 📅 Te recordamos tu cita ${cuando}. Si necesitas reagendar, avísanos. ¡Te esperamos!`;
+  if (o.tipo === "cita") {
+    return `Hola${n ? " " + n : ""} 😊\n\nSolo para confirmar que te esperamos ${cuando} 📅\n\nSi necesitas mover el horario, dime y lo acomodamos.`;
+  }
+  return `Hola${n ? " " + n : ""} 😊\n\nTu pedido va ${cuando} 🙌\n\n¿Te queda bien la hora de entrega?`;
 }
 
+// Mensaje cálido para introducir el pago (cuando el pedido ya está confirmado)
 export function buildPaymentMessage(o: Order): string {
   const n = firstName(o.cliente);
-  const monto = o.precio ? ` por ${money(o.precio)}` : "";
-  return `¡Hola${n ? " " + n : ""}! 💳 Para asegurar tu pedido${monto} necesitamos tu pago o anticipo. Te paso los datos ahora. ¡Gracias!`;
+  const monto = o.precio ? ` (${money(o.precio)})` : "";
+  return `Hola${n ? " " + n : ""} 😊\n\n¡Todo listo de mi lado! Para apartar tu lugar${monto}, te paso el link de pago en un momento 🙌`;
 }
 
+// Pedido listo
 export function buildReadyMessage(o: Order): string {
   const n = firstName(o.cliente);
-  const desc = o.descripcion || "tu pedido";
-  return `¡Hola${n ? " " + n : ""}! 🎉 ${desc} ya está listo. Coordinamos la entrega según lo acordado. ¡Gracias!`;
+  const noun = itemNoun(o);
+  return `¡Hola${n ? " " + n : ""}! 🎉\n\n${noun.charAt(0).toUpperCase() + noun.slice(1)} ya está listo. ¿Te queda bien pasar a la hora acordada?`;
 }
 
 // Recordatorio de pago / cobro automático
