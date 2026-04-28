@@ -5,6 +5,7 @@ import { usePaymentEngine } from "@/lib/payment-engine";
 import { useCatalog } from "@/lib/catalog-store";
 import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
 import { useAutoReplyEngine } from "@/lib/auto-reply-engine";
+import { useLearningEngine } from "@/lib/learning-engine";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,8 @@ function Index() {
   useInventoryEngine();
   // Activa motor de respuestas automáticas (sugerido / automático)
   useAutoReplyEngine();
+  // Activa motor de aprendizaje continuo (cosecha outcomes, recalcula pesos por producto)
+  useLearningEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
