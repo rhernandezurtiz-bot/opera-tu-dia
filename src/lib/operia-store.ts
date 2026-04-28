@@ -303,17 +303,91 @@ export const useOperia = create<State>()(
       generatePaymentLink: (id) => {
         const token = Math.random().toString(36).slice(2, 10);
         const link = `https://pay.operia.app/${id}/${token}`;
+        const now = Date.now();
         set((s) => ({
-          orders: s.orders.map((o) =>
-            o.id === id
-              ? recompute({ ...o, paymentLink: link, pago: o.pago === "pagado" ? o.pago : "anticipo_solicitado" })
-              : o
-          ),
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            if (o.pago === "pagado" || o.pago === "no_requerido") return o;
+            const mode: "anticipo" | "total" =
+              s.negocio.autoCobroEnabled && o.precio >= s.negocio.umbralAnticipo
+                ? "anticipo"
+                : "total";
+            const events = o.paymentEvents ?? [];
+            return recompute({
+              ...o,
+              paymentLink: link,
+              paymentLinkAt: now,
+              paymentMode: mode,
+              pago: "link_enviado",
+              paymentEvents: [
+                ...events,
+                { kind: "link_generado", at: now, detail: mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total" },
+                { kind: "mensaje_enviado", at: now, detail: "Mensaje de cobro enviado por WhatsApp" },
+              ],
+            });
+          }),
         }));
         return link;
       },
+      markPaymentPaid: (id) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            if (o.pago === "pagado") return o;
+            const events = o.paymentEvents ?? [];
+            const newEstado: OrderStatus = o.estado === "nuevo" ? "confirmado" : o.estado;
+            return recompute({
+              ...o,
+              pago: "pagado",
+              paymentPaidAt: now,
+              estado: newEstado,
+              checklist: { ...o.checklist, pago: true },
+              paymentEvents: [
+                ...events,
+                { kind: "pago_recibido", at: now, detail: "Webhook de pago confirmado" },
+              ],
+            });
+          }),
+        }));
+      },
+      markPaymentFailed: (id, motivo) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            return recompute({
+              ...o,
+              pago: "fallido",
+              paymentEvents: [
+                ...events,
+                { kind: "pago_fallido", at: now, detail: motivo ?? "Pago rechazado" },
+              ],
+            });
+          }),
+        }));
+      },
+      sendPaymentReminder: (id) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            return {
+              ...o,
+              paymentReminderAt: now,
+              paymentEvents: [
+                ...events,
+                { kind: "recordatorio_enviado", at: now, detail: "Recordatorio enviado al cliente" },
+              ],
+            };
+          }),
+        }));
+      },
+      setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
     }),
-    { name: "operia-store-v4" }
+    { name: "operia-store-v5" }
   )
 );
 
