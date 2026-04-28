@@ -120,11 +120,10 @@ function Landing() {
         </div>
 
         {/* Logos / proof bar */}
-        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Metric value="−87%" label="Pedidos perdidos" />
-          <Metric value="3.2×" label="Tiempo de respuesta" />
-          <Metric value="+24%" label="Cobranza puntual" />
-          <Metric value="<2 min" label="Implementación inicial" />
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Metric value="+32%" label="Más pedidos cerrados en 30 días" />
+          <Metric value="−78%" label="Pedidos sin seguimiento" />
+          <Metric value="0" label="Pedidos perdidos en operación diaria" />
         </div>
       </section>
 
