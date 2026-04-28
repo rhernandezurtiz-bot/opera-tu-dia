@@ -244,6 +244,18 @@ function Detalle() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
+          {/* Decisión comercial */}
+          <DecisionCard
+            decision={decision}
+            telefono={order.telefono}
+            canCharge={decision.canCharge && !blockPayment}
+            onGenerarCobro={() => {
+              const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
+              generatePaymentLink(order.id, provider);
+              toast.success("Link de pago generado");
+            }}
+          />
+
           {/* Validación contra catálogo */}
           <CatalogValidationBlock
             validation={validation}
