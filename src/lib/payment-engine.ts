@@ -25,18 +25,14 @@ export function usePaymentEngine() {
 
       for (const o of orders) {
         if (o.estado === "cancelado" || o.estado === "entregado") continue;
-        if (!o.precio || o.precio <= 0) continue;
 
-        // Regla 1: confirmado, sin pago, sin link → genera link
-        if (
-          o.estado === "confirmado" &&
-          o.pago === "pendiente" &&
-          !o.paymentLink &&
-          (o.faltantes ?? []).length === 0
-        ) {
+        // Regla 1: criterios cumplidos (fecha confirmada + dirección + monto) y sin link → genera link automáticamente
+        if (!o.paymentLink && isReadyForAutoPayment(o)) {
           generatePaymentLink(o.id);
           continue;
         }
+
+        if (!o.precio || o.precio <= 0) continue;
 
         // Regla 2: link_enviado y pasó tiempo de webhook → simular pago recibido
         if (o.pago === "link_enviado" && o.paymentLinkAt && now - o.paymentLinkAt >= webhookMs) {
