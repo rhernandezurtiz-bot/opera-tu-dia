@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
+import { LandingExample } from "@/components/LandingExample";
+
 
 function Example({
   icon: Icon,
