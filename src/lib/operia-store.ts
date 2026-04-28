@@ -215,6 +215,7 @@ const seedOrders = (): Order[] => [
     checklist: { pago: true, produccion: true, empaque: false, entrega: false },
     mensajeOriginal: "Hola, quiero el pastel de chocolate para hoy 5pm",
     createdAt: Date.now() - 86400000,
+    canal: "whatsapp",
   },
   {
     id: "o2", cliente: "Sofía Ramírez", telefono: "+52 55 9876 5432",
