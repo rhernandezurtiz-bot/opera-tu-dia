@@ -891,13 +891,16 @@ function FieldRow({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
   );
 }
 
-function CostCard({ value, label }: { value: string; label: string }) {
+function CostCard({ title, label }: { title: string; label: string }) {
   return (
-    <Card className="p-6 rounded-2xl">
-      <div className="text-[28px] md:text-[32px] font-semibold tracking-tight tabular-nums text-danger">
-        {value}
+    <Card className="p-6 rounded-2xl h-full">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-4 w-4 text-foreground/70" />
+        <div className="text-[14.5px] font-semibold tracking-tight">
+          {title}
+        </div>
       </div>
-      <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+      <p className="text-[13px] text-muted-foreground leading-relaxed">
         {label}
       </p>
     </Card>
