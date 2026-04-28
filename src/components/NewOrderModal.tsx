@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
+import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 const SAMPLE = `Hola! Soy Carolina, quisiera un pastel de chocolate para mañana a las 5pm. Te paso el anticipo hoy.`;
@@ -16,6 +18,7 @@ export function NewOrderModal() {
   const close = useUI((s) => s.closeNewOrder);
   const addOrder = useOperia((s) => s.addOrder);
   const navigate = useNavigate();
+  const usage = useUsageLimits();
   const [msg, setMsg] = useState("");
   const [draft, setDraft] = useState<Order | null>(null);
 
@@ -29,6 +32,8 @@ export function NewOrderModal() {
 
   const guardar = () => {
     if (!draft) return;
+    const check = usage.canCreateOrder();
+    if (!check.ok) { toast.error(check.reason ?? "Límite alcanzado"); return; }
     addOrder(draft);
     toast.success("Pedido guardado");
     handleClose();
@@ -37,6 +42,8 @@ export function NewOrderModal() {
 
   const editar = () => {
     if (!draft) return;
+    const check = usage.canCreateOrder();
+    if (!check.ok) { toast.error(check.reason ?? "Límite alcanzado"); return; }
     addOrder(draft);
     handleClose();
     navigate({ to: "/pedidos/$id", params: { id: draft.id } });
