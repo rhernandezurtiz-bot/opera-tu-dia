@@ -92,6 +92,9 @@ export interface Order {
   paymentLinkAt?: number; // cuando se generó
   paymentPaidAt?: number; // cuando se pagó
   paymentReminderAt?: number; // último recordatorio enviado
+  linkSentAt?: number; // cuando el mensaje con el link salió por WhatsApp
+  linkSendResult?: "ok" | "error"; // resultado del último envío
+  linkSendError?: string; // motivo si linkSendResult === "error"
   paymentEvents?: PaymentEvent[];
   paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
   paymentProvider?: PaymentProvider; // proveedor usado para el link
