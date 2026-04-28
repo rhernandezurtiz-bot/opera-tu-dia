@@ -656,6 +656,30 @@ function SolutionItem({
   );
 }
 
+function ControlItem({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: any;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Card className="p-5 rounded-xl">
+      <div className="flex items-start gap-3">
+        <div className="h-8 w-8 rounded-lg border border-border grid place-items-center shrink-0 mt-0.5">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div>
+          <div className="text-[14.5px] font-semibold tracking-tight mb-1">{title}</div>
+          <p className="text-[12.5px] text-muted-foreground leading-relaxed">{body}</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function ProblemItem({ title, detail }: { title: string; detail: string }) {
   return (
     <div className="bg-background p-6 md:p-7">
