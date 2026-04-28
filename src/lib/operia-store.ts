@@ -92,6 +92,9 @@ export interface Order {
   paymentLinkAt?: number; // cuando se generó
   paymentPaidAt?: number; // cuando se pagó
   paymentReminderAt?: number; // último recordatorio enviado
+  linkSentAt?: number; // cuando el mensaje con el link salió por WhatsApp
+  linkSendResult?: "ok" | "error"; // resultado del último envío
+  linkSendError?: string; // motivo si linkSendResult === "error"
   paymentEvents?: PaymentEvent[];
   paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
   paymentProvider?: PaymentProvider; // proveedor usado para el link
@@ -259,6 +262,7 @@ interface State {
   markPaymentPaid: (id: string) => void;
   markPaymentFailed: (id: string, motivo?: string) => void;
   sendPaymentReminder: (id: string) => void;
+  markLinkSent: (id: string, payload: { ok: boolean; at: number; provider: string; messageId?: string; error?: string }) => void;
   setPaymentRules: (rules: Partial<Pick<Negocio, "autoCobroEnabled" | "umbralAnticipo" | "porcentajeAnticipo" | "recordatorioMinutos" | "webhookSimMinutos">>) => void;
   setPaymentsConfig: (cfg: Partial<PaymentsConfig>) => void;
 }
@@ -427,6 +431,27 @@ export const useOperia = create<State>()(
               paymentEvents: [
                 ...events,
                 { kind: "recordatorio_enviado", at: now, detail: "Recordatorio enviado al cliente" },
+              ],
+            };
+          }),
+        }));
+      },
+      markLinkSent: (id, payload) => {
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            const detail = payload.ok
+              ? `Enviado por WhatsApp · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
+              : `Falló envío por WhatsApp · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
+            return {
+              ...o,
+              linkSentAt: payload.ok ? payload.at : o.linkSentAt,
+              linkSendResult: payload.ok ? "ok" : "error",
+              linkSendError: payload.ok ? undefined : payload.error,
+              paymentEvents: [
+                ...events,
+                { kind: "mensaje_enviado", at: payload.at, detail },
               ],
             };
           }),
