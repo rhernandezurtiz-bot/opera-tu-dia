@@ -717,6 +717,28 @@ function SolutionItem({
   );
 }
 
+function PillarItem({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: any;
+  title: string;
+  body: string;
+}) {
+  return (
+    <li className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
+      <div className="h-7 w-7 rounded-md border border-border grid place-items-center shrink-0 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-foreground/70" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[13.5px] font-semibold tracking-tight">{title}</div>
+        <p className="text-[12.5px] text-muted-foreground leading-relaxed mt-0.5">{body}</p>
+      </div>
+    </li>
+  );
+}
+
 function ControlItem({
   icon: Icon,
   title,
