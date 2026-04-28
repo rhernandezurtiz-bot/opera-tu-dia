@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 export type RiskLevel = "bajo" | "medio" | "alto";
 export type OrderStatus = "nuevo" | "confirmado" | "en_proceso" | "listo" | "entregado" | "cancelado";
-export type PaymentStatus = "pendiente" | "anticipo" | "pagado";
+export type PaymentStatus = "pendiente" | "anticipo_solicitado" | "anticipo" | "pagado" | "vencido";
 export type OrderType = "producto" | "servicio" | "cita" | "personalizado";
 
 export const typeLabels: Record<OrderType, string> = {
