@@ -71,7 +71,7 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
     if ((o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado") {
       ingresosEnRiesgo += monto;
     }
-    if (o.pago === "pendiente" && o.estado !== "entregado") {
+    if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado" || o.pago === "vencido") && o.estado !== "entregado") {
       pedidosSinAnticipo += 1;
       montoSinAnticipo += monto;
     }
