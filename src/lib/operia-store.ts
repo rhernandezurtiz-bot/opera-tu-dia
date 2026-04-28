@@ -433,6 +433,8 @@ export const useOperia = create<State>()(
       instagram: { igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram", conectado: false },
       facebook: { pageId: "", accessToken: "", verifyToken: "", appSecret: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook", conectado: false },
       channelMode: "demo" as ChannelMode,
+      autoReplyMode: "sugerido" as AutoReplyMode,
+      autoReplyLog: [] as AutoReplyLogEntry[],
       clientNotes: {
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
       } as Record<string, string>,
@@ -448,6 +450,18 @@ export const useOperia = create<State>()(
       setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
       setFacebook: (c) => set((s) => ({ facebook: { ...s.facebook, ...c } })),
       setChannelMode: (m) => set(() => ({ channelMode: m })),
+      setAutoReplyMode: (m) => set(() => ({ autoReplyMode: m })),
+      logAutoReply: (entry) => {
+        const id = "ar_" + Math.random().toString(36).slice(2, 10);
+        const at = entry.at ?? Date.now();
+        set((s) => ({
+          autoReplyLog: [{ ...entry, id, at } as AutoReplyLogEntry, ...s.autoReplyLog].slice(0, 200),
+        }));
+        return id;
+      },
+      updateAutoReplyLog: (id, patch) => set((s) => ({
+        autoReplyLog: s.autoReplyLog.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
         orders: s.orders.map((o) => (o.id === id ? recompute({ ...o, ...patch }) : o)),
