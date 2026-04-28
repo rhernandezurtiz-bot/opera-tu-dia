@@ -527,6 +527,54 @@ function Landing() {
         </div>
       </section>
 
+      {/* Antes / Después */}
+      <section
+        id="impacto"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>Antes y después</SectionLabel>
+        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-3 max-w-2xl">
+          El impacto operativo, en números.
+        </h2>
+        <p className="text-[15px] text-muted-foreground leading-relaxed max-w-xl mb-12">
+          De una operación reactiva en chats sueltos a un sistema medible y bajo control.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card className="p-6 md:p-7 rounded-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Antes
+              </div>
+              <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20">
+                Sin control
+              </span>
+            </div>
+            <ul className="space-y-3">
+              <CompareRow label="Mensajes diarios" value="120" tone="muted" />
+              <CompareRow label="Sin respuesta" value="30%" tone="danger" />
+              <CompareRow label="Control de pagos" value="Inexistente" tone="danger" />
+            </ul>
+          </Card>
+
+          <Card className="p-6 md:p-7 rounded-2xl border-foreground/20">
+            <div className="flex items-center justify-between mb-5">
+              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Después con Operia
+              </div>
+              <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-foreground text-background">
+                Operación bajo control
+              </span>
+            </div>
+            <ul className="space-y-3">
+              <CompareRow label="Pedidos registrados" value="100%" tone="positive" />
+              <CompareRow label="Con anticipo antes de producción" value="90%" tone="positive" />
+              <CompareRow label="Tablero central para el equipo" value="1" tone="positive" />
+            </ul>
+          </Card>
+        </div>
+      </section>
+
       {/* Clientes */}
       <section
         id="clientes"
