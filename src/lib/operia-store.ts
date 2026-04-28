@@ -379,12 +379,16 @@ export const useOperia = create<State>()(
             if (o.id !== id) return o;
             if (o.pago === "pagado") return o;
             const events = o.paymentEvents ?? [];
-            const newEstado: OrderStatus = o.estado === "nuevo" ? "confirmado" : o.estado;
+            // Tras confirmar pago: mover a "confirmado" si aún no avanzó más allá,
+            // y bajar el riesgo (las alertas de pago/datos quedan resueltas).
+            const advanced: OrderStatus[] = ["en_proceso", "listo", "entregado"];
+            const newEstado: OrderStatus = advanced.includes(o.estado) ? o.estado : "confirmado";
             return recompute({
               ...o,
               pago: "pagado",
               paymentPaidAt: now,
               estado: newEstado,
+              riesgo: "bajo",
               checklist: { ...o.checklist, pago: true },
               paymentEvents: [
                 ...events,
