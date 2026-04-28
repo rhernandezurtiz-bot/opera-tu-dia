@@ -15,6 +15,7 @@ const nav = [
   { to: "/pedidos", label: "Pedidos", icon: ListOrdered },
   { to: "/produccion", label: "Plan del día", icon: ChefHat },
   { to: "/catalogo", label: "Catálogo", icon: Package },
+  { to: "/inventario", label: "Inventario", icon: Boxes },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/riesgos", label: "Riesgos", icon: AlertTriangle },
   { to: "/configuracion", label: "Ajustes", icon: Settings },
