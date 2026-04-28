@@ -708,6 +708,13 @@ export function variantRemaining(
   return remainingCapacity(item, fechaISO, orders);
 }
 
+/* ============== Boost inyectable (aprendizaje) ============== */
+
+let _productBoost: (id: string) => number = () => 1;
+export function setProductBoostResolver(fn: (id: string) => number) {
+  _productBoost = fn;
+}
+
 /* ============== Selector de mejor opción ============== */
 
 export interface BestOptionRequest {
@@ -781,14 +788,8 @@ export function selectBestOption(
       const prepScore = Math.max(0, 500 - prep);     // 0 prep = 500, 500 min = 0
       const marginScore = Math.min(precio / 10, 500); // tope 500
 
-      // Boost por aprendizaje (lazy import para evitar ciclo)
-      let boost = 1;
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const mod = require("./learning-engine") as typeof import("./learning-engine");
-        boost = mod.getProductBoost(item.id);
-      } catch { /* sin datos aún */ }
-
+      // Boost por aprendizaje (inyectado desde learning-engine)
+      const boost = _productBoost(item.id);
       const score = (dispScore + prepScore + marginScore) * boost;
 
       candidates.push({
