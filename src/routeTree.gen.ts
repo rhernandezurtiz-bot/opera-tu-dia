@@ -14,6 +14,7 @@ import { Route as ProduccionRouteImport } from './routes/produccion'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
+import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
@@ -49,6 +50,11 @@ const LoginRoute = LoginRouteImport.update({
 const ConfiguracionRoute = ConfiguracionRouteImport.update({
   id: '/configuracion',
   path: '/configuracion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogoRoute = CatalogoRouteImport.update({
+  id: '/catalogo',
+  path: '/catalogo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -111,6 +117,7 @@ const ApiPublicWebhooksMercadopagoRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/catalogo'
     | '/configuracion'
     | '/login'
     | '/onboarding'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/catalogo'
     | '/configuracion'
     | '/login'
     | '/onboarding'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/catalogo'
     | '/configuracion'
     | '/login'
     | '/onboarding'
@@ -223,6 +235,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
+  CatalogoRoute: typeof CatalogoRoute
   ConfiguracionRoute: typeof ConfiguracionRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       path: '/configuracion'
       fullPath: '/configuracion'
       preLoaderRoute: typeof ConfiguracionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogo': {
+      id: '/catalogo'
+      path: '/catalogo'
+      fullPath: '/catalogo'
+      preLoaderRoute: typeof CatalogoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -359,6 +379,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
+  CatalogoRoute: CatalogoRoute,
   ConfiguracionRoute: ConfiguracionRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
