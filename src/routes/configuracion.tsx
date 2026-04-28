@@ -31,6 +31,8 @@ function Config() {
   const setRiskRules = useOperia((s) => s.setRiskRules);
   const whatsapp = useOperia((s) => s.whatsapp);
   const setWhatsapp = useOperia((s) => s.setWhatsapp);
+  const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
+  const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
 
