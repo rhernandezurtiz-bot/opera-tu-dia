@@ -56,7 +56,13 @@ export interface MoneySummary {
   ingresosEnRiesgo: number;
   pedidosSinAnticipo: number;
   montoSinAnticipo: number;
+  cobradoHoy: number;
+  pedidosCobradosHoy: number;
+  pedidosFallidos: number;
+  conversionPct: number; // pedidos pagados / pedidos con cobro requerido (últimos 30d)
 }
+
+const MS_30D = 1000 * 60 * 60 * 24 * 30;
 
 export function summarizeMoney(orders: Order[]): MoneySummary {
   const today = todayStr();
@@ -64,6 +70,13 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
   let ingresosEnRiesgo = 0;
   let pedidosSinAnticipo = 0;
   let montoSinAnticipo = 0;
+  let cobradoHoy = 0;
+  let pedidosCobradosHoy = 0;
+  let pedidosFallidos = 0;
+  let conversionDen = 0;
+  let conversionNum = 0;
+  const cutoff = Date.now() - MS_30D;
+
   for (const o of orders) {
     if (o.estado === "cancelado") continue;
     const monto = o.precio || 0;
@@ -71,12 +84,37 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
     if ((o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado") {
       ingresosEnRiesgo += monto;
     }
-    if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado" || o.pago === "vencido") && o.estado !== "entregado") {
+    if (
+      (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "vencido" || o.pago === "fallido") &&
+      o.estado !== "entregado"
+    ) {
       pedidosSinAnticipo += 1;
       montoSinAnticipo += monto;
     }
+    if (o.pago === "fallido") pedidosFallidos += 1;
+    if (o.pago === "pagado" && o.paymentPaidAt) {
+      const paidDate = new Date(o.paymentPaidAt).toISOString().slice(0, 10);
+      if (paidDate === today) {
+        cobradoHoy += monto;
+        pedidosCobradosHoy += 1;
+      }
+    }
+    if (o.pago !== "no_requerido" && o.createdAt >= cutoff) {
+      conversionDen += 1;
+      if (o.pago === "pagado") conversionNum += 1;
+    }
   }
-  return { ingresosHoy, ingresosEnRiesgo, pedidosSinAnticipo, montoSinAnticipo };
+  const conversionPct = conversionDen === 0 ? 0 : Math.round((conversionNum / conversionDen) * 100);
+  return {
+    ingresosHoy,
+    ingresosEnRiesgo,
+    pedidosSinAnticipo,
+    montoSinAnticipo,
+    cobradoHoy,
+    pedidosCobradosHoy,
+    pedidosFallidos,
+    conversionPct,
+  };
 }
 
 /* ---------- Message templates ---------- */
