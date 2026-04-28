@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as InventarioRouteImport } from './routes/inventario'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as CapacidadRouteImport } from './routes/capacidad'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
@@ -66,6 +67,11 @@ const ConfiguracionRoute = ConfiguracionRouteImport.update({
 const CatalogoRoute = CatalogoRouteImport.update({
   id: '/catalogo',
   path: '/catalogo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CapacidadRoute = CapacidadRouteImport.update({
+  id: '/capacidad',
+  path: '/capacidad',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -155,6 +161,7 @@ const ApiPublicWebhooksFacebookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/capacidad': typeof CapacidadRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/inventario': typeof InventarioRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/capacidad': typeof CapacidadRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/inventario': typeof InventarioRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRoute
+  '/capacidad': typeof CapacidadRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
   '/inventario': typeof InventarioRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/capacidad'
     | '/catalogo'
     | '/configuracion'
     | '/inventario'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/capacidad'
     | '/catalogo'
     | '/configuracion'
     | '/inventario'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/capacidad'
     | '/catalogo'
     | '/configuracion'
     | '/inventario'
@@ -309,6 +321,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRoute
+  CapacidadRoute: typeof CapacidadRoute
   CatalogoRoute: typeof CatalogoRoute
   ConfiguracionRoute: typeof ConfiguracionRoute
   InventarioRoute: typeof InventarioRoute
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/catalogo'
       fullPath: '/catalogo'
       preLoaderRoute: typeof CatalogoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/capacidad': {
+      id: '/capacidad'
+      path: '/capacidad'
+      fullPath: '/capacidad'
+      preLoaderRoute: typeof CapacidadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -501,6 +521,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRoute,
+  CapacidadRoute: CapacidadRoute,
   CatalogoRoute: CatalogoRoute,
   ConfiguracionRoute: ConfiguracionRoute,
   InventarioRoute: InventarioRoute,
