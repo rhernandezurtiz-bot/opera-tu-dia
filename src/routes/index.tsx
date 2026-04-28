@@ -4,17 +4,19 @@ import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
   MessageSquare,
-  ListChecks,
-  AlertCircle,
-  ChefHat,
+  Workflow,
+  ShieldCheck,
+  Layers,
   Users,
-  Wallet,
+  LineChart,
   Check,
   Sparkles,
   ArrowDown,
   Send,
   Wrench,
   Cake,
+  AlertCircle,
+  Zap,
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
@@ -25,17 +27,20 @@ import { Testimonial } from "@/components/Testimonial";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
+      { title: "Operia — Centraliza, controla y ejecuta tus ventas de WhatsApp" },
       {
         name: "description",
         content:
-          "Operia convierte mensajes de WhatsApp en órdenes claras, te dice qué hacer y te ayuda a cobrar a tiempo. Menos caos, más dinero.",
+          "La plataforma operativa para equipos que venden por WhatsApp. Convierte conversaciones en operaciones claras, evita pérdidas y escala sin caos.",
       },
-      { property: "og:title", content: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
+      {
+        property: "og:title",
+        content: "Operia — La plataforma operativa para ventas por WhatsApp",
+      },
       {
         property: "og:description",
         content:
-          "Convierte mensajes en órdenes, recupera pagos pendientes y entrega a tiempo. Empieza gratis.",
+          "Centraliza pedidos, prioriza por riesgo, ejecuta acciones y mide resultados. Diseñada para equipos.",
       },
     ],
   }),
@@ -53,77 +58,101 @@ function Landing() {
             <img src={operiaLogo} alt="Operia" className="h-[16px] w-auto object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-7 text-[13px] text-muted-foreground">
-            <a href="#como-funciona" className="hover:text-foreground">Cómo funciona</a>
-            <a href="#beneficios" className="hover:text-foreground">Beneficios</a>
+            <a href="#plataforma" className="hover:text-foreground">Plataforma</a>
+            <a href="#capacidades" className="hover:text-foreground">Capacidades</a>
+            <a href="#clientes" className="hover:text-foreground">Clientes</a>
             <a href="#precios" className="hover:text-foreground">Precios</a>
             <a href="#faq" className="hover:text-foreground">FAQ</a>
-            <a href="#contacto" className="hover:text-foreground">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm" className="h-9">
               <Link to="/login">Entrar</Link>
             </Button>
             <Button asChild size="sm" className="h-9">
-              <Link to="/login">Empieza gratis</Link>
+              <a href="#contacto">Solicitar demo</a>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="px-5 md:px-8 max-w-6xl mx-auto pt-16 md:pt-24 pb-16 md:pb-24">
+      <section className="px-5 md:px-8 max-w-6xl mx-auto pt-20 md:pt-28 pb-16 md:pb-24">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[11.5px] uppercase tracking-[0.14em] text-muted-foreground mb-5">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Para negocios que venden por WhatsApp</span>
+            <span>Plataforma operativa para ventas por WhatsApp</span>
           </div>
-          <h1 className="text-[40px] md:text-[58px] leading-[1.05] font-semibold tracking-tight">
-            Deja de perder pedidos y{" "}
-            <span className="bg-foreground text-background px-2 rounded-md">dinero</span>{" "}
-            en WhatsApp.
+          <h1 className="text-[42px] md:text-[60px] leading-[1.04] font-semibold tracking-tight">
+            Centraliza, controla y ejecuta tus{" "}
+            <span className="bg-foreground text-background px-2 rounded-md">
+              ventas de WhatsApp
+            </span>
+            .
           </h1>
           <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
-            Operia convierte mensajes en órdenes claras, te dice qué hacer y te
-            ayuda a cobrar a tiempo. Menos caos, menos errores, más dinero en la
-            caja.
+            Operia convierte conversaciones en operaciones claras para equipos.
+            Evita pérdidas, mejora tiempos de respuesta y escala sin caos.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-12 px-6 text-[14px]">
-              <Link to="/login">
-                Empieza gratis <ArrowRight className="h-4 w-4" />
-              </Link>
+              <a href="#contacto">
+                Solicitar demo <ArrowRight className="h-4 w-4" />
+              </a>
             </Button>
-            <a
-              href="#como-funciona"
-              className="text-[13.5px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-            >
-              Ver cómo funciona <ArrowRight className="h-3.5 w-3.5" />
-            </a>
+            <Button asChild size="lg" variant="ghost" className="h-12 px-5 text-[14px]">
+              <Link to="/login">Probar plataforma</Link>
+            </Button>
           </div>
-          <p className="mt-5 text-[12.5px] text-muted-foreground">
-            Sin tarjeta. Sin instalación. Tu primer pedido organizado en menos de 1 minuto.
+          <p className="mt-6 text-[12.5px] text-muted-foreground">
+            Implementación guiada · SOC-friendly · Roles y auditoría
           </p>
         </div>
-      </section>
 
-      {/* Cómo funciona */}
-      <section id="como-funciona" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Cómo funciona</SectionLabel>
-        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          De un WhatsApp confuso a un pedido cobrado, sin perder tiempo.
-        </h2>
-        <div className="grid md:grid-cols-3 gap-4">
-          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia el WhatsApp del cliente y pégalo. Operia lee y entiende." />
-          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y qué falta para no perder el pedido." />
-          <Step n="3" icon={ChefHat} title="Te dice qué hacer" body="Confirma, cobra y entrega siguiendo el plan del día. Cero adivinar." />
+        {/* Logos / proof bar */}
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Metric value="−87%" label="Pedidos perdidos" />
+          <Metric value="3.2×" label="Tiempo de respuesta" />
+          <Metric value="+24%" label="Cobranza puntual" />
+          <Metric value="<2 min" label="Implementación inicial" />
         </div>
       </section>
 
-      {/* Así funciona en la vida real */}
-      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Así funciona en la vida real</SectionLabel>
+      {/* Plataforma */}
+      <section
+        id="plataforma"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
+      >
+        <SectionLabel>La plataforma</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Mensajes reales. Pedidos listos. Acción clara.
+          Una sola superficie operativa para todo el ciclo de venta.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Step
+            n="01"
+            icon={MessageSquare}
+            title="Captura"
+            body="Ingesta de mensajes de WhatsApp, manuales o vía API oficial. Estandariza datos en tiempo real."
+          />
+          <Step
+            n="02"
+            icon={Workflow}
+            title="Decisión"
+            body="Motor de prioridad y faltantes. Asigna la siguiente acción a cada pedido y a cada agente."
+          />
+          <Step
+            n="03"
+            icon={LineChart}
+            title="Ejecución"
+            body="Ejecuta cobros, confirmaciones y entregas con plantillas auditables y métricas en vivo."
+          />
+        </div>
+      </section>
+
+      {/* Casos reales */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Casos reales</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          De conversación a operación, en segundos.
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
           <LandingExample
@@ -137,7 +166,7 @@ function Landing() {
               { label: "Sabor / dirección", value: "Faltan", missing: true },
             ]}
             action="Solicitar anticipo"
-            message="Hola 😊 para confirmar tu pastel para 20 personas necesito el sabor, la dirección y un anticipo. ¿Me ayudas?"
+            message="Para confirmar tu pedido necesitamos sabor, dirección y anticipo. ¿Podrías compartirlos?"
           />
           <LandingExample
             icon={Wrench}
@@ -150,7 +179,7 @@ function Landing() {
               { label: "Hora exacta", value: "Falta", missing: true },
             ]}
             action="Confirmar horario"
-            message="Hola 😊 confirmo tu visita por la fuga el viernes en Providencia. ¿A qué hora te queda mejor?"
+            message="Confirmamos visita el viernes en Providencia. ¿Qué franja horaria te funciona mejor?"
           />
           <LandingExample
             icon={Users}
@@ -163,22 +192,41 @@ function Landing() {
               { label: "Cliente", value: "Por confirmar", missing: true },
             ]}
             action="Confirmar cita"
-            message="¡Hola! ✅ Te confirmo tu cita mañana a las 4 pm para corte y tinte. ¿Me confirmas tu nombre? ¡Te esperamos!"
+            message="Confirmamos tu cita mañana a las 16:00 para corte y tinte. Por favor confirma tu nombre."
           />
         </div>
       </section>
 
-      {/* Beneficios */}
-      <section id="beneficios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Beneficios</SectionLabel>
+      {/* Capacidades */}
+      <section
+        id="capacidades"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
+      >
+        <SectionLabel>Capacidades</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Cada pedido cuenta. Cada peso, también.
+          Diseñada para equipos que no pueden permitirse errores.
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
-          <Benefit icon={AlertCircle} title="No pierdas pedidos" body="Operia te avisa qué falta antes de que el cliente desaparezca o cancele." />
-          <Benefit icon={Wallet} title="Cobra a tiempo" body="Detecta pagos pendientes y te da el mensaje listo para pedir el anticipo." />
-          <Benefit icon={ChefHat} title="Ten control del día" body="Sabes qué producir, a qué hora y para quién. Sin libretas, sin caos." />
-          <Benefit icon={Users} title="Sabes qué hacer ahora" body="Cada pedido tiene una acción clara: confirmar, cobrar, recordar o entregar." />
+          <Benefit
+            icon={Layers}
+            title="Centralización total"
+            body="Todas las conversaciones, pedidos y clientes en una sola fuente de verdad. Sin libretas, sin duplicados."
+          />
+          <Benefit
+            icon={Workflow}
+            title="Ejecución asistida"
+            body="Cada pedido tiene una próxima acción priorizada por riesgo, valor y tiempo restante."
+          />
+          <Benefit
+            icon={LineChart}
+            title="Visibilidad operativa"
+            body="Indicadores en vivo de cobranza, entregas y SLA. Decisiones basadas en datos, no en intuición."
+          />
+          <Benefit
+            icon={ShieldCheck}
+            title="Control y cumplimiento"
+            body="Roles, permisos y trazabilidad de cada acción. Listo para auditoría desde el día uno."
+          />
         </div>
       </section>
 
@@ -189,49 +237,49 @@ function Landing() {
           Operia no solo organiza. Decide contigo.
         </h2>
         <p className="text-muted-foreground text-[14.5px] mb-10 max-w-xl">
-          Cada pedido llega con una recomendación clara. Tú apruebas y envías. Cero adivinar.
+          Cada pedido llega priorizado y con la acción recomendada. Tu equipo aprueba y ejecuta.
         </p>
 
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           <ul className="space-y-4">
             <DecideItem
               icon={AlertCircle}
-              title="Te dice qué falta"
-              body="Detecta los datos que faltan antes de que se conviertan en un problema o un pedido perdido."
+              title="Detecta lo que falta"
+              body="Identifica datos incompletos antes de que se conviertan en pérdidas."
             />
             <DecideItem
-              icon={Sparkles}
-              title="Te dice qué es urgente"
-              body="Ordena el día por prioridad: rojo hoy, amarillo mañana, verde resuelto."
+              icon={Zap}
+              title="Prioriza por urgencia"
+              body="Clasificación automática por riesgo, valor y SLA. Sin reuniones para decidir qué hacer."
             />
             <DecideItem
               icon={Send}
-              title="Te dice qué hacer"
-              body="Una acción por pedido y un mensaje listo para enviar al cliente. Un clic y listo."
+              title="Ejecuta con precisión"
+              body="Una acción por pedido, una plantilla por contexto. Aprobación y envío en un clic."
             />
           </ul>
 
           <Card className="p-5 rounded-2xl bg-secondary/40">
             <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
-              Vista en Operia
+              Vista en plataforma
             </div>
 
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0">
-                  <div className="text-[14px] font-semibold truncate">María López</div>
+                  <div className="text-[14px] font-semibold truncate">M. López · #4821</div>
                   <div className="text-[12.5px] text-muted-foreground truncate">
-                    Pastel chocolate · 20 personas · mañana
+                    Pedido B2C · valor $1,800 · entrega +18h
                   </div>
                 </div>
                 <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20 shrink-0">
-                  🔴 Urgente
+                  P0 · Crítico
                 </span>
               </div>
               <div className="flex items-center gap-2 text-[12px]">
-                <span className="text-danger/90 font-medium">⚠ Falta pago</span>
+                <span className="text-danger/90 font-medium">Pago no confirmado</span>
                 <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">Entrega en 18 h</span>
+                <span className="text-muted-foreground">SLA en 18 h</span>
               </div>
             </div>
 
@@ -245,25 +293,34 @@ function Landing() {
               </div>
               <div className="text-[14px] font-semibold mb-2">Solicitar anticipo</div>
               <div className="text-[12.5px] text-foreground/80 italic leading-snug mb-3">
-                "Hola María 😊 te recuerdo el anticipo ($1,800) para confirmar tu pastel
-                de mañana. ¿Me ayudas con eso?"
+                "Hola María, para asegurar tu pedido del viernes te compartimos los datos
+                para el anticipo de $1,800. Confirmamos al recibirlo."
               </div>
               <Button size="sm" className="w-full h-9">
-                <Send className="h-3.5 w-3.5" /> Solicitar anticipo
+                <Send className="h-3.5 w-3.5" /> Aprobar y enviar
               </Button>
             </div>
           </Card>
         </div>
       </section>
 
-      {/* Para quién */}
+      {/* Industrias */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Para quién es</SectionLabel>
+        <SectionLabel>Industrias</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Hecho para negocios que viven en WhatsApp.
+          Construida para operaciones donde cada conversación es ingreso.
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {["Reposterías", "Dark kitchens", "Floristerías", "Salones de belleza", "Servicios a domicilio", "Estudios y citas", "Talleres y reparaciones", "Pequeños catering"].map((x) => (
+          {[
+            "Retail D2C",
+            "Food & Beverage",
+            "Servicios técnicos",
+            "Salud y bienestar",
+            "Logística última milla",
+            "Educación",
+            "Inmobiliaria",
+            "Profesional B2B",
+          ].map((x) => (
             <Card key={x} className="p-4 rounded-xl text-[13.5px] font-medium">
               {x}
             </Card>
@@ -271,49 +328,60 @@ function Landing() {
         </div>
       </section>
 
-      {/* Testimonios */}
-      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Lo que dicen</SectionLabel>
+      {/* Clientes */}
+      <section
+        id="clientes"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
+      >
+        <SectionLabel>Clientes</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Negocios reales que dejaron de perder pedidos.
+          Equipos operando con menos fricción y más control.
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
           <Testimonial
-            quote="Antes anotaba todo en libretas y mensajes sueltos. Con Operia ya no se me pasa ningún pastel ni ningún anticipo. Ahorro como 2 horas al día."
+            quote="Centralizamos la operación de cinco sucursales en una sola vista. Redujimos pedidos perdidos a casi cero y recuperamos horas operativas todos los días."
             name="Mariana Cortés"
-            role="Pastelería Dulce Hogar · CDMX"
+            role="Head of Operations · Dulce Hogar"
             initial="M"
           />
           <Testimonial
-            quote="Tenía citas dobles y clientas molestas cada semana. Operia me ordena la agenda y me dice a quién recordarle. Cero errores este mes."
+            quote="La priorización automática eliminó las dobles reservas. El equipo deja de discutir qué hacer y simplemente ejecuta."
             name="Andrea Reyes"
-            role="Salón Belle · Guadalajara"
+            role="Directora · Belle Studios"
             initial="A"
           />
           <Testimonial
-            quote="Mis técnicos llegaban sin la dirección o sin saber qué hacer. Hoy todo el equipo ve el mismo plan del día. Cobramos más rápido y dejamos de perder servicios."
+            quote="Visibilidad real del pipeline de servicios y cobros. Mejoramos tiempos de respuesta 3× sin contratar más gente."
             name="Luis Hernández"
-            role="Servicios Hogar Plus · Monterrey"
+            role="COO · Hogar Plus"
             initial="L"
           />
         </div>
       </section>
 
       {/* Precios */}
-      <section id="precios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+      <section
+        id="precios"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
+      >
         <SectionLabel>Precios</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-3 max-w-2xl">
-          Un plan para cada etapa del negocio.
+          Planes por etapa de operación.
         </h2>
         <p className="text-muted-foreground text-[14.5px] mb-10 max-w-xl">
-          Empieza gratis, paga cuando crezcas. Cancela cuando quieras.
+          Sin permanencia. Migración asistida desde cualquier plan.
         </p>
         <div className="grid md:grid-cols-3 gap-4">
           <Plan
             name="Inicial"
             price="$499"
             tagline="Para empezar a organizar tus pedidos."
-            features={["Hasta 50 pedidos / mes", "Inbox de WhatsApp", "Plan del día", "1 usuario"]}
+            features={[
+              "Hasta 50 pedidos / mes",
+              "Inbox unificado",
+              "Plan operativo diario",
+              "1 usuario",
+            ]}
           />
           <Plan
             name="Pro"
@@ -322,8 +390,8 @@ function Landing() {
             tagline="Para negocios que reciben pedidos todos los días."
             features={[
               "Pedidos ilimitados",
-              "Clientes y notas",
-              "Recordatorios y pagos",
+              "CRM integrado y notas",
+              "Acciones recomendadas y cobros",
               "Hasta 3 usuarios",
             ]}
           />
@@ -333,55 +401,73 @@ function Landing() {
             tagline="Para equipos que no pueden perder pedidos ni dinero."
             features={[
               "Todo lo de Pro",
-              "Usuarios ilimitados",
-              "Integración WhatsApp Cloud API",
-              "Soporte prioritario",
+              "Usuarios ilimitados con roles",
+              "WhatsApp Cloud API · SLA y reportes",
+              "Soporte prioritario y onboarding",
             ]}
           />
         </div>
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+      <section
+        id="faq"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
+      >
         <SectionLabel>Preguntas frecuentes</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Lo que normalmente nos preguntan.
+          Lo esencial antes de implementar.
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
-          <Faq q="¿Necesito conectar WhatsApp?" a="No es obligatorio. Puedes pegar mensajes manualmente. Si quieres recibir mensajes en automático, conectas WhatsApp Cloud API en Ajustes." />
-          <Faq q="¿Mis datos están seguros?" a="Tus pedidos, clientes y notas se guardan organizados en un solo lugar y son privados de tu cuenta." />
-          <Faq q="¿Puedo usarlo desde el celular?" a="Sí. Operia funciona en cualquier navegador, optimizado para móvil." />
-          <Faq q="¿Puedo cancelar?" a="Cuando quieras. No hay contratos ni permanencia." />
+          <Faq
+            q="¿Cómo se integra con WhatsApp?"
+            a="Soportamos ingesta manual y conexión nativa con WhatsApp Cloud API. La migración es asistida y no requiere migrar tu número."
+          />
+          <Faq
+            q="¿Cómo manejan seguridad y permisos?"
+            a="Cuentas con roles granulares, registro de auditoría y separación de datos por organización. Infraestructura cifrada en tránsito y en reposo."
+          />
+          <Faq
+            q="¿Qué tan rápido se implementa?"
+            a="Operación productiva en menos de un día. Para equipos grandes ofrecemos onboarding guiado y plantillas por industria."
+          />
+          <Faq
+            q="¿Pueden integrarse con nuestros sistemas?"
+            a="Exponemos API y webhooks. Integramos con CRM, ERP y herramientas de pago utilizadas por equipos de operación."
+          />
         </div>
       </section>
 
       {/* CTA + Contacto */}
-      <section id="contacto" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
+      <section
+        id="contacto"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
         <Card className="p-8 md:p-12 rounded-2xl text-center">
           <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight max-w-2xl mx-auto">
-            Cada pedido perdido es dinero que ya no vuelve.
+            La operación de tu negocio merece una plataforma, no una libreta.
           </h2>
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-[14.5px]">
-            Empieza gratis hoy. Pega tu primer mensaje y deja de perder pedidos en WhatsApp.
+            Agenda una demo de 20 minutos. Te mostramos cómo se vería con tu operación.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
-              <Link to="/login">
-                Empieza gratis <ArrowRight className="h-4 w-4" />
-              </Link>
+              <a href="mailto:hola@operia.app?subject=Solicitar%20demo%20Operia">
+                Solicitar demo <ArrowRight className="h-4 w-4" />
+              </a>
             </Button>
-            <a
-              href="mailto:hola@operia.app"
-              className="text-[13.5px] text-muted-foreground hover:text-foreground"
-            >
-              hola@operia.app
-            </a>
+            <Button asChild size="lg" variant="ghost" className="h-12 px-5">
+              <Link to="/login">Probar plataforma</Link>
+            </Button>
           </div>
+          <p className="text-[12px] text-muted-foreground mt-5">
+            hola@operia.app · Respuesta en menos de 24 h hábiles
+          </p>
         </Card>
       </section>
 
       <footer className="border-t border-border py-8 text-center text-[12px] text-muted-foreground">
-        © {new Date().getFullYear()} Operia. Hecho para negocios reales.
+        © {new Date().getFullYear()} Operia. Plataforma operativa para ventas por WhatsApp.
       </footer>
     </div>
   );
@@ -395,14 +481,35 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Step({ n, icon: Icon, title, body }: { n: string; icon: any; title: string; body: string }) {
+function Metric({ value, label }: { value: string; label: string }) {
+  return (
+    <Card className="p-4 rounded-xl">
+      <div className="text-[22px] font-semibold tracking-tight tabular-nums">{value}</div>
+      <div className="text-[12px] text-muted-foreground mt-0.5">{label}</div>
+    </Card>
+  );
+}
+
+function Step({
+  n,
+  icon: Icon,
+  title,
+  body,
+}: {
+  n: string;
+  icon: any;
+  title: string;
+  body: string;
+}) {
   return (
     <Card className="p-6 rounded-xl">
       <div className="flex items-center gap-3 mb-4">
         <div className="h-9 w-9 rounded-lg bg-foreground text-background grid place-items-center">
           <Icon className="h-4 w-4" />
         </div>
-        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">Paso {n}</span>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums">
+          {n}
+        </span>
       </div>
       <div className="text-[16px] font-semibold mb-1">{title}</div>
       <p className="text-[13.5px] text-muted-foreground leading-relaxed">{body}</p>
@@ -410,7 +517,15 @@ function Step({ n, icon: Icon, title, body }: { n: string; icon: any; title: str
   );
 }
 
-function Benefit({ icon: Icon, title, body }: { icon: any; title: string; body: string }) {
+function Benefit({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: any;
+  title: string;
+  body: string;
+}) {
   return (
     <Card className="p-6 rounded-xl">
       <div className="h-8 w-8 rounded-lg bg-secondary border border-border grid place-items-center mb-4">
@@ -441,18 +556,38 @@ function Plan({
         highlighted ? "border-foreground bg-foreground text-background" : ""
       }`}
     >
-      <div className={`text-[11px] uppercase tracking-[0.14em] mb-2 ${highlighted ? "text-background/70" : "text-muted-foreground"}`}>
-        {name} {highlighted && "· Más popular"}
+      <div
+        className={`text-[11px] uppercase tracking-[0.14em] mb-2 ${
+          highlighted ? "text-background/70" : "text-muted-foreground"
+        }`}
+      >
+        {name} {highlighted && "· Recomendado"}
       </div>
       <div className="flex items-baseline gap-1.5 mb-2">
         <span className="text-[34px] font-semibold tracking-tight tabular-nums">{price}</span>
-        <span className={`text-[12.5px] ${highlighted ? "text-background/70" : "text-muted-foreground"}`}>MXN / mes</span>
+        <span
+          className={`text-[12.5px] ${
+            highlighted ? "text-background/70" : "text-muted-foreground"
+          }`}
+        >
+          MXN / mes
+        </span>
       </div>
-      <p className={`text-[13px] mb-5 ${highlighted ? "text-background/80" : "text-muted-foreground"}`}>{tagline}</p>
+      <p
+        className={`text-[13px] mb-5 ${
+          highlighted ? "text-background/80" : "text-muted-foreground"
+        }`}
+      >
+        {tagline}
+      </p>
       <ul className="space-y-2 mb-6 flex-1">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-[13.5px]">
-            <Check className={`h-4 w-4 mt-0.5 shrink-0 ${highlighted ? "text-background" : "text-foreground/70"}`} />
+            <Check
+              className={`h-4 w-4 mt-0.5 shrink-0 ${
+                highlighted ? "text-background" : "text-foreground/70"
+              }`}
+            />
             <span>{f}</span>
           </li>
         ))}
@@ -462,7 +597,7 @@ function Plan({
         variant={highlighted ? "secondary" : "default"}
         className="h-10 w-full"
       >
-        <Link to="/login">Empezar</Link>
+        <Link to="/login">Comenzar</Link>
       </Button>
     </Card>
   );
@@ -476,4 +611,3 @@ function Faq({ q, a }: { q: string; a: string }) {
     </Card>
   );
 }
-
