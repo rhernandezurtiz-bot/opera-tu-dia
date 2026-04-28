@@ -221,6 +221,67 @@ function Landing() {
         </div>
       </section>
 
+      {/* 3.5 CONEXIÓN WHATSAPP */}
+      <section
+        id="whatsapp"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>Integración</SectionLabel>
+        <h2 className="text-[30px] md:text-[44px] leading-[1.06] font-semibold tracking-tight max-w-3xl">
+          Conectado directamente con WhatsApp
+        </h2>
+        <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-2xl">
+          Operia se adapta a cómo ya trabajas. Puedes empezar en segundos o
+          integrarlo a nivel empresa.
+        </p>
+
+        <div className="mt-12 grid md:grid-cols-3 gap-4">
+          <Card className="p-6 rounded-2xl flex flex-col h-full">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">
+              Opción 1 · Inmediato
+            </div>
+            <div className="text-[17px] font-semibold tracking-tight mb-2">
+              Sin integración
+            </div>
+            <p className="text-[13.5px] text-muted-foreground leading-relaxed">
+              Pega cualquier mensaje de WhatsApp y Operia lo convierte en un
+              pedido estructurado al instante. Ideal para empezar sin
+              configuración.
+            </p>
+          </Card>
+
+          <Card className="p-6 rounded-2xl flex flex-col h-full">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">
+              Opción 2 · Automático
+            </div>
+            <div className="text-[17px] font-semibold tracking-tight mb-2">
+              Conexión automática
+            </div>
+            <p className="text-[13.5px] text-muted-foreground leading-relaxed">
+              Conecta WhatsApp Cloud API y Operia recibe, organiza y procesa
+              mensajes automáticamente en tiempo real.
+            </p>
+          </Card>
+
+          <Card className="p-6 rounded-2xl flex flex-col h-full border-foreground/40">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground mb-3">
+              Opción 3 · Enterprise
+            </div>
+            <div className="text-[17px] font-semibold tracking-tight mb-2">
+              Integración enterprise
+            </div>
+            <p className="text-[13.5px] text-muted-foreground leading-relaxed">
+              Integración con CRM, ERP y sistemas internos vía API y webhooks.
+              Diseñado para operaciones de alto volumen.
+            </p>
+          </Card>
+        </div>
+
+        <p className="mt-10 text-[14.5px] md:text-[15px] text-foreground/80 font-medium">
+          Empieza manual. Escala automático.
+        </p>
+      </section>
+
       {/* 4. MOMENTO WOW */}
       <section
         id="plataforma"
