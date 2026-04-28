@@ -26,6 +26,7 @@ import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
 import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
 import { Route as ApiSendInstagramRouteImport } from './routes/api/send-instagram'
+import { Route as ApiSendFacebookRouteImport } from './routes/api/send-facebook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicWebhooksInstagramRouteImport } from './routes/api/public/webhooks/instagram'
@@ -115,6 +116,11 @@ const ApiSendInstagramRoute = ApiSendInstagramRouteImport.update({
   path: '/api/send-instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSendFacebookRoute = ApiSendFacebookRouteImport.update({
+  id: '/api/send-facebook',
+  path: '/api/send-facebook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   id: '/api/public/webhooks/stripe',
   path: '/api/public/webhooks/stripe',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-whatsapp'
     | '/clientes/$key'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-whatsapp'
     | '/clientes/$key'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-whatsapp'
     | '/clientes/$key'
@@ -279,6 +291,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
+  ApiSendFacebookRoute: typeof ApiSendFacebookRoute
   ApiSendInstagramRoute: typeof ApiSendInstagramRoute
   ApiSendWhatsappRoute: typeof ApiSendWhatsappRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
@@ -413,6 +426,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSendInstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/send-facebook': {
+      id: '/api/send-facebook'
+      path: '/api/send-facebook'
+      fullPath: '/api/send-facebook'
+      preLoaderRoute: typeof ApiSendFacebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/stripe': {
       id: '/api/public/webhooks/stripe'
       path: '/api/public/webhooks/stripe'
@@ -447,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
+  ApiSendFacebookRoute: ApiSendFacebookRoute,
   ApiSendInstagramRoute: ApiSendInstagramRoute,
   ApiSendWhatsappRoute: ApiSendWhatsappRoute,
   ClientesKeyRoute: ClientesKeyRoute,
