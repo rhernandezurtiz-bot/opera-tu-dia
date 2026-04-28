@@ -177,3 +177,11 @@
     font-weight: 600;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 72px;
+}

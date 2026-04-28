@@ -133,12 +133,12 @@ function Landing() {
           </p>
         </div>
 
-        {/* Métricas */}
+        {/* Métricas cualitativas */}
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Metric value="−87%" label="Pedidos perdidos" />
-          <Metric value="3.2x" label="Mejora en tiempo de respuesta" />
-          <Metric value="+24%" label="Cobranza puntual" />
-          <Metric value="<2 min" label="Configuración inicial" />
+          <Metric value="Menos pérdidas" label="Cierra pedidos que hoy se caen sin seguimiento." />
+          <Metric value="Más velocidad" label="Respuestas estructuradas en lugar de improvisadas." />
+          <Metric value="Cobranza clara" label="Anticipos y pagos con trazabilidad por pedido." />
+          <Metric value="Listo en 1 día" label="Implementación guiada por nuestro equipo." />
         </div>
       </section>
 
@@ -366,16 +366,16 @@ function Landing() {
           </div>
           <div className="md:col-span-7 grid sm:grid-cols-3 gap-3">
             <CostCard
-              value="15–30%"
-              label="de pedidos se pierden por falta de seguimiento."
+              title="Pedidos sin cierre"
+              label="Conversaciones que avanzan, pero nunca terminan en venta confirmada."
             />
             <CostCard
-              value="20–40%"
-              label="de retrasos por información incompleta."
+              title="Retrabajo y errores"
+              label="Información incompleta que genera retrasos y reclamos del cliente."
             />
             <CostCard
-              value="10–25%"
-              label="de cobros nunca ejecutados."
+              title="Cobros olvidados"
+              label="Anticipos y saldos pendientes que no se ejecutan a tiempo."
             />
           </div>
         </div>
@@ -391,7 +391,7 @@ function Landing() {
             </div>
           </div>
           <Button asChild variant="secondary" className="h-10 shrink-0">
-            <a href="#contacto">Calcular impacto</a>
+            <a href="#contacto">Solicitar demo</a>
           </Button>
         </Card>
       </section>
@@ -739,20 +739,18 @@ function Landing() {
           <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight max-w-2xl mx-auto leading-[1.08]">
             Tu operación ya es compleja. Tu sistema no debería serlo.
           </h2>
-          <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-[14.5px]">
-            Agenda una demo y en 20 minutos te mostramos cómo se vería tu
-            operación funcionando con control total.
+          <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-[14.5px] leading-relaxed">
+            Agenda una demo y te mostramos cómo se vería Operia funcionando con
+            tu operación.
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
               <a href="mailto:hola@operia.app?subject=Solicitar%20demo%20Operia">
                 Solicitar demo <ArrowRight className="h-4 w-4" />
               </a>
             </Button>
             <Button asChild size="lg" variant="ghost" className="h-12 px-5">
-              <a href="mailto:hola@operia.app?subject=Demo%20personalizada%20para%20mi%20negocio">
-                Ver cómo funcionaría en mi negocio
-              </a>
+              <Link to="/login">Ver demo de plataforma</Link>
             </Button>
           </div>
           <p className="text-[12px] text-muted-foreground mt-5">
@@ -761,9 +759,26 @@ function Landing() {
         </Card>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-[12px] text-muted-foreground">
-        © {new Date().getFullYear()} Operia. Infraestructura operativa para
-        ventas conversacionales.
+      <footer className="border-t border-border">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-[12.5px] text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <img src={operiaIcon} alt="" className="h-5 w-5 rounded-full" />
+            <span className="text-foreground font-medium">Operia</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">
+              Plataforma operativa para ventas conversacionales
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a
+              href="mailto:hola@operia.app"
+              className="hover:text-foreground transition-colors"
+            >
+              hola@operia.app
+            </a>
+            <span>© {new Date().getFullYear()} Operia</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
@@ -781,11 +796,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <Card className="p-5 rounded-xl">
-      <div className="text-[26px] font-semibold tracking-tight tabular-nums">
+    <Card className="p-5 rounded-xl h-full">
+      <div className="text-[18px] md:text-[19px] font-semibold tracking-tight">
         {value}
       </div>
-      <div className="text-[12.5px] text-muted-foreground mt-1">{label}</div>
+      <div className="text-[12.5px] text-muted-foreground mt-1.5 leading-relaxed">
+        {label}
+      </div>
     </Card>
   );
 }
@@ -889,13 +906,16 @@ function FieldRow({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
   );
 }
 
-function CostCard({ value, label }: { value: string; label: string }) {
+function CostCard({ title, label }: { title: string; label: string }) {
   return (
-    <Card className="p-6 rounded-2xl">
-      <div className="text-[28px] md:text-[32px] font-semibold tracking-tight tabular-nums text-danger">
-        {value}
+    <Card className="p-6 rounded-2xl h-full">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-4 w-4 text-foreground/70" />
+        <div className="text-[14.5px] font-semibold tracking-tight">
+          {title}
+        </div>
       </div>
-      <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+      <p className="text-[13px] text-muted-foreground leading-relaxed">
         {label}
       </p>
     </Card>
