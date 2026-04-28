@@ -300,7 +300,21 @@ export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: num
   return `Hola${n ? " " + n : ""} 😊\n\nQuería confirmar que tengo todo listo de mi lado para ${noun}${cuando ? " " + cuando : ""} 🙌\n\nEn un momento te paso el link para apartarlo.`;
 }
 
-// Mensaje automático tras confirmar pago
+// Mensaje automático específico para auto-envío de link de pago
+// Se dispara cuando el pedido tiene fecha confirmada + dirección + monto.
+export function buildAutoPaymentMessage(o: Order): string {
+  const link = o.paymentLink ?? "[LINK]";
+  return `Perfecto 🙌\n\nPara asegurar tu pedido, puedes realizar tu pago aquí:\n${link}\n\nEn cuanto se confirme, queda apartado automáticamente.`;
+}
+
+// ¿Cumple los 3 criterios para auto-envío de cobro?
+export function isReadyForAutoPayment(o: Order): boolean {
+  const fechaOk = !!o.fechaEntrega && o.fechaConfirmada !== false;
+  const direccionOk = !!o.direccion && o.direccion.trim().length > 0;
+  const montoOk = !!o.precio && o.precio > 0;
+  const cobrable = o.pago !== "pagado" && o.pago !== "no_requerido";
+  return fechaOk && direccionOk && montoOk && cobrable;
+}
 export function buildPaymentReceivedMessage(o: Order): string {
   const n = firstName(o.cliente);
   const fechaTxt = o.fechaEntrega
