@@ -334,12 +334,9 @@ export const useOperia = create<State>()(
           (cfg.proveedorPrincipal === "stripe"
             ? "stripe"
             : "mercadopago");
-        const token = Math.random().toString(36).slice(2, 10);
-        const orderShort = id.slice(0, 8);
-        const link =
-          provider === "mercadopago"
-            ? `https://mercadopago.com.mx/checkout/v1/redirect?pref_id=demo_${orderShort}_${token}`
-            : `https://checkout.stripe.com/c/pay/demo_${orderShort}_${token}`;
+        // Link unificado y amigable de marca Operia (simulado).
+        // El proveedor real (MP/Stripe) se resolverá en el backend al redirigir.
+        const link = `https://pago.operia.app/pay/${id}?via=${provider}`;
         const now = Date.now();
         set((s) => ({
           orders: s.orders.map((o) => {
