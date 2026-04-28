@@ -104,6 +104,10 @@ function Detalle() {
   // Historial del cliente: excluir la orden actual
   const stats = cKey ? getClientStats(allOrders.filter((o) => o.id !== order.id), cKey) : null;
 
+  // Validación contra catálogo
+  const validation = validateOrder(order, catalog);
+  const fueraCatalogo = validation.status === "fuera_catalogo";
+
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
     toast.success(label);
