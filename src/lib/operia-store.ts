@@ -256,6 +256,11 @@ export const useOperia = create<State>()(
         direccion: "Ciudad de México",
         horarios: "Lun a Sáb 9:00 - 19:00",
         tiposActivos: ["producto", "servicio", "cita", "personalizado"],
+        autoCobroEnabled: true,
+        umbralAnticipo: 1500, // arriba de $1,500 → solicita 50% anticipo; abajo → cobro total
+        porcentajeAnticipo: 50,
+        recordatorioMinutos: 30,
+        webhookSimMinutos: 1, // simulación: pago confirma a 1 min
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
