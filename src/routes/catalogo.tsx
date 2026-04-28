@@ -186,10 +186,60 @@ function ItemForm({ value, onChange }: { value: Omit<CatalogItem, "id" | "create
       <Labeled label="Tiempo mínimo de anticipación (horas)">
         <Input type="number" value={value.anticipacionHoras || ""} onChange={(e) => set("anticipacionHoras", Number(e.target.value) || 0)} />
       </Labeled>
+      <Labeled label="Tiempo mínimo de preparación (minutos)">
+        <Input type="number" value={value.prepMinutos || ""} onChange={(e) => set("prepMinutos", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Stock disponible (0 = no aplica)">
+        <Input type="number" value={value.stockDisponible || ""} onChange={(e) => set("stockDisponible", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Capacidad diaria (0 = ilimitada)">
+        <Input type="number" value={value.capacidadDiaria || ""} onChange={(e) => set("capacidadDiaria", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Horario desde (HH:mm)">
+        <Input type="time" value={value.horarioDesde} onChange={(e) => set("horarioDesde", e.target.value)} />
+      </Labeled>
+      <Labeled label="Horario hasta (HH:mm)">
+        <Input type="time" value={value.horarioHasta} onChange={(e) => set("horarioHasta", e.target.value)} />
+      </Labeled>
+      <Labeled label="Días disponibles (vacío = todos)" full>
+        <div className="flex flex-wrap gap-1.5">
+          {ALL_DAYS.map((d) => {
+            const active = value.diasDisponibles.includes(d);
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => {
+                  const next = active
+                    ? value.diasDisponibles.filter((x) => x !== d)
+                    : [...value.diasDisponibles, d];
+                  set("diasDisponibles", next as DayKey[]);
+                }}
+                className={`px-3 h-8 rounded-full text-[12px] border transition-colors ${
+                  active
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-secondary text-foreground/70 border-border hover:bg-secondary/70"
+                }`}
+              >
+                {DAY_LABELS[d]}
+              </button>
+            );
+          })}
+        </div>
+      </Labeled>
       <Labeled label="Disponible">
         <div className="flex items-center gap-2 h-10">
           <Switch checked={value.disponible} onCheckedChange={(v) => set("disponible", v)} />
           <span className="text-[13px] text-muted-foreground">{value.disponible ? "Sí" : "No"}</span>
+        </div>
+      </Labeled>
+      <Labeled label="Bloquear venta si no hay disponibilidad">
+        <div className="flex items-center gap-2 h-10">
+          <Switch
+            checked={value.bloquearSinDisponibilidad}
+            onCheckedChange={(v) => set("bloquearSinDisponibilidad", v)}
+          />
+          <span className="text-[13px] text-muted-foreground">{value.bloquearSinDisponibilidad ? "Sí" : "No"}</span>
         </div>
       </Labeled>
       <Labeled label="Notas internas" full>
