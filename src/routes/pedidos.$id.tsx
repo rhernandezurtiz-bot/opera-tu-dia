@@ -295,8 +295,45 @@ function Detalle() {
 
             {order.pago !== "pagado" && (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
+                {/* Selector de proveedor: solo cuando hay "ambos" disponible */}
+                {paymentsCfg.proveedorPrincipal === "ambos" && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11.5px] text-muted-foreground">Cobrar con:</span>
+                    {(["mercadopago", "stripe"] as PaymentProvider[]).map((p) => {
+                      const active = (order.paymentProvider ?? "mercadopago") === p;
+                      return (
+                        <Button
+                          key={p}
+                          size="sm"
+                          variant={active ? "default" : "ghost"}
+                          className="rounded-full h-7 px-3 text-[11.5px]"
+                          onClick={() => {
+                            const link = generatePaymentLink(order.id, p);
+                            toast.success(`Link generado con ${p === "mercadopago" ? "Mercado Pago" : "Stripe"}`);
+                            copiar(link, "Link copiado");
+                          }}
+                        >
+                          {p === "mercadopago" ? "Mercado Pago" : "Stripe"}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div>
-                  <div className="text-[12.5px] text-muted-foreground mb-1.5">Link de pago:</div>
+                  <div className="text-[12.5px] text-muted-foreground mb-1.5 flex items-center gap-2">
+                    Link de pago
+                    {order.paymentProvider && (
+                      <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-background border border-border">
+                        {order.paymentProvider === "mercadopago" ? "Mercado Pago" : "Stripe"}
+                      </span>
+                    )}
+                    {paymentsCfg.modo === "simulacion" && (
+                      <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-warning/15 text-foreground/70 border border-warning/30">
+                        Simulación
+                      </span>
+                    )}
+                  </div>
                   {order.paymentLink ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <code className="text-[12px] px-2 py-1 rounded bg-background border border-border break-all flex-1 min-w-0">
@@ -310,7 +347,7 @@ function Detalle() {
                         variant="secondary"
                         className="rounded-full h-8"
                         onClick={() => {
-                          const link = generatePaymentLink(order.id);
+                          const link = generatePaymentLink(order.id, order.paymentProvider);
                           toast.success("Link regenerado");
                           copiar(link);
                         }}
@@ -331,6 +368,29 @@ function Detalle() {
                     </Button>
                   )}
                 </div>
+
+                {/* Simular webhook (Fase 1: cobro automático sin backend real) */}
+                {order.paymentLink && paymentsCfg.modo === "simulacion" && (
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <span className="text-[11.5px] text-muted-foreground">Simular respuesta del proveedor:</span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="rounded-full h-7 px-3 text-[11.5px]"
+                      onClick={() => { markPaymentPaid(order.id); toast.success("Pago recibido (simulado)"); }}
+                    >
+                      ✓ Pago recibido
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="rounded-full h-7 px-3 text-[11.5px] text-danger hover:text-danger"
+                      onClick={() => { markPaymentFailed(order.id, "Rechazado en simulación"); toast.error("Pago fallido (simulado)"); }}
+                    >
+                      ✗ Pago fallido
+                    </Button>
+                  </div>
+                )}
 
                 <div className="border-t border-border pt-3">
                   <div className="text-[12.5px] text-muted-foreground mb-1.5">Mensaje sugerido:</div>
