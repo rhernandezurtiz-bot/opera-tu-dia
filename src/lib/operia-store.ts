@@ -304,6 +304,18 @@ const seedMessages = (): WhatsappMessage[] => [
     recibidoAt: Date.now() - 1000 * 60 * 60 * 20, estado: "convertido", ordenId: "o1",
     canal: "whatsapp",
   },
+  {
+    id: "fb1", cliente: "Daniela Pérez", telefono: "",
+    texto: "Hola! Vi su página, ¿manejan envío a Coyoacán para mañana? Necesito un arreglo floral.",
+    recibidoAt: Date.now() - 1000 * 60 * 30, estado: "nuevo",
+    canal: "facebook", canalUserId: "fb_5512987", canalHandle: "Daniela Pérez",
+  },
+  {
+    id: "fb2", cliente: "Miguel Ángel R.", telefono: "+52 55 2233 4455",
+    texto: "Buen día, quiero cotizar 50 cupcakes para un evento el sábado 🙏",
+    recibidoAt: Date.now() - 1000 * 60 * 90, estado: "analizado",
+    canal: "facebook", canalUserId: "fb_8821123", canalHandle: "Miguel Ángel R.",
+  },
 ];
 
 interface State {
@@ -314,6 +326,7 @@ interface State {
   messages: WhatsappMessage[];
   whatsapp: WhatsappConfig;
   instagram: InstagramConfig;
+  facebook: FacebookConfig;
   channelMode: ChannelMode; // demo | produccion (global, simple toggle)
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
