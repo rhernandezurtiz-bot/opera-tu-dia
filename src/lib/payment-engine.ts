@@ -62,4 +62,8 @@ export function usePaymentEngine() {
   }, [enabled]);
 }
 
-export { buildPaymentReminder, buildPaymentReceivedMessage };
+export {
+  buildPaymentReminder,
+  buildPaymentReceivedMessage,
+  buildAutoPaymentReminder,
+};
