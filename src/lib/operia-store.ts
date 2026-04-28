@@ -102,6 +102,10 @@ export interface Order {
   // Inventario
   stockReservadoFor?: string;   // catalog item id cuyo stock ya descontamos
   stockReservedQty?: number;    // cantidad descontada
+  // Canal de origen del pedido
+  canal?: Channel;              // "whatsapp" | "instagram" | "manual"
+  canalUserId?: string;         // id del usuario en el canal
+  canalHandle?: string;         // @handle visible (Instagram) o nombre
 }
 
 export type PaymentProvider = "mercadopago" | "stripe";
