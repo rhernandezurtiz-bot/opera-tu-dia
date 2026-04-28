@@ -4,29 +4,28 @@ import { buildPaymentReminder, buildPaymentReceivedMessage } from "./ui-store";
 
 /**
  * Motor de cobro automático.
- * Se ejecuta cada 5s y aplica reglas:
+ * Lee del store con getState() para evitar re-suscripciones que causan loops.
+ * Reglas:
  *  1. Pedido confirmado + sin pago + sin link → genera link automáticamente.
  *  2. Link enviado hace > webhookSimMinutos → simula webhook de pago recibido.
  *  3. Link enviado hace > recordatorioMinutos sin recordatorio → envía recordatorio.
- *  4. Pago recibido → emite mensaje "¡Pago recibido!" (solo una vez).
  */
 export function usePaymentEngine() {
-  const orders = useOperia((s) => s.orders);
-  const negocio = useOperia((s) => s.negocio);
-  const generatePaymentLink = useOperia((s) => s.generatePaymentLink);
-  const markPaymentPaid = useOperia((s) => s.markPaymentPaid);
-  const sendPaymentReminder = useOperia((s) => s.sendPaymentReminder);
+  // Habilitación reactiva (única dep) para arrancar/detener el intervalo
+  const enabled = useOperia((s) => s.negocio.autoCobroEnabled);
 
   useEffect(() => {
-    if (!negocio.autoCobroEnabled) return;
+    if (!enabled) return;
     const tick = () => {
+      const state = useOperia.getState();
+      const { orders, negocio, generatePaymentLink, markPaymentPaid, sendPaymentReminder } = state;
       const now = Date.now();
-      const webhookMs = negocio.webhookSimMinutos * 60 * 1000;
-      const reminderMs = negocio.recordatorioMinutos * 60 * 1000;
+      const webhookMs = (negocio.webhookSimMinutos ?? 1) * 60 * 1000;
+      const reminderMs = (negocio.recordatorioMinutos ?? 30) * 60 * 1000;
 
       for (const o of orders) {
         if (o.estado === "cancelado" || o.estado === "entregado") continue;
-        if (o.precio <= 0) continue;
+        if (!o.precio || o.precio <= 0) continue;
 
         // Regla 1: confirmado, sin pago, sin link → genera link
         if (
@@ -59,8 +58,7 @@ export function usePaymentEngine() {
     tick();
     const id = setInterval(tick, 5000);
     return () => clearInterval(id);
-  }, [orders, negocio, generatePaymentLink, markPaymentPaid, sendPaymentReminder]);
+  }, [enabled]);
 }
 
-// Helpers exportados para componer mensajes desde la UI
 export { buildPaymentReminder, buildPaymentReceivedMessage };
