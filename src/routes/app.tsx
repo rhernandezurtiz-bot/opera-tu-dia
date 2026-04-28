@@ -260,11 +260,14 @@ function MoneyCard({
 }
 
 function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => void }) {
-  const copyMissing = (e: React.MouseEvent) => {
+  const action = nextAction(order);
+  const copyAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(buildMissingMessage(order.cliente, order.faltantes));
-    toast.success("Mensaje copiado");
+    if (!action) return;
+    navigator.clipboard.writeText(action.message);
+    toast.success("Mensaje copiado · listo para enviar");
+    if (action.kind === "confirmar_pedido") onConfirm();
   };
 
   return (
@@ -290,24 +293,21 @@ function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <UrgencyChip fecha={order.fechaEntrega} hora={order.horaEntrega} />
-          {order.faltantes.length > 0 && (
-            <span className="text-[11.5px] text-muted-foreground">
-              Falta: {order.faltantes.slice(0, 2).join(", ")}
+          {action && (
+            <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> {action.reason}
             </span>
           )}
         </div>
       </Link>
 
       <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
-        {order.estado === "nuevo" && (
-          <Button size="sm" variant="secondary" onClick={onConfirm}>
-            <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar
+        {action ? (
+          <Button size="sm" onClick={copyAction}>
+            <Send className="h-3.5 w-3.5" /> {action.label}
           </Button>
-        )}
-        {order.faltantes.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={copyMissing}>
-            <Copy className="h-3.5 w-3.5" /> Copiar mensaje
-          </Button>
+        ) : (
+          <span className="text-[12.5px] text-muted-foreground">Todo en orden ✓</span>
         )}
         <Button size="sm" variant="ghost" className="ml-auto" asChild>
           <Link to="/pedidos/$id" params={{ id: order.id }}>
