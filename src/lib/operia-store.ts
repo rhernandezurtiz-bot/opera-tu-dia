@@ -364,6 +364,9 @@ interface State {
   instagram: InstagramConfig;
   facebook: FacebookConfig;
   channelMode: ChannelMode; // demo | produccion (global, simple toggle)
+  // Auto-respuesta multicanal
+  autoReplyMode: AutoReplyMode;
+  autoReplyLog: AutoReplyLogEntry[];
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
   addOrder: (o: Order) => void;
@@ -382,6 +385,9 @@ interface State {
   setInstagram: (c: Partial<InstagramConfig>) => void;
   setFacebook: (c: Partial<FacebookConfig>) => void;
   setChannelMode: (m: ChannelMode) => void;
+  setAutoReplyMode: (m: AutoReplyMode) => void;
+  logAutoReply: (entry: Omit<AutoReplyLogEntry, "id" | "at"> & { at?: number }) => string;
+  updateAutoReplyLog: (id: string, patch: Partial<AutoReplyLogEntry>) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
   markPaymentPaid: (id: string) => void;
