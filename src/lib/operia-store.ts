@@ -282,6 +282,14 @@ export const useOperia = create<State>()(
         porcentajeAnticipo: 50,
         recordatorioMinutos: 30,
         webhookSimMinutos: 1, // simulación: pago confirma a 1 min
+        payments: {
+          proveedorPrincipal: "mercadopago",
+          moneda: "MXN",
+          modo: "simulacion",
+          mercadopagoConectado: false,
+          stripeConectado: false,
+          webhookUrl: "https://tu-dominio.com/api/public/webhooks/mercadopago",
+        },
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
