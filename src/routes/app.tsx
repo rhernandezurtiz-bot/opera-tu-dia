@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useOperia, todayStr, type Order } from "@/lib/operia-store";
-import { useUI, buildMissingMessage, summarizeMoney, money } from "@/lib/ui-store";
+import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@/lib/ui-store";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import {
   TrendingUp,
   AlertOctagon,
   Wallet,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -118,6 +120,9 @@ function Index() {
           </Button>
         </Card>
       )}
+
+      {/* Tu día en Operia — priority command center */}
+      <CommandCenter orders={orders} updateOrder={updateOrder} />
 
       <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
         <section className="lg:col-span-2">
@@ -255,11 +260,14 @@ function MoneyCard({
 }
 
 function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => void }) {
-  const copyMissing = (e: React.MouseEvent) => {
+  const action = nextAction(order);
+  const copyAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(buildMissingMessage(order.cliente, order.faltantes));
-    toast.success("Mensaje copiado");
+    if (!action) return;
+    navigator.clipboard.writeText(action.message);
+    toast.success("Mensaje copiado · listo para enviar");
+    if (action.kind === "confirmar_pedido") onConfirm();
   };
 
   return (
@@ -285,24 +293,21 @@ function OrderActionCard({ order, onConfirm }: { order: Order; onConfirm: () => 
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <UrgencyChip fecha={order.fechaEntrega} hora={order.horaEntrega} />
-          {order.faltantes.length > 0 && (
-            <span className="text-[11.5px] text-muted-foreground">
-              Falta: {order.faltantes.slice(0, 2).join(", ")}
+          {action && (
+            <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> {action.reason}
             </span>
           )}
         </div>
       </Link>
 
       <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-border">
-        {order.estado === "nuevo" && (
-          <Button size="sm" variant="secondary" onClick={onConfirm}>
-            <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar
+        {action ? (
+          <Button size="sm" onClick={copyAction}>
+            <Send className="h-3.5 w-3.5" /> {action.label}
           </Button>
-        )}
-        {order.faltantes.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={copyMissing}>
-            <Copy className="h-3.5 w-3.5" /> Copiar mensaje
-          </Button>
+        ) : (
+          <span className="text-[12.5px] text-muted-foreground">Todo en orden ✓</span>
         )}
         <Button size="sm" variant="ghost" className="ml-auto" asChild>
           <Link to="/pedidos/$id" params={{ id: order.id }}>
@@ -354,5 +359,130 @@ function FirstRunEmpty({ onStart }: { onStart: () => void }) {
         Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
       </p>
     </Card>
+  );
+}
+
+/* -------- Tu día en Operia: priority command center -------- */
+
+type Priority = "alta" | "media" | "baja";
+
+function priorityOf(o: Order): Priority {
+  if (o.estado === "entregado" || o.estado === "cancelado") return "baja";
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+  if (o.fechaEntrega && o.fechaEntrega < today) return "alta";
+  if (o.fechaEntrega === today) return "alta";
+  if ((o.faltantes || []).length > 0) return "alta";
+  if (o.pago === "pendiente" && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
+  if (o.fechaEntrega === tomorrow) return "media";
+  if ((o.faltantes || []).length > 0) return "media";
+  return "baja";
+}
+
+function CommandCenter({
+  orders,
+  updateOrder,
+}: {
+  orders: Order[];
+  updateOrder: (id: string, patch: Partial<Order>) => void;
+}) {
+  const active = orders.filter((o) => o.estado !== "entregado" && o.estado !== "cancelado");
+  const ranked = active
+    .map((o) => ({ o, action: nextAction(o), p: priorityOf(o) }))
+    .filter((x) => x.action)
+    .sort((a, b) => {
+      const order = { alta: 0, media: 1, baja: 2 } as const;
+      if (order[a.p] !== order[b.p]) return order[a.p] - order[b.p];
+      return (a.o.fechaEntrega + (a.o.horaEntrega || "")).localeCompare(
+        b.o.fechaEntrega + (b.o.horaEntrega || ""),
+      );
+    });
+
+  if (ranked.length === 0) return null;
+
+  const top = ranked.slice(0, 5);
+  const counts = {
+    alta: ranked.filter((r) => r.p === "alta").length,
+    media: ranked.filter((r) => r.p === "media").length,
+    baja: ranked.filter((r) => r.p === "baja").length,
+  };
+
+  const advanceAfter: Partial<Record<NonNullable<ReturnType<typeof nextAction>>["kind"], Order["estado"]>> = {
+    confirmar_pedido: "confirmado",
+    avisar_listo: "entregado",
+    marcar_listo: "listo",
+  };
+
+  return (
+    <section className="mb-10">
+      <SectionHeading
+        title="Tu día en Operia"
+        subtitle="Lo que hay que hacer ahora, ordenado por prioridad"
+        action={
+          <div className="flex items-center gap-2 text-[11.5px]">
+            {counts.alta > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20">
+                🔴 {counts.alta} urgente{counts.alta === 1 ? "" : "s"}
+              </span>
+            )}
+            {counts.media > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-warning/15 text-foreground/70 border border-warning/30">
+                🟡 {counts.media} medio{counts.media === 1 ? "" : "s"}
+              </span>
+            )}
+            {counts.baja > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 text-success/90 border border-success/20">
+                🟢 {counts.baja} bajo{counts.baja === 1 ? "" : "s"}
+              </span>
+            )}
+          </div>
+        }
+      />
+      <div className="space-y-2">
+        {top.map(({ o, action, p }) => {
+          if (!action) return null;
+          const dot = p === "alta" ? "bg-danger" : p === "media" ? "bg-warning" : "bg-success";
+          const next = advanceAfter[action.kind];
+          return (
+            <Card
+              key={o.id}
+              className="p-3.5 md:p-4 rounded-xl flex items-center gap-3 hover:border-foreground/15 transition-colors"
+            >
+              <span className={`h-2.5 w-2.5 rounded-full ${dot} shrink-0`} />
+              <Link
+                to="/pedidos/$id"
+                params={{ id: o.id }}
+                className="min-w-0 flex-1 block"
+              >
+                <div className="text-[14px] font-medium truncate">
+                  {action.label} · {o.cliente || "Cliente"}
+                </div>
+                <div className="text-[12px] text-muted-foreground truncate">
+                  {action.reason}
+                </div>
+              </Link>
+              <Button
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(action.message);
+                  toast.success("Mensaje copiado · listo para enviar");
+                  if (next) updateOrder(o.id, { estado: next });
+                }}
+              >
+                <Send className="h-3.5 w-3.5" /> Copiar y enviar
+              </Button>
+            </Card>
+          );
+        })}
+        {ranked.length > top.length && (
+          <Link
+            to="/pedidos"
+            className="block text-center text-[12.5px] text-muted-foreground hover:text-foreground py-2"
+          >
+            Ver las {ranked.length} acciones pendientes →
+          </Link>
+        )}
+      </div>
+    </section>
   );
 }
