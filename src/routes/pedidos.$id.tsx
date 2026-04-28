@@ -29,6 +29,7 @@ import {
   money,
   nextAction,
 } from "@/lib/ui-store";
+import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer } from "@/lib/catalog-store";
 import {
   ArrowLeft,
   Copy,
