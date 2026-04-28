@@ -242,8 +242,8 @@ function Detalle() {
           {/* Validación contra catálogo */}
           <CatalogValidationBlock
             validation={validation}
-            onCopy={(t) => copiar(t)}
-            onWhatsApp={(t) => {
+            onCopy={(t: string) => copiar(t)}
+            onWhatsApp={(t: string) => {
               if (!order.telefono) { toast.error("Falta teléfono del cliente"); return; }
               window.open(`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(t)}`, "_blank", "noopener,noreferrer");
             }}
