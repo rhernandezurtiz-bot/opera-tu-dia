@@ -109,6 +109,7 @@ export interface PaymentsConfig {
   mercadopagoConectado: boolean;
   stripeConectado: boolean;
   webhookUrl: string;
+}
 
 export interface Miembro { id: string; nombre: string; rol: string; }
 
