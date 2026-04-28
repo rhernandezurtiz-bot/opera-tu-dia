@@ -690,9 +690,10 @@ function extractLocation(text: string): string {
   return "";
 }
 
-export function parseWhatsapp(text: string): Order {
+export function parseWhatsapp(text: string, opts: { canal?: Channel; canalUserId?: string; canalHandle?: string } = {}): Order {
   const lower = text.toLowerCase();
   const id = "o" + Math.random().toString(36).slice(2, 9);
+  const canal: Channel = opts.canal ?? "whatsapp";
 
   // Tipo — prioridad: cita > servicio > personalizado > producto
   let tipo: OrderType = "producto";
