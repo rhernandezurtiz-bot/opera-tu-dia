@@ -239,6 +239,10 @@ interface State {
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string) => string;
+  markPaymentPaid: (id: string) => void;
+  markPaymentFailed: (id: string, motivo?: string) => void;
+  sendPaymentReminder: (id: string) => void;
+  setPaymentRules: (rules: Partial<Pick<Negocio, "autoCobroEnabled" | "umbralAnticipo" | "porcentajeAnticipo" | "recordatorioMinutos" | "webhookSimMinutos">>) => void;
 }
 
 export const useOperia = create<State>()(
