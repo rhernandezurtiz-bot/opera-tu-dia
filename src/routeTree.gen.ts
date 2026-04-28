@@ -22,6 +22,8 @@ import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
+import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 
 const RiesgosRoute = RiesgosRouteImport.update({
   id: '/riesgos',
@@ -88,6 +90,17 @@ const ClientesKeyRoute = ClientesKeyRouteImport.update({
   path: '/clientes/$key',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksMercadopagoRoute =
+  ApiPublicWebhooksMercadopagoRouteImport.update({
+    id: '/api/public/webhooks/mercadopago',
+    path: '/api/public/webhooks/mercadopago',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +116,8 @@ export interface FileRoutesByFullPath {
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +133,8 @@ export interface FileRoutesByTo {
   '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
   '/pedidos': typeof PedidosIndexRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +151,8 @@ export interface FileRoutesById {
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
+  '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +170,8 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
+    | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/stripe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +187,8 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/inbox'
     | '/pedidos'
+    | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/stripe'
   id:
     | '__root__'
     | '/'
@@ -181,6 +204,8 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
+    | '/api/public/webhooks/mercadopago'
+    | '/api/public/webhooks/stripe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +222,8 @@ export interface RootRouteChildren {
   ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
+  ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +319,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesKeyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/mercadopago': {
+      id: '/api/public/webhooks/mercadopago'
+      path: '/api/public/webhooks/mercadopago'
+      fullPath: '/api/public/webhooks/mercadopago'
+      preLoaderRoute: typeof ApiPublicWebhooksMercadopagoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +350,8 @@ const rootRouteChildren: RootRouteChildren = {
   ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
+  ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

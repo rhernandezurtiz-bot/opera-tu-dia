@@ -17,6 +17,8 @@ import {
   Wallet,
   Sparkles,
   Send,
+  CreditCard,
+  Percent,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +33,8 @@ export const Route = createFileRoute("/app")({
 });
 
 function Index() {
+  // Activa motor de cobro automático (genera links, simula webhooks, recordatorios)
+  usePaymentEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
@@ -94,6 +98,34 @@ function Index() {
             value={money(dinero.ingresosEnRiesgo)}
             hint={`${risky.length} con datos faltantes`}
             tone="danger"
+          />
+        </div>
+      </section>
+
+      {/* Cobros automáticos */}
+      <section className="mb-10">
+        <Eyebrow>💳 Cobros automáticos</Eyebrow>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <MoneyCard
+            icon={CreditCard}
+            label="Cobrado hoy"
+            value={money(dinero.cobradoHoy)}
+            hint={`${dinero.pedidosCobradosHoy} ${dinero.pedidosCobradosHoy === 1 ? "pago recibido" : "pagos recibidos"}`}
+            tone="default"
+          />
+          <MoneyCard
+            icon={Wallet}
+            label="Pagos pendientes"
+            value={String(dinero.pedidosSinAnticipo)}
+            hint={`${money(dinero.montoSinAnticipo)} por cobrar${dinero.pedidosFallidos > 0 ? ` · ${dinero.pedidosFallidos} fallidos` : ""}`}
+            tone="warning"
+          />
+          <MoneyCard
+            icon={Percent}
+            label="Conversión a pago"
+            value={`${dinero.conversionPct}%`}
+            hint="Pedidos pagados / con cobro (30 días)"
+            tone="default"
           />
         </div>
       </section>
