@@ -110,6 +110,9 @@ function Detalle() {
   const fueraCatalogo = validation.status === "fuera_catalogo";
   const blockPayment = validation.blockPayment;
 
+  // Motor de decisión comercial
+  const decision = evaluateOrderDecision({ order, catalog, allOrders });
+
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
     toast.success(label);
