@@ -11,6 +11,10 @@ import {
   Wallet,
   Check,
   Sparkles,
+  ArrowDown,
+  Send,
+  Wrench,
+  Cake,
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
@@ -109,6 +113,55 @@ function Landing() {
           <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia el WhatsApp del cliente y pégalo. Operia lee y entiende." />
           <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y qué falta para no perder el pedido." />
           <Step n="3" icon={ChefHat} title="Te dice qué hacer" body="Confirma, cobra y entrega siguiendo el plan del día. Cero adivinar." />
+        </div>
+      </section>
+
+      {/* Así funciona en la vida real */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Así funciona en la vida real</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Mensajes reales. Pedidos listos. Acción clara.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Example
+            icon={Cake}
+            input="Hola quiero un pastel mañana para 20 personas"
+            tipo="Producto · Pastel"
+            fields={[
+              { label: "Cliente", value: "Por confirmar", missing: true },
+              { label: "Fecha", value: "Mañana" },
+              { label: "Personas", value: "20" },
+              { label: "Sabor / dirección", value: "Faltan", missing: true },
+            ]}
+            action="Solicitar anticipo"
+            message="Hola 😊 para confirmar tu pastel para 20 personas necesito el sabor, la dirección y un anticipo. ¿Me ayudas?"
+          />
+          <Example
+            icon={Wrench}
+            input="¿Me arreglan una fuga el viernes en Providencia?"
+            tipo="Servicio · Plomería"
+            fields={[
+              { label: "Servicio", value: "Reparar fuga" },
+              { label: "Fecha", value: "Viernes" },
+              { label: "Zona", value: "Providencia" },
+              { label: "Hora exacta", value: "Falta", missing: true },
+            ]}
+            action="Confirmar horario"
+            message="Hola 😊 confirmo tu visita por la fuga el viernes en Providencia. ¿A qué hora te queda mejor?"
+          />
+          <Example
+            icon={Users}
+            input="¿Tienes lugar mañana 4pm para corte y tinte?"
+            tipo="Cita · Salón"
+            fields={[
+              { label: "Servicio", value: "Corte y tinte" },
+              { label: "Fecha", value: "Mañana" },
+              { label: "Hora", value: "4:00 pm" },
+              { label: "Cliente", value: "Por confirmar", missing: true },
+            ]}
+            action="Confirmar cita"
+            message="¡Hola! ✅ Te confirmo tu cita mañana a las 4 pm para corte y tinte. ¿Me confirmas tu nombre? ¡Te esperamos!"
+          />
         </div>
       </section>
 
@@ -315,6 +368,89 @@ function Faq({ q, a }: { q: string; a: string }) {
     <Card className="p-5 rounded-xl">
       <div className="text-[14.5px] font-semibold mb-1.5">{q}</div>
       <p className="text-[13.5px] text-muted-foreground leading-relaxed">{a}</p>
+    </Card>
+  );
+}
+
+function Example({
+  icon: Icon,
+  input,
+  tipo,
+  fields,
+  action,
+  message,
+}: {
+  icon: any;
+  input: string;
+  tipo: string;
+  fields: { label: string; value: string; missing?: boolean }[];
+  action: string;
+  message: string;
+}) {
+  return (
+    <Card className="p-5 rounded-2xl flex flex-col gap-3">
+      {/* Input: WhatsApp-style bubble */}
+      <div className="flex items-start gap-2">
+        <div className="h-7 w-7 rounded-full bg-success/15 text-success grid place-items-center shrink-0">
+          <MessageSquare className="h-3.5 w-3.5" />
+        </div>
+        <div className="flex-1">
+          <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+            Mensaje del cliente
+          </div>
+          <div className="text-[13.5px] bg-success/8 border border-success/20 rounded-2xl rounded-tl-sm px-3 py-2 leading-snug">
+            {input}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center text-muted-foreground">
+        <ArrowDown className="h-4 w-4" />
+      </div>
+
+      {/* Output: organized order */}
+      <div className="rounded-xl border border-border bg-secondary/40 p-3.5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-7 w-7 rounded-lg bg-foreground text-background grid place-items-center">
+            <Icon className="h-3.5 w-3.5" />
+          </div>
+          <div className="text-[12.5px] font-semibold">{tipo}</div>
+        </div>
+        <ul className="space-y-1.5">
+          {fields.map((f) => (
+            <li key={f.label} className="flex justify-between gap-3 text-[12.5px]">
+              <span className="text-muted-foreground">{f.label}</span>
+              <span
+                className={
+                  f.missing
+                    ? "text-danger/90 font-medium"
+                    : "text-foreground font-medium"
+                }
+              >
+                {f.missing ? "⚠ " : ""}{f.value}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex justify-center text-muted-foreground">
+        <ArrowDown className="h-4 w-4" />
+      </div>
+
+      {/* Action + ready message */}
+      <div className="rounded-xl border border-foreground/15 bg-foreground/3 p-3.5">
+        <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+          Próxima acción
+        </div>
+        <div className="text-[13.5px] font-semibold mb-2">{action}</div>
+        <div className="text-[12.5px] text-foreground/80 italic leading-snug mb-3">
+          "{message}"
+        </div>
+        <Button size="sm" className="w-full h-9">
+          <Send className="h-3.5 w-3.5" /> Copiar y enviar
+        </Button>
+      </div>
     </Card>
   );
 }
