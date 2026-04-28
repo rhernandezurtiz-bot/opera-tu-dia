@@ -226,6 +226,7 @@ const seedOrders = (): Order[] => [
     checklist: {},
     mensajeOriginal: "Hola, necesito un masaje a domicilio para mañana",
     createdAt: Date.now() - 3600000,
+    canal: "whatsapp",
   },
   {
     id: "o3", cliente: "Ana Torres", telefono: "",
@@ -238,6 +239,7 @@ const seedOrders = (): Order[] => [
     checklist: {},
     mensajeOriginal: "Quiero agendar para hoy a las 3",
     createdAt: Date.now() - 1800000,
+    canal: "instagram", canalUserId: "ig_770331", canalHandle: "@anatorres",
   },
   {
     id: "o4", cliente: "Carolina Méndez", telefono: "+52 55 5555 1212",
@@ -249,6 +251,7 @@ const seedOrders = (): Order[] => [
     checklist: { brief: true, propuesta: true, anticipo: true, ejecucion: false, entrega: false },
     mensajeOriginal: "Necesito arreglos para mi boda mañana",
     createdAt: Date.now() - 7200000,
+    canal: "whatsapp",
   },
 ];
 
