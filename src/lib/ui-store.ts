@@ -301,19 +301,27 @@ export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: num
 }
 
 // Mensaje automático específico para auto-envío de link de pago
-// Se dispara cuando el pedido tiene fecha confirmada + dirección + monto.
 export function buildAutoPaymentMessage(o: Order): string {
   const link = o.paymentLink ?? "[LINK]";
-  return `Perfecto 🙌\n\nPara asegurar tu pedido, puedes realizar tu pago aquí:\n${link}\n\nEn cuanto se confirme, queda apartado automáticamente.`;
+  return `Perfecto 🙌\n\nTu pedido ya está listo para apartarse.\nPuedes realizar tu pago aquí:\n${link}\n\nEn cuanto se confirme, queda apartado automáticamente.`;
 }
 
-// ¿Cumple los 3 criterios para auto-envío de cobro?
+// Recordatorio cálido (≥30 min sin pago) — solo se genera, no se envía solo
+export function buildAutoPaymentReminder(o: Order): string {
+  const link = o.paymentLink ?? "[LINK]";
+  return `Hola 🙌\n\nTe dejo nuevamente el link para asegurar tu pedido:\n${link}`;
+}
+
+// ¿Cumple los criterios para auto-cobro?
+// Fecha confirmada + dirección + producto definido + cliente identificado + monto.
 export function isReadyForAutoPayment(o: Order): boolean {
   const fechaOk = !!o.fechaEntrega && o.fechaConfirmada !== false;
   const direccionOk = !!o.direccion && o.direccion.trim().length > 0;
+  const productoOk = !!o.descripcion && !/por definir/i.test(o.descripcion);
+  const clienteOk = (!!o.cliente && o.cliente.trim().length > 0) || !!o.telefono;
   const montoOk = !!o.precio && o.precio > 0;
   const cobrable = o.pago !== "pagado" && o.pago !== "no_requerido";
-  return fechaOk && direccionOk && montoOk && cobrable;
+  return fechaOk && direccionOk && productoOk && clienteOk && montoOk && cobrable;
 }
 
 // Mensaje automático tras confirmar pago (webhook)

@@ -1,6 +1,11 @@
 import { useEffect } from "react";
 import { useOperia } from "./operia-store";
-import { buildPaymentReminder, buildPaymentReceivedMessage, isReadyForAutoPayment } from "./ui-store";
+import {
+  buildPaymentReminder,
+  buildPaymentReceivedMessage,
+  buildAutoPaymentReminder,
+  isReadyForAutoPayment,
+} from "./ui-store";
 
 /**
  * Motor de cobro automático.
@@ -57,4 +62,8 @@ export function usePaymentEngine() {
   }, [enabled]);
 }
 
-export { buildPaymentReminder, buildPaymentReceivedMessage };
+export {
+  buildPaymentReminder,
+  buildPaymentReceivedMessage,
+  buildAutoPaymentReminder,
+};
