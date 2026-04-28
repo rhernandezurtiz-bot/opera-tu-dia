@@ -4,9 +4,7 @@ import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
   ArrowDown,
-  MessageSquare,
   MessagesSquare,
-  Workflow,
   ShieldCheck,
   Layers,
   Users,
@@ -33,6 +31,7 @@ import {
   Target,
   Gauge,
   TrendingUp,
+  Brain,
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
@@ -42,21 +41,21 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "Operia — Convierte WhatsApp en un sistema operativo de ventas",
+          "Operia — Centraliza, controla y ejecuta tus ventas de WhatsApp",
       },
       {
         name: "description",
         content:
-          "Operia transforma conversaciones de WhatsApp en operaciones claras para equipos. Detecta, prioriza y ejecuta cada pedido sin perder control.",
+          "Operia convierte conversaciones de WhatsApp en operaciones claras para equipos. Evita pérdidas, mejora tiempos de respuesta y escala sin caos.",
       },
       {
         property: "og:title",
-        content: "Operia — Sistema operativo para ventas por WhatsApp",
+        content: "Operia — Infraestructura operativa para ventas por WhatsApp",
       },
       {
         property: "og:description",
         content:
-          "Estructura, asigna, prioriza y ejecuta cada pedido. Plataforma operativa con estándar empresarial.",
+          "Una capa operativa enterprise sobre WhatsApp. Estructura, asigna, prioriza y ejecuta cada pedido con control total.",
       },
     ],
   }),
@@ -80,7 +79,7 @@ function Landing() {
           <nav className="hidden md:flex items-center gap-7 text-[13px] text-muted-foreground">
             <a href="#problema" className="hover:text-foreground transition-colors">Problema</a>
             <a href="#solucion" className="hover:text-foreground transition-colors">Solución</a>
-            <a href="#ejecucion" className="hover:text-foreground transition-colors">Ejecución</a>
+            <a href="#plataforma" className="hover:text-foreground transition-colors">Plataforma</a>
             <a href="#enterprise" className="hover:text-foreground transition-colors">Enterprise</a>
             <a href="#precios" className="hover:text-foreground transition-colors">Precios</a>
             <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
@@ -96,23 +95,23 @@ function Landing() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* 1. HERO */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto pt-20 md:pt-28 pb-16 md:pb-24">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[11.5px] uppercase tracking-[0.14em] text-muted-foreground mb-5">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Sistema operativo para ventas conversacionales</span>
+            <span>Infraestructura operativa para ventas conversacionales</span>
           </div>
           <h1 className="text-[42px] md:text-[60px] leading-[1.04] font-semibold tracking-tight">
-            Convierte WhatsApp en un{" "}
+            Centraliza, controla y{" "}
             <span className="bg-foreground text-background px-2 rounded-md">
-              sistema operativo
+              ejecuta
             </span>{" "}
-            de ventas.
+            tus ventas de WhatsApp.
           </h1>
           <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
-            Operia transforma conversaciones en operaciones claras para equipos.
-            Detecta, prioriza y ejecuta cada pedido sin perder control.
+            Operia convierte conversaciones en operaciones claras para equipos.
+            Evita pérdidas, mejora tiempos de respuesta y escala sin caos.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-12 px-6 text-[14px]">
@@ -126,23 +125,24 @@ function Landing() {
               variant="ghost"
               className="h-12 px-5 text-[14px]"
             >
-              <Link to="/login">Probar plataforma</Link>
+              <Link to="/login">Explorar plataforma</Link>
             </Button>
           </div>
           <p className="mt-6 text-[12.5px] text-muted-foreground">
-            Implementación guiada · API-first · Seguridad empresarial
+            Implementación guiada · Roles y auditoría · Listo en menos de 1 día
           </p>
         </div>
 
-        {/* Proof bar */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Metric value="+32%" label="Más pedidos cerrados en 30 días" />
-          <Metric value="−78%" label="Pedidos sin seguimiento" />
-          <Metric value="0" label="Pedidos perdidos en operación diaria" />
+        {/* Métricas */}
+        <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Metric value="−87%" label="Pedidos perdidos" />
+          <Metric value="3.2x" label="Mejora en tiempo de respuesta" />
+          <Metric value="+24%" label="Cobranza puntual" />
+          <Metric value="<2 min" label="Configuración inicial" />
         </div>
       </section>
 
-      {/* El problema */}
+      {/* 2. PROBLEMA */}
       <section
         id="problema"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
@@ -161,53 +161,26 @@ function Landing() {
           </div>
           <div className="md:col-span-7 grid sm:grid-cols-2 gap-px bg-border rounded-2xl overflow-hidden border border-border">
             <ProblemItem
-              title="Pedidos que se pierden"
-              detail="Mensajes que nunca se responden. Clientes que se van sin que el equipo lo note."
+              title="Conversaciones perdidas"
+              detail="Mensajes sin respuesta. Clientes que se van sin que el equipo lo note."
             />
             <ProblemItem
-              title="Cobros sin ejecutar"
-              detail="Anticipos olvidados, confirmaciones a medias, dinero que nunca entra."
+              title="Pedidos sin seguimiento"
+              detail="Sin estado, sin responsable, sin siguiente paso definido."
             />
             <ProblemItem
               title="Equipos descoordinados"
-              detail="Cada agente con su propio teléfono y criterio. Cero visibilidad cruzada."
+              detail="Cada agente con su criterio. Cero visibilidad cruzada."
             />
             <ProblemItem
-              title="Sin trazabilidad"
-              detail="No se puede auditar lo que no se registra. La operación depende de la memoria."
+              title="Falta de visibilidad"
+              detail="No hay métricas, no hay control, no hay forma de auditar."
             />
           </div>
         </div>
-
-        {/* Costo real */}
-        <div className="mt-14 md:mt-20 grid md:grid-cols-12 gap-6 items-stretch">
-          <Card className="md:col-span-7 p-7 md:p-9 rounded-2xl">
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="h-8 w-8 rounded-lg border border-border grid place-items-center">
-                <AlertTriangle className="h-4 w-4" />
-              </div>
-              <div className="text-[15px] font-semibold tracking-tight">
-                El costo real de operar en WhatsApp
-              </div>
-            </div>
-            <ul className="space-y-3.5">
-              <CostRow text="Cada mensaje no estructurado es un riesgo." />
-              <CostRow text="Cada dato faltante retrasa la operación." />
-              <CostRow text="Cada pedido sin seguimiento es dinero perdido." />
-            </ul>
-          </Card>
-          <Card className="md:col-span-5 p-7 md:p-9 rounded-2xl bg-foreground text-background flex flex-col justify-center">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-background/60 mb-3">
-              Resumen
-            </div>
-            <div className="text-[24px] md:text-[28px] leading-[1.15] font-semibold tracking-tight">
-              Cada día sin control = ingresos que no recuperas.
-            </div>
-          </Card>
-        </div>
       </section>
 
-      {/* La solución */}
+      {/* 3. SOLUCIÓN */}
       <section
         id="solucion"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
@@ -218,7 +191,7 @@ function Landing() {
         </h2>
         <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-2xl">
           Una capa operativa sobre tus conversaciones. Estructura, asigna,
-          prioriza y ejecuta.
+          prioriza y coordina para que el equipo trabaje sobre datos, no chats.
         </p>
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <SolutionItem
@@ -230,54 +203,103 @@ function Landing() {
           <SolutionItem
             n="02"
             icon={Users}
-            title="Asigna responsabilidades"
+            title="Asigna responsables"
             body="Define quién hace qué, sin ambigüedad sobre dueños y siguientes pasos."
           />
           <SolutionItem
             n="03"
             icon={Zap}
-            title="Prioriza automáticamente"
-            body="El sistema detecta urgencia, riesgo y valor para enfocar al equipo en lo crítico."
+            title="Prioriza por urgencia y riesgo"
+            body="El motor enfoca al equipo en lo que mueve la operación."
           />
           <SolutionItem
             n="04"
             icon={LineChart}
-            title="Visibilidad total"
-            body="Tablero central con estado en tiempo real para toda la operación."
+            title="Dashboard en tiempo real"
+            body="Estado de cada pedido, agente y SLA en una sola vista."
           />
         </div>
       </section>
 
-      {/* Motor de ejecución */}
+      {/* 4. MOMENTO WOW */}
       <section
-        id="ejecucion"
+        id="plataforma"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
       >
-        <SectionLabel>Motor de ejecución</SectionLabel>
+        <SectionLabel>Momento wow</SectionLabel>
         <h2 className="text-[30px] md:text-[44px] leading-[1.06] font-semibold tracking-tight max-w-3xl">
-          No solo organizas. Ejecutas.
+          Así se ve operar con Operia.
         </h2>
         <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-2xl">
-          Cada pedido llega con contexto completo y una acción recomendada. Tu
-          equipo aprueba y ejecuta.
+          De mensaje a pedido estructurado a acción ejecutable. En segundos.
         </p>
 
         <div className="mt-12 grid lg:grid-cols-2 gap-6 items-start">
+          {/* Mock: mensaje → pedido → acción */}
+          <Card className="p-5 rounded-2xl bg-secondary/40">
+            <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
+              1. Mensaje del cliente
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="text-[13px] text-foreground/80 italic leading-relaxed">
+                "Hola, quiero un pastel mañana para 20 personas."
+              </div>
+              <div className="mt-2 text-[11.5px] text-muted-foreground">
+                M. López · WhatsApp · hace 2 min
+              </div>
+            </div>
+
+            <div className="flex justify-center text-muted-foreground my-3">
+              <ArrowDown className="h-4 w-4" />
+            </div>
+
+            <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
+              2. Pedido estructurado
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 space-y-2 text-[13px]">
+              <FieldRow k="Cliente" v="M. López" />
+              <FieldRow k="Fecha" v="Mañana" />
+              <FieldRow k="Producto" v="Pastel · 20 personas" />
+              <FieldRow k="Datos faltantes" v="Sabor · Hora · Anticipo" warn />
+            </div>
+
+            <div className="flex justify-center text-muted-foreground my-3">
+              <ArrowDown className="h-4 w-4" />
+            </div>
+
+            <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
+              3. Acción recomendada
+            </div>
+            <div className="rounded-xl border border-foreground/15 bg-foreground/[0.03] p-4">
+              <div className="text-[14px] font-semibold mb-2">
+                Solicitar anticipo
+              </div>
+              <div className="text-[12.5px] text-foreground/80 italic leading-snug mb-3">
+                "Hola María, para asegurar tu pedido te compartimos los datos
+                para el anticipo. Confirmamos al recibirlo."
+              </div>
+              <Button size="sm" className="w-full h-9">
+                <Send className="h-3.5 w-3.5" /> Aprobar y enviar
+              </Button>
+            </div>
+          </Card>
+
+          {/* Lateral: qué hace el motor */}
           <div className="space-y-3">
             <ExecRow
               icon={AlertCircle}
-              title="Qué falta"
+              title="Detecta lo que falta"
               body="Datos incompletos, anticipos pendientes, confirmaciones por cerrar."
             />
             <ExecRow
               icon={Gauge}
-              title="Qué riesgo tiene"
-              body="Clasificación automática por urgencia, valor y SLA."
+              title="Clasifica el riesgo"
+              body="Urgencia, valor del pedido y SLA evaluados de forma automática."
             />
             <ExecRow
               icon={Target}
-              title="Qué hacer"
-              body="Una acción recomendada por pedido, lista para aprobar."
+              title="Propone la siguiente acción"
+              body="Una recomendación clara por pedido, lista para que el equipo apruebe."
             />
 
             <Card className="mt-6 p-6 rounded-2xl bg-foreground text-background">
@@ -291,128 +313,132 @@ function Landing() {
                 <ExecChip icon={ArrowUpRight} label="Escalar" />
               </div>
               <div className="mt-5 text-[13px] text-background/80">
-                Menos decisiones. Más ejecución.
+                Menos decisiones manuales. Más ejecución medible.
               </div>
             </Card>
           </div>
-
-          {/* Mock plataforma */}
-          <Card className="p-5 rounded-2xl bg-secondary/40">
-            <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
-              Vista en plataforma
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                  <div className="text-[14px] font-semibold truncate">
-                    M. López · #4821
-                  </div>
-                  <div className="text-[12.5px] text-muted-foreground truncate">
-                    Pedido B2C · valor $1,800 · entrega +18h
-                  </div>
-                </div>
-                <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20 shrink-0">
-                  P0 · Crítico
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-[12px]">
-                <span className="text-danger/90 font-medium">
-                  Pago no confirmado
-                </span>
-                <span className="text-muted-foreground">·</span>
-                <span className="text-muted-foreground">SLA en 18 h</span>
-              </div>
-            </div>
-
-            <div className="flex justify-center text-muted-foreground my-3">
-              <ArrowDown className="h-4 w-4" />
-            </div>
-
-            <div className="rounded-xl border border-foreground/15 bg-foreground/[0.03] p-4">
-              <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
-                Acción recomendada
-              </div>
-              <div className="text-[14px] font-semibold mb-2">
-                Solicitar anticipo
-              </div>
-              <div className="text-[12.5px] text-foreground/80 italic leading-snug mb-3">
-                "Hola María, para asegurar tu pedido del viernes te compartimos
-                los datos para el anticipo de $1,800. Confirmamos al recibirlo."
-              </div>
-              <Button size="sm" className="w-full h-9">
-                <Send className="h-3.5 w-3.5" /> Aprobar y enviar
-              </Button>
-            </div>
-          </Card>
         </div>
       </section>
 
-      {/* Caso real */}
+      {/* 5. CAPA OPERATIVA */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
-        <SectionLabel>Caso real</SectionLabel>
-        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-3 max-w-2xl">
-          De conversación a operación, en segundos.
+        <SectionLabel>Capa operativa</SectionLabel>
+        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-3 max-w-3xl">
+          Una sola superficie operativa para todo el ciclo de venta.
         </h2>
         <p className="text-[15px] text-muted-foreground leading-relaxed max-w-xl mb-12">
-          El impacto operativo, en números reales de equipos que migraron a
-          Operia.
+          Captura, decisión y ejecución conectadas en un mismo flujo.
         </p>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <Card className="p-6 md:p-7 rounded-2xl">
-            <div className="flex items-center justify-between mb-5">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Antes
-              </div>
-              <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20">
-                Sin control
-              </span>
-            </div>
-            <ul className="space-y-3">
-              <CompareRow label="Mensajes diarios" value="120" tone="muted" />
-              <CompareRow label="Sin respuesta" value="30%" tone="danger" />
-              <CompareRow
-                label="Control de pagos"
-                value="Inexistente"
-                tone="danger"
-              />
-            </ul>
-          </Card>
-
-          <Card className="p-6 md:p-7 rounded-2xl border-foreground/30 bg-foreground/[0.02]">
-            <div className="flex items-center justify-between mb-5">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Después con Operia
-              </div>
-              <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-foreground text-background">
-                Operación bajo control
-              </span>
-            </div>
-            <ul className="space-y-3">
-              <CompareRow
-                label="Pedidos registrados"
-                value="100%"
-                tone="positive"
-              />
-              <CompareRow
-                label="Con anticipo confirmado"
-                value="90%"
-                tone="positive"
-              />
-              <CompareRow
-                label="Tablero central para el equipo"
-                value="1"
-                tone="positive"
-              />
-            </ul>
-          </Card>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Step
+            n="01"
+            icon={MessagesSquare}
+            title="Captura"
+            body="Mensajes desde WhatsApp Cloud API o ingestados vía API. Una bandeja central."
+          />
+          <Step
+            n="02"
+            icon={Brain}
+            title="Decisión"
+            body="Motor que prioriza, detecta faltantes y propone el siguiente paso óptimo."
+          />
+          <Step
+            n="03"
+            icon={Send}
+            title="Ejecución"
+            body="Cobros, confirmaciones y entregas ejecutadas con plantilla y trazabilidad."
+          />
         </div>
       </section>
 
-      {/* Control para empresas */}
+      {/* 6. COSTO DE NO USAR SISTEMA */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
-        <SectionLabel>Control para empresas</SectionLabel>
+        <SectionLabel>El costo de no operar con sistema</SectionLabel>
+        <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
+          <div className="md:col-span-5">
+            <h2 className="text-[30px] md:text-[42px] leading-[1.06] font-semibold tracking-tight">
+              Cada día sin sistema, hay ingresos que no recuperas.
+            </h2>
+            <p className="mt-5 text-[15px] text-muted-foreground leading-relaxed max-w-md">
+              Operia no es un gasto. Es infraestructura para recuperar
+              ingresos que hoy se pierden silenciosamente en la operación.
+            </p>
+          </div>
+          <div className="md:col-span-7 grid sm:grid-cols-3 gap-3">
+            <CostCard
+              value="15–30%"
+              label="de pedidos se pierden por falta de seguimiento."
+            />
+            <CostCard
+              value="20–40%"
+              label="de retrasos por información incompleta."
+            />
+            <CostCard
+              value="10–25%"
+              label="de cobros nunca ejecutados."
+            />
+          </div>
+        </div>
+
+        <Card className="mt-10 p-7 md:p-9 rounded-2xl bg-foreground text-background flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg border border-background/20 grid place-items-center shrink-0">
+              <AlertTriangle className="h-4 w-4" />
+            </div>
+            <div className="text-[18px] md:text-[22px] leading-[1.2] font-semibold tracking-tight max-w-2xl">
+              Operia no es un gasto. Es infraestructura para recuperar
+              ingresos.
+            </div>
+          </div>
+          <Button asChild variant="secondary" className="h-10 shrink-0">
+            <a href="#contacto">Calcular impacto</a>
+          </Button>
+        </Card>
+      </section>
+
+      {/* 7. CAPACIDADES */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
+        <SectionLabel>Capacidades de la plataforma</SectionLabel>
+        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-10 max-w-2xl">
+          Todo lo que tu operación necesita, en una sola plataforma.
+        </h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ControlItem
+            icon={MessagesSquare}
+            title="Centralización de conversaciones"
+            body="Toda la actividad de WhatsApp en una bandeja única auditable."
+          />
+          <ControlItem
+            icon={Layers}
+            title="Gestión estructurada de pedidos"
+            body="Cada pedido con campos, estado, dueño y siguiente acción."
+          />
+          <ControlItem
+            icon={Users}
+            title="Asignación y seguimiento"
+            body="Reparto de carga, escalamientos y supervisión por equipo."
+          />
+          <ControlItem
+            icon={AlertTriangle}
+            title="Detección de riesgos operativos"
+            body="Alertas tempranas sobre SLA, datos faltantes y cobros pendientes."
+          />
+          <ControlItem
+            icon={History}
+            title="Historial por cliente"
+            body="Contexto completo: conversaciones, pedidos y comportamiento de pago."
+          />
+          <ControlItem
+            icon={Zap}
+            title="Acciones automatizadas"
+            body="Recordatorios, cobros y confirmaciones ejecutados con plantilla."
+          />
+        </div>
+      </section>
+
+      {/* 8. CONTROL Y VISIBILIDAD */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
+        <SectionLabel>Control y visibilidad total</SectionLabel>
         <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
           <div className="md:col-span-5">
             <h2 className="text-[30px] md:text-[42px] leading-[1.06] font-semibold tracking-tight">
@@ -424,14 +450,14 @@ function Landing() {
             </p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground">
               <ShieldCheck className="h-3.5 w-3.5" />
-              Tus datos siempre privados y organizados.
+              Infraestructura segura, con datos cifrados en tránsito y reposo.
             </div>
           </div>
           <div className="md:col-span-7 grid sm:grid-cols-2 gap-3">
             <ControlItem
               icon={History}
               title="Historial de acciones"
-              body="Registro completo de cada cambio, mensaje y decisión."
+              body="Auditoría completa de cada cambio, mensaje y decisión."
             />
             <ControlItem
               icon={Users}
@@ -440,7 +466,7 @@ function Landing() {
             />
             <ControlItem
               icon={ListChecks}
-              title="Control de pedidos"
+              title="Control de pedidos en tiempo real"
               body="Estado, dueño y siguiente acción visibles para cada pedido."
             />
             <ControlItem
@@ -452,7 +478,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* Inteligencia operativa */}
+      {/* 9. INTELIGENCIA OPERATIVA */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
         <SectionLabel>Inteligencia operativa</SectionLabel>
         <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-3 max-w-2xl">
@@ -472,19 +498,68 @@ function Landing() {
           <Step
             n="02"
             icon={Zap}
-            title="Prioriza por urgencia, valor y SLA"
-            body="Clasificación automática. Sin reuniones para decidir qué hacer primero."
+            title="Prioriza por urgencia"
+            body="Clasificación automática por riesgo, valor y SLA. Sin reuniones para decidir."
           />
           <Step
             n="03"
             icon={Send}
             title="Ejecuta con precisión"
-            body="Una acción por pedido, una plantilla por contexto. Aprobación y envío en un clic."
+            body="Una acción por pedido, lista para aprobar y enviar en un clic."
           />
         </div>
       </section>
 
-      {/* Enterprise stack */}
+      {/* 10. INDUSTRIAS */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Industrias</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Construida para operaciones donde cada conversación es ingreso.
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            "Retail D2C",
+            "Food & Beverage",
+            "Servicios técnicos",
+            "Salud",
+            "Logística",
+            "Educación",
+            "Inmobiliaria",
+            "B2B",
+          ].map((x) => (
+            <Card key={x} className="p-4 rounded-xl text-[13.5px] font-medium">
+              {x}
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* 11. SOCIAL PROOF */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
+        <SectionLabel>Social proof</SectionLabel>
+        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-12 max-w-2xl">
+          Equipos operando con menos fricción y más control.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Quote
+            kpi="Operaciones centralizadas"
+            text="Pasamos de tres teléfonos y una hoja de cálculo a una sola plataforma. Hoy todo el equipo ve lo mismo, en tiempo real."
+            author="Dirección de Operaciones · Retail D2C"
+          />
+          <Quote
+            kpi="Errores eliminados"
+            text="Los pedidos sin anticipo y los olvidos desaparecieron. La operación dejó de depender de la memoria de cada agente."
+            author="Gerencia Comercial · Food & Beverage"
+          />
+          <Quote
+            kpi="Tiempos de respuesta"
+            text="Bajamos el tiempo promedio de respuesta a menos de la mitad. Cada pedido llega con su acción recomendada."
+            author="CEO · Servicios técnicos"
+          />
+        </div>
+      </section>
+
+      {/* 12. ENTERPRISE STACK */}
       <section
         id="enterprise"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
@@ -567,56 +642,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* Para quién es */}
-      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
-        <SectionLabel>Para quién es</SectionLabel>
-        <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
-          <div className="md:col-span-5">
-            <h2 className="text-[30px] md:text-[42px] leading-[1.06] font-semibold tracking-tight">
-              Hecho para equipos con volumen.
-            </h2>
-            <p className="mt-5 text-[15px] text-muted-foreground leading-relaxed max-w-md">
-              Operia rinde donde el caos empieza a costar dinero: cuando los
-              chats dejan de ser manejables a mano.
-            </p>
-          </div>
-          <div className="md:col-span-7 grid sm:grid-cols-2 gap-3">
-            <FitItem icon={TrendingUp} text="+30 pedidos diarios" />
-            <FitItem icon={Users} text="+2 personas operando WhatsApp" />
-            <FitItem
-              icon={AlertCircle}
-              text="Problemas de seguimiento o cobro"
-            />
-            <FitItem icon={ShieldCheck} text="Necesidad de control y auditoría" />
-          </div>
-        </div>
-      </section>
-
-      {/* Industrias */}
-      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
-        <SectionLabel>Industrias</SectionLabel>
-        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Construida para operaciones donde cada conversación es ingreso.
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            "Retail D2C",
-            "Food & Beverage",
-            "Servicios técnicos",
-            "Salud",
-            "Logística",
-            "Educación",
-            "Inmobiliaria",
-            "B2B",
-          ].map((x) => (
-            <Card key={x} className="p-4 rounded-xl text-[13.5px] font-medium">
-              {x}
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Precios */}
+      {/* 13. PRECIOS */}
       <section
         id="precios"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
@@ -660,14 +686,13 @@ function Landing() {
           />
           <Plan
             name="Enterprise"
-            price="Desde $9,900"
+            price="A medida"
             tagline="Operaciones críticas con requerimientos a medida."
             features={[
-              "Implementación personalizada",
-              "Integraciones a medida",
+              "Implementación a medida",
+              "Integraciones (ERP, CRM, pagos)",
               "SLA dedicado",
-              "Automatización avanzada",
-              "Soporte directo",
+              "Soporte prioritario",
             ]}
             ctaLabel="Solicitar demo"
             ctaHref="#contacto"
@@ -676,7 +701,7 @@ function Landing() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* 14. FAQ */}
       <section
         id="faq"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
@@ -687,36 +712,36 @@ function Landing() {
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
           <Faq
-            q="¿Cómo se integra con WhatsApp?"
-            a="Soportamos ingesta manual y conexión nativa con WhatsApp Cloud API. La migración es asistida y no requiere migrar tu número."
+            q="¿Cómo se integra con WhatsApp Cloud API?"
+            a="Conexión nativa y oficial con WhatsApp Cloud API. Sin intermediarios y sin cambiar tu número. Migración asistida por nuestro equipo."
           />
           <Faq
             q="¿Cómo manejan seguridad y roles?"
-            a="Roles granulares, registro de auditoría y separación de datos por organización. Infraestructura cifrada en tránsito y en reposo."
+            a="Roles granulares por función y equipo, registro de auditoría inmutable y aislamiento de datos por organización. Cifrado en tránsito y en reposo."
           />
           <Faq
-            q="¿Qué tan rápido se implementa?"
+            q="¿Tiempo de implementación?"
             a="Operación productiva en menos de un día. Para equipos grandes ofrecemos onboarding guiado y plantillas por industria."
           />
           <Faq
-            q="¿Se integra con CRM y ERP?"
-            a="Exponemos API y webhooks. Integramos con CRM, ERP y plataformas de pago utilizadas por equipos de operación."
+            q="¿Integración con CRM y ERP?"
+            a="API-first y webhooks en tiempo real. Integramos con CRM, ERP y plataformas de pago utilizadas por equipos de operación."
           />
         </div>
       </section>
 
-      {/* CTA final */}
+      {/* 15. CTA FINAL */}
       <section
         id="contacto"
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
       >
         <Card className="p-8 md:p-14 rounded-2xl text-center">
           <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight max-w-2xl mx-auto leading-[1.08]">
-            La operación de tu negocio merece una plataforma, no una libreta.
+            Tu operación ya es compleja. Tu sistema no debería serlo.
           </h2>
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-[14.5px]">
-            Agenda una demo de 20 minutos. Te mostramos cómo se vería con tu
-            operación.
+            Agenda una demo y en 20 minutos te mostramos cómo se vería tu
+            operación funcionando con control total.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
@@ -725,18 +750,20 @@ function Landing() {
               </a>
             </Button>
             <Button asChild size="lg" variant="ghost" className="h-12 px-5">
-              <Link to="/login">Probar plataforma</Link>
+              <a href="mailto:hola@operia.app?subject=Demo%20personalizada%20para%20mi%20negocio">
+                Ver cómo funcionaría en mi negocio
+              </a>
             </Button>
           </div>
           <p className="text-[12px] text-muted-foreground mt-5">
-            Respuesta en menos de 24 h hábiles
+            Contacto en menos de 24 h hábiles
           </p>
         </Card>
       </section>
 
       <footer className="border-t border-border py-8 text-center text-[12px] text-muted-foreground">
-        © {new Date().getFullYear()} Operia. Sistema operativo para ventas
-        conversacionales.
+        © {new Date().getFullYear()} Operia. Infraestructura operativa para
+        ventas conversacionales.
       </footer>
     </div>
   );
@@ -776,19 +803,6 @@ function ProblemItem({ title, detail }: { title: string; detail: string }) {
         {detail}
       </p>
     </div>
-  );
-}
-
-function CostRow({ text }: { text: string }) {
-  return (
-    <li className="flex items-start gap-3">
-      <div className="h-5 w-5 rounded-full border border-border grid place-items-center shrink-0 mt-0.5">
-        <div className="h-1.5 w-1.5 rounded-full bg-foreground/70" />
-      </div>
-      <div className="text-[14px] text-foreground/85 leading-relaxed">
-        {text}
-      </div>
-    </li>
   );
 }
 
@@ -860,30 +874,31 @@ function ExecChip({ icon: Icon, label }: { icon: any; label: string }) {
   );
 }
 
-function CompareRow({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone: "muted" | "danger" | "positive";
-}) {
-  const valueClass =
-    tone === "danger"
-      ? "text-danger"
-      : tone === "positive"
-        ? "text-foreground"
-        : "text-foreground/80";
+function FieldRow({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
   return (
-    <li className="flex items-baseline justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0">
-      <span className="text-[13.5px] text-muted-foreground">{label}</span>
-      <span
-        className={`text-[18px] font-semibold tracking-tight tabular-nums ${valueClass}`}
-      >
-        {value}
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="text-[12px] uppercase tracking-[0.1em] text-muted-foreground">
+        {k}
       </span>
-    </li>
+      <span
+        className={`text-[13px] font-medium tracking-tight ${warn ? "text-danger" : "text-foreground"}`}
+      >
+        {v}
+      </span>
+    </div>
+  );
+}
+
+function CostCard({ value, label }: { value: string; label: string }) {
+  return (
+    <Card className="p-6 rounded-2xl">
+      <div className="text-[28px] md:text-[32px] font-semibold tracking-tight tabular-nums text-danger">
+        {value}
+      </div>
+      <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+        {label}
+      </p>
+    </Card>
   );
 }
 
@@ -944,6 +959,30 @@ function Step({
   );
 }
 
+function Quote({
+  kpi,
+  text,
+  author,
+}: {
+  kpi: string;
+  text: string;
+  author: string;
+}) {
+  return (
+    <Card className="p-6 rounded-2xl flex flex-col h-full">
+      <div className="text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground mb-3">
+        {kpi}
+      </div>
+      <p className="text-[14px] text-foreground/90 leading-relaxed flex-1">
+        "{text}"
+      </p>
+      <div className="mt-5 pt-4 border-t border-border text-[12px] text-muted-foreground">
+        {author}
+      </div>
+    </Card>
+  );
+}
+
 function PillarItem({
   icon: Icon,
   title,
@@ -967,17 +1006,6 @@ function PillarItem({
         </p>
       </div>
     </li>
-  );
-}
-
-function FitItem({ icon: Icon, text }: { icon: any; text: string }) {
-  return (
-    <Card className="p-5 rounded-xl flex items-center gap-3">
-      <div className="h-8 w-8 rounded-lg border border-border grid place-items-center shrink-0">
-        <Icon className="h-4 w-4 text-foreground/70" />
-      </div>
-      <div className="text-[14px] font-medium tracking-tight">{text}</div>
-    </Card>
   );
 }
 
