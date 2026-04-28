@@ -373,8 +373,8 @@ function priorityOf(o: Order): Priority {
   if (o.fechaEntrega && o.fechaEntrega < today) return "alta";
   if (o.fechaEntrega === today) return "alta";
   if ((o.faltantes || []).length > 0) return "alta";
-  if (o.pago === "vencido") return "alta";
-  if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado") && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
+  if (o.pago === "vencido" || o.pago === "fallido") return "alta";
+  if ((o.pago === "pendiente" || o.pago === "link_enviado") && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
   if (o.fechaEntrega === tomorrow) return "media";
   if ((o.faltantes || []).length > 0) return "media";
   return "baja";
