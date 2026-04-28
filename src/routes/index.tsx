@@ -781,11 +781,13 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <Card className="p-5 rounded-xl">
-      <div className="text-[26px] font-semibold tracking-tight tabular-nums">
+    <Card className="p-5 rounded-xl h-full">
+      <div className="text-[18px] md:text-[19px] font-semibold tracking-tight">
         {value}
       </div>
-      <div className="text-[12.5px] text-muted-foreground mt-1">{label}</div>
+      <div className="text-[12.5px] text-muted-foreground mt-1.5 leading-relaxed">
+        {label}
+      </div>
     </Card>
   );
 }
