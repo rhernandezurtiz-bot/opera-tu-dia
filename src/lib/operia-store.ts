@@ -114,6 +114,12 @@ export interface Negocio {
   direccion: string;
   horarios: string;
   tiposActivos: OrderType[];
+  // Reglas de cobro automático
+  autoCobroEnabled: boolean;
+  umbralAnticipo: number; // si precio >= umbral → solicitar anticipo (no total)
+  porcentajeAnticipo: number; // % del total para anticipo
+  recordatorioMinutos: number; // tiempo sin pago antes de recordar
+  webhookSimMinutos: number; // tiempo simulado para "recibir" pago
 }
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
