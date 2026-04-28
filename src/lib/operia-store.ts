@@ -301,6 +301,8 @@ interface State {
   riskRules: RiskRules;
   messages: WhatsappMessage[];
   whatsapp: WhatsappConfig;
+  instagram: InstagramConfig;
+  channelMode: ChannelMode; // demo | produccion (global, simple toggle)
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
   addOrder: (o: Order) => void;
