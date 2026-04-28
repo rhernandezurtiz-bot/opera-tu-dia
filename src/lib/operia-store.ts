@@ -265,7 +265,7 @@ interface State {
 
 export const useOperia = create<State>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       orders: seedOrders(),
       miembros: [
         { id: "m1", nombre: "Laura", rol: "Operaciones" },
