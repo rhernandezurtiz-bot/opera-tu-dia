@@ -39,6 +39,9 @@ function Config() {
   const channelMode = useOperia((s) => s.channelMode);
   const setChannelMode = useOperia((s) => s.setChannelMode);
   const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
+  const autoReplyMode = useOperia((s) => s.autoReplyMode);
+  const setAutoReplyMode = useOperia((s) => s.setAutoReplyMode);
+  const autoReplyLog = useOperia((s) => s.autoReplyLog);
   const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
