@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook } from "lucide-react";
+import { useOperia, typeLabels, type RiskRules, type OrderType, type AutoReplyMode, CHANNEL_LABELS } from "@/lib/operia-store";
+import { DECISION_LABELS, INTENT_LABELS } from "@/lib/auto-reply";
+import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook, Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
@@ -38,6 +39,9 @@ function Config() {
   const channelMode = useOperia((s) => s.channelMode);
   const setChannelMode = useOperia((s) => s.setChannelMode);
   const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
+  const autoReplyMode = useOperia((s) => s.autoReplyMode);
+  const setAutoReplyMode = useOperia((s) => s.setAutoReplyMode);
+  const autoReplyLog = useOperia((s) => s.autoReplyLog);
   const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
@@ -362,6 +366,88 @@ function Config() {
             <span>
               Por seguridad, las credenciales reales (Access Token, Secret Key) nunca se guardan en el frontend.
               Se configuran como secretos del backend. Estos campos son visuales para previsualizar la conexión.
+            </span>
+          </div>
+        </Card>
+
+        {/* Automatización: respuestas automáticas */}
+        <Card className="p-5 rounded-xl lg:col-span-2">
+          <div className="flex items-center gap-2 mb-1">
+            <Bot className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg">Automatización</h3>
+            <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full border bg-secondary text-muted-foreground border-border">
+              {autoReplyMode === "manual" ? "Manual" : autoReplyMode === "sugerido" ? "Sugerido" : "Automático"}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Operia detecta intención del mensaje, lo cruza con catálogo y stock, y genera la respuesta. Nunca cobra sin disponibilidad confirmada.
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-2 mb-4">
+            {(["manual", "sugerido", "automatico"] as AutoReplyMode[]).map((m) => {
+              const label = m === "manual" ? "Manual" : m === "sugerido" ? "Sugerido" : "Automático";
+              const desc = m === "manual"
+                ? "Operia no responde, tú decides todo."
+                : m === "sugerido"
+                  ? "Operia genera la respuesta, tú la envías."
+                  : "Operia responde sola los casos seguros.";
+              const active = autoReplyMode === m;
+              return (
+                <button
+                  key={m}
+                  onClick={() => setAutoReplyMode(m)}
+                  className={`text-left p-3 rounded-2xl border transition ${active ? "border-primary bg-primary/8" : "border-border hover:bg-secondary/40"}`}
+                >
+                  <div className="flex items-center gap-2 font-medium text-sm">
+                    {active && <Sparkles className="h-3.5 w-3.5 text-primary" />}
+                    {label}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">{desc}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-medium">Historial de respuestas</h4>
+            <span className="text-xs text-muted-foreground">{autoReplyLog.length} eventos</span>
+          </div>
+          {autoReplyLog.length === 0 ? (
+            <div className="p-4 rounded-2xl bg-secondary/40 text-sm text-muted-foreground">
+              Aún no hay respuestas automáticas registradas. Activa "Sugerido" o "Automático" y entra al Inbox.
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {autoReplyLog.slice(0, 20).map((e) => (
+                <div key={e.id} className="p-3 rounded-xl border border-border text-xs">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="font-medium text-foreground text-sm">{e.cliente}</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-secondary text-[10px]">{CHANNEL_LABELS[e.canal]}</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px]">{INTENT_LABELS[e.intencion]}</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-warning/10 text-foreground/80 text-[10px]">{DECISION_LABELS[e.decision]}</span>
+                    <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[10px] ${
+                      e.resultado === "ok" ? "bg-success/15 text-success" :
+                      e.resultado === "error" ? "bg-danger/15 text-danger" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      {e.enviado ? "Enviado" : e.resultado === "error" ? "Error" : "Pendiente"}
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground italic line-clamp-1">"{e.recibido}"</div>
+                  <div className="text-foreground/80 mt-1 whitespace-pre-wrap line-clamp-3">{e.respuesta}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {new Date(e.at).toLocaleString("es-MX")} · modo {e.modo}
+                    {e.error ? ` · ${e.error}` : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-4 p-3 rounded-2xl bg-secondary/50 text-xs text-muted-foreground flex gap-2">
+            <Info className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              En modo <strong>Automático</strong>, Operia envía respuestas seguras vía <code>/api/send-message</code> (stub). Los casos ambiguos se marcan como <strong>Requiere revisión</strong> y no se envían.
             </span>
           </div>
         </Card>

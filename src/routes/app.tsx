@@ -4,6 +4,7 @@ import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@
 import { usePaymentEngine } from "@/lib/payment-engine";
 import { useCatalog } from "@/lib/catalog-store";
 import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
+import { useAutoReplyEngine } from "@/lib/auto-reply-engine";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,8 @@ function Index() {
   usePaymentEngine();
   // Activa motor de inventario (descuenta/restaura stock según ciclo del pedido)
   useInventoryEngine();
+  // Activa motor de respuestas automáticas (sugerido / automático)
+  useAutoReplyEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);

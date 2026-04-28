@@ -213,6 +213,42 @@ export interface FacebookConfig {
 
 export type ChannelMode = "demo" | "produccion";
 
+/* ============== Auto-respuesta ============== */
+
+export type AutoReplyMode = "manual" | "sugerido" | "automatico";
+
+export type AutoReplyIntent =
+  | "pedido_nuevo"
+  | "seguimiento"
+  | "pregunta"
+  | "cotizacion"
+  | "desconocido";
+
+export type AutoReplyDecision =
+  | "venta_posible"
+  | "sin_disponibilidad"
+  | "faltan_datos"
+  | "listo_cobrar"
+  | "ya_pago"
+  | "requiere_revision";
+
+export interface AutoReplyLogEntry {
+  id: string;
+  at: number;
+  canal: Channel;
+  cliente: string;
+  messageId?: string;
+  ordenId?: string;
+  recibido: string;
+  intencion: AutoReplyIntent;
+  decision: AutoReplyDecision;
+  respuesta: string;
+  enviado: boolean;
+  modo: AutoReplyMode;
+  resultado?: "ok" | "error" | "pendiente";
+  error?: string;
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
 
@@ -328,6 +364,9 @@ interface State {
   instagram: InstagramConfig;
   facebook: FacebookConfig;
   channelMode: ChannelMode; // demo | produccion (global, simple toggle)
+  // Auto-respuesta multicanal
+  autoReplyMode: AutoReplyMode;
+  autoReplyLog: AutoReplyLogEntry[];
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
   addOrder: (o: Order) => void;
@@ -346,6 +385,9 @@ interface State {
   setInstagram: (c: Partial<InstagramConfig>) => void;
   setFacebook: (c: Partial<FacebookConfig>) => void;
   setChannelMode: (m: ChannelMode) => void;
+  setAutoReplyMode: (m: AutoReplyMode) => void;
+  logAutoReply: (entry: Omit<AutoReplyLogEntry, "id" | "at"> & { at?: number }) => string;
+  updateAutoReplyLog: (id: string, patch: Partial<AutoReplyLogEntry>) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
   markPaymentPaid: (id: string) => void;
@@ -391,6 +433,8 @@ export const useOperia = create<State>()(
       instagram: { igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram", conectado: false },
       facebook: { pageId: "", accessToken: "", verifyToken: "", appSecret: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook", conectado: false },
       channelMode: "demo" as ChannelMode,
+      autoReplyMode: "sugerido" as AutoReplyMode,
+      autoReplyLog: [] as AutoReplyLogEntry[],
       clientNotes: {
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
       } as Record<string, string>,
@@ -406,6 +450,18 @@ export const useOperia = create<State>()(
       setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
       setFacebook: (c) => set((s) => ({ facebook: { ...s.facebook, ...c } })),
       setChannelMode: (m) => set(() => ({ channelMode: m })),
+      setAutoReplyMode: (m) => set(() => ({ autoReplyMode: m })),
+      logAutoReply: (entry) => {
+        const id = "ar_" + Math.random().toString(36).slice(2, 10);
+        const at = entry.at ?? Date.now();
+        set((s) => ({
+          autoReplyLog: [{ ...entry, id, at } as AutoReplyLogEntry, ...s.autoReplyLog].slice(0, 200),
+        }));
+        return id;
+      },
+      updateAutoReplyLog: (id, patch) => set((s) => ({
+        autoReplyLog: s.autoReplyLog.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+      })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
         orders: s.orders.map((o) => (o.id === id ? recompute({ ...o, ...patch }) : o)),
@@ -557,8 +613,8 @@ export const useOperia = create<State>()(
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
     {
-      name: "operia-store-v8",
-      version: 8,
+      name: "operia-store-v9",
+      version: 9,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 7) {
@@ -585,6 +641,10 @@ export const useOperia = create<State>()(
               conectado: false,
             };
           }
+        }
+        if (version < 9) {
+          if (!persisted.autoReplyMode) persisted.autoReplyMode = "sugerido";
+          if (!Array.isArray(persisted.autoReplyLog)) persisted.autoReplyLog = [];
         }
         return persisted;
       },
