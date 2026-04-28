@@ -8,6 +8,7 @@ import {
   isReadyForAutoPayment,
 } from "./ui-store";
 import { sendWhatsAppMessage } from "./whatsapp";
+import { useCatalog, validateOrder } from "./catalog-store";
 
 /**
  * Motor de cobro automático.
@@ -41,11 +42,16 @@ export function usePaymentEngine() {
       const webhookMs = (negocio.webhookSimMinutos ?? 1) * 60 * 1000;
       const reminderMs = (negocio.recordatorioMinutos ?? 30) * 60 * 1000;
 
+      const catalog = useCatalog.getState().items;
       for (const o of orders) {
         if (o.estado === "cancelado" || o.estado === "entregado") continue;
 
+        // Bloquea cobro automático si el pedido no coincide con catálogo
+        const validation = validateOrder(o, catalog);
+        const blockedByCatalog = validation.status === "fuera_catalogo";
+
         // Regla 1: criterios listos y sin link → generar link + enviar WhatsApp
-        if (!o.paymentLink && isReadyForAutoPayment(o) && !sendingNow.has(o.id)) {
+        if (!o.paymentLink && !blockedByCatalog && isReadyForAutoPayment(o) && !sendingNow.has(o.id)) {
           sendingNow.add(o.id);
           const link = generatePaymentLink(o.id);
           // Construye el mensaje con el link recién generado
