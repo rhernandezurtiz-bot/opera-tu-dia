@@ -75,51 +75,39 @@ export interface AutoReplyResult {
 
 /* --------------------- Helpers de catálogo / alternativas ----------------- */
 
-function capacityNumber(cap: string): number | null {
-  const m = (cap || "").match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : null;
+function formatCombo(combo: ComboSuggestion): string {
+  const partes = combo.pieces.map((p) =>
+    p.cantidad > 1
+      ? `${p.cantidad} ${p.variant.nombre.toLowerCase()}`
+      : `1 ${p.variant.nombre.toLowerCase()}`,
+  );
+  const lista = partes.length === 1
+    ? partes[0]
+    : `${partes.slice(0, -1).join(", ")} + ${partes[partes.length - 1]}`;
+  const precio = combo.totalPrecio
+    ? ` ($${combo.totalPrecio.toLocaleString("es-MX")} total)`
+    : "";
+  return `${lista}${precio}`;
 }
 
-/**
- * Sugiere combinación de productos para cubrir N personas usando los items
- * disponibles del catálogo. Ej: 25 personas con tope de 12 → "2 de 12 + 1 chico".
- */
-function suggestCombo(catalog: CatalogItem[], personas: number, match?: CatalogItem): string | null {
-  if (!personas || personas <= 0) return null;
-  const candidates = catalog
-    .filter((c) => c.disponible && capacityNumber(c.capacidad))
-    .map((c) => ({ item: c, cap: capacityNumber(c.capacidad)! }))
-    .sort((a, b) => b.cap - a.cap);
-  if (candidates.length === 0) return null;
-
-  const big = match
-    ? candidates.find((c) => c.item.id === match.id) ?? candidates[0]
-    : candidates[0];
-  const n = Math.floor(personas / big.cap);
-  const resto = personas - n * big.cap;
-
-  if (n >= 1 && resto === 0) {
-    return `${n} ${big.item.nombre.toLowerCase()}`;
-  }
-  if (n >= 1 && resto > 0) {
-    const small = candidates
-      .filter((c) => c.cap >= resto && c.cap < big.cap)
-      .pop() // más chico que cubra el resto
-      ?? candidates[candidates.length - 1];
-    return `${n} ${big.item.nombre.toLowerCase()} + 1 ${small.item.nombre.toLowerCase()} (cubre los ${resto} restantes)`;
-  }
-  return null;
+function formatBest(best: ScoredOption): string {
+  const precio = best.variant.precio
+    ? ` ($${best.variant.precio.toLocaleString("es-MX")})`
+    : "";
+  return `${best.item.nombre} — ${best.variant.nombre}${precio}`;
 }
 
-function nextAvailableDate(item: CatalogItem): string | null {
-  // Próxima fecha que respete prepMinutos + anticipacionHoras y caiga en día disponible
+function nextAvailableDate(item: CatalogItem, orders: Order[]): string | null {
+  // Próxima fecha que respete prepMinutos + anticipacionHoras, día disponible y capacidad libre
   const minMs = (item.anticipacionHoras * 60 + item.prepMinutos) * 60 * 1000;
   const base = new Date(Date.now() + minMs);
   const map: ("dom"|"lun"|"mar"|"mie"|"jue"|"vie"|"sab")[] = ["dom","lun","mar","mie","jue","vie","sab"];
   for (let i = 0; i < 14; i++) {
     const d = new Date(base.getTime() + i * 86400000);
     const dk = map[d.getDay()];
-    if (item.diasDisponibles.length === 0 || item.diasDisponibles.includes(dk)) {
+    if (item.diasDisponibles.length > 0 && !item.diasDisponibles.includes(dk)) continue;
+    const iso = d.toISOString().slice(0, 10);
+    if (remainingCapacity(item, iso, orders) > 0) {
       return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
     }
   }
