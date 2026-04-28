@@ -42,16 +42,16 @@ export function useUsageLimits(): UsageInfo {
   return useMemo<UsageInfo>(() => {
     const plan = getPlanSafe(planId);
     const since = startOfMonth();
-    const pedidosUsados = orders.filter((o) => (o.creadoAt ?? 0) >= since).length;
+    const pedidosUsados = orders.filter((o) => (o.createdAt ?? 0) >= since).length;
     const pedidosMax = plan.features.pedidosMes;
     const pedidosRestantes = Number.isFinite(pedidosMax)
       ? Math.max(0, pedidosMax - pedidosUsados)
       : Number.POSITIVE_INFINITY;
 
     const canalesActivos: Channel[] = [];
-    if (wa?.enabled) canalesActivos.push("whatsapp");
-    if (ig?.enabled) canalesActivos.push("instagram");
-    if (fb?.enabled) canalesActivos.push("facebook");
+    if (wa?.conectado) canalesActivos.push("whatsapp");
+    if (ig?.conectado) canalesActivos.push("instagram");
+    if (fb?.conectado) canalesActivos.push("facebook");
 
     const blocked = status === "canceled";
 
