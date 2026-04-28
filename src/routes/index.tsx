@@ -4,11 +4,14 @@ import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
   MessageSquare,
+  MessagesSquare,
   Workflow,
   ShieldCheck,
   Layers,
   Users,
   LineChart,
+  ListChecks,
+  History,
   Check,
   Sparkles,
   ArrowDown,
@@ -281,29 +284,42 @@ function Landing() {
         className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border"
       >
         <SectionLabel>Capacidades</SectionLabel>
-        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Diseñada para equipos que no pueden permitirse errores.
+        <h2 className="text-[28px] md:text-[40px] leading-[1.06] font-semibold tracking-tight mb-3 max-w-2xl">
+          Capacidades de la plataforma.
         </h2>
-        <div className="grid md:grid-cols-2 gap-4">
+        <p className="text-[15px] text-muted-foreground leading-relaxed max-w-xl mb-12">
+          Todo lo necesario para operar ventas conversacionales con estándar empresarial.
+        </p>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Benefit
+            icon={MessagesSquare}
+            title="Centralización de conversaciones"
+            body="Todos los chats unificados en una sola bandeja, sin importar el número o el agente."
+          />
           <Benefit
             icon={Layers}
-            title="Centralización total"
-            body="Todas las conversaciones, pedidos y clientes en una sola fuente de verdad. Sin libretas, sin duplicados."
+            title="Gestión de pedidos y servicios"
+            body="Estructura cada solicitud como un registro con campos, estado y trazabilidad."
           />
           <Benefit
-            icon={Workflow}
-            title="Ejecución asistida"
-            body="Cada pedido tiene una próxima acción priorizada por riesgo, valor y tiempo restante."
-          />
-          <Benefit
-            icon={LineChart}
-            title="Visibilidad operativa"
-            body="Indicadores en vivo de cobranza, entregas y SLA. Decisiones basadas en datos, no en intuición."
+            icon={Users}
+            title="Asignación y seguimiento"
+            body="Define responsables y supervisa el avance de cada pedido en tiempo real."
           />
           <Benefit
             icon={ShieldCheck}
-            title="Control y cumplimiento"
-            body="Roles, permisos y trazabilidad de cada acción. Listo para auditoría desde el día uno."
+            title="Detección de riesgos operativos"
+            body="Alertas tempranas sobre faltantes, demoras y pedidos en riesgo de pérdida."
+          />
+          <Benefit
+            icon={History}
+            title="Historial por cliente"
+            body="Línea de tiempo completa con interacciones, compras y comportamiento."
+          />
+          <Benefit
+            icon={Sparkles}
+            title="Acciones sugeridas automatizadas"
+            body="Recomendaciones contextuales para cobrar, confirmar o escalar al instante."
           />
         </div>
       </section>
