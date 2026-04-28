@@ -96,7 +96,12 @@ export function MetaChannelsPanel() {
       const res = await listMetaChannels();
       setRows((res.channels ?? []) as ChannelRow[]);
     } catch (err: any) {
-      toast.error(err?.message ?? "No se pudieron cargar los canales");
+      // Sin sesión Supabase real → mostramos panel vacío sin reventar la página.
+      const msg = err?.message ?? String(err ?? "");
+      if (!/Unauthorized|401/i.test(msg)) {
+        toast.error(msg || "No se pudieron cargar los canales");
+      }
+      setRows([]);
     } finally {
       setLoading(false);
     }
