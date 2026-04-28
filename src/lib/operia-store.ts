@@ -436,6 +436,7 @@ export const useOperia = create<State>()(
         }));
       },
       setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
+      setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
     { name: "operia-store-v5" }
   )
