@@ -371,7 +371,7 @@ function Detalle() {
                         toast.success("Mensaje enviado por WhatsApp");
                       }}
                     >
-                      <Send className="h-3.5 w-3.5 mr-1" /> Enviar automáticamente por WhatsApp
+                      <Send className="h-3.5 w-3.5 mr-1" /> Enviar automático por WhatsApp
                     </Button>
                   </div>
                 )}
