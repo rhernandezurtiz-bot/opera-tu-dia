@@ -136,8 +136,16 @@ export function evaluateOrderDecision(input: EvaluateInput): OrderDecision {
   const cantidadOrden = order.cantidad ? parseInt(order.cantidad, 10) : undefined;
   if (Number.isFinite(cantidadOrden)) parsed.cantidad = cantidadOrden;
 
+  // Limpia sabor: solo primera palabra significativa
+  if (parsed.sabor) {
+    parsed.sabor = parsed.sabor.split(/\s+/).find((w) => w.length > 2) || parsed.sabor;
+  }
+
+  const fullText = (text || "").trim();
+  const meaningful = fullText.split(/\s+/).filter((w) => w.length > 3).length;
+
   // Sin texto útil — revisión manual / pedir más info
-  if (!parsed.productoTexto && !order.descripcion?.trim()) {
+  if (!parsed.productoTexto && !order.descripcion?.trim() && meaningful < 2) {
     return askForMoreInfo({
       parsed,
       order,
