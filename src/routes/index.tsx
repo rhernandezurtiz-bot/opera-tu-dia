@@ -11,6 +11,10 @@ import {
   Wallet,
   Check,
   Sparkles,
+  ArrowDown,
+  Send,
+  Wrench,
+  Cake,
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
