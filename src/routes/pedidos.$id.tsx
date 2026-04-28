@@ -560,6 +560,23 @@ function PaymentBadge({ status }: { status: PaymentStatus }) {
   );
 }
 
+function CobroBadge({ status }: { status: PaymentStatus }) {
+  const map: Record<PaymentStatus, { label: string; emoji: string; cls: string }> = {
+    no_requerido: { label: "Sin cobro", emoji: "⚪", cls: "bg-muted text-muted-foreground border-border" },
+    pendiente: { label: "Pendiente", emoji: "🟡", cls: "bg-warning/15 text-foreground/85 border-warning/35" },
+    link_enviado: { label: "Link enviado", emoji: "🟡", cls: "bg-warning/15 text-foreground/85 border-warning/35" },
+    pagado: { label: "Pagado", emoji: "🟢", cls: "bg-success/12 text-success border-success/30" },
+    fallido: { label: "Fallido", emoji: "🔴", cls: "bg-danger/12 text-danger border-danger/35" },
+    vencido: { label: "Vencido", emoji: "🔴", cls: "bg-danger/15 text-danger border-danger/40" },
+  };
+  const m = map[status];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 h-[24px] rounded-full text-[12px] font-medium border ${m.cls}`}>
+      <span>{m.emoji}</span> {m.label}
+    </span>
+  );
+}
+
 function ReminderCard({
   title,
   hint,
