@@ -21,6 +21,8 @@ import {
 import {
   buildMissingMessage,
   buildPaymentReminder,
+  buildAutoPaymentMessage,
+  isReadyForAutoPayment,
   buildDayBeforeReminder,
   buildHoursBeforeReminder,
   money,
