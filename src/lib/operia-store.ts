@@ -861,8 +861,12 @@ export function parseWhatsapp(text: string, opts: { canal?: Channel; canalUserId
     faltantes: [], checklist: {},
     mensajeOriginal: text, createdAt: Date.now(),
     fechaConfirmada, horaAprox, horaConfirmada, fechaTextoOriginal, ocasion, ambiguo,
+    canal, canalUserId: opts.canalUserId, canalHandle: opts.canalHandle,
   });
 }
+
+// Alias semántico para multicanal
+export const parseChannelMessage = parseWhatsapp;
 
 export const todayStr = today;
 
