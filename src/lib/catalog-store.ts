@@ -4,6 +4,39 @@ import type { Order, OrderType } from "./operia-store";
 
 export type CatalogKind = "producto" | "servicio" | "cita";
 
+// Inventory typing — más rico que CatalogKind: incluye insumos y capacidad pura.
+export type InventoryKind =
+  | "producto_terminado"
+  | "insumo"
+  | "servicio"
+  | "capacidad_diaria";
+
+export type Unidad =
+  | "piezas"
+  | "kg"
+  | "litros"
+  | "horas"
+  | "espacios"
+  | "porciones";
+
+export const UNIDAD_LABELS: Record<Unidad, string> = {
+  piezas: "piezas",
+  kg: "kg",
+  litros: "litros",
+  horas: "horas",
+  espacios: "espacios",
+  porciones: "porciones",
+};
+
+export const ALL_UNIDADES: Unidad[] = ["piezas", "kg", "litros", "horas", "espacios", "porciones"];
+
+export const INVENTORY_KIND_LABELS: Record<InventoryKind, string> = {
+  producto_terminado: "Producto terminado",
+  insumo: "Insumo",
+  servicio: "Servicio",
+  capacidad_diaria: "Capacidad diaria",
+};
+
 export type DayKey = "lun" | "mar" | "mie" | "jue" | "vie" | "sab" | "dom";
 export const DAY_LABELS: Record<DayKey, string> = {
   lun: "Lun", mar: "Mar", mie: "Mié", jue: "Jue", vie: "Vie", sab: "Sáb", dom: "Dom",
