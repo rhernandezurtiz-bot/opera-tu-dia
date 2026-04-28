@@ -321,7 +321,7 @@ function Detalle() {
               </div>
             ) : (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
-                {fueraCatalogo && (
+                {blockPayment && (
                   <div className="p-3 rounded-2xl bg-warning/15 border border-warning/30 text-[13px]">
                     <div className="font-medium mb-0.5">Este pedido necesita ajuste antes de cobrarse.</div>
                     <div className="text-muted-foreground text-[12px]">
@@ -334,7 +334,7 @@ function Detalle() {
                   <Button
                     size="sm"
                     className="rounded-full"
-                    disabled={fueraCatalogo}
+                    disabled={blockPayment}
                     onClick={() => {
                       const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
                       generatePaymentLink(order.id, provider);
@@ -365,7 +365,7 @@ function Detalle() {
                 </div>
 
                 {/* Auto-envío: cuando se cumplen los criterios + catálogo OK */}
-                {!fueraCatalogo && isReadyForAutoPayment(order) && order.telefono && (
+                {!blockPayment && isReadyForAutoPayment(order) && order.telefono && (
                   <div className="p-3 rounded-2xl bg-primary/5 border border-primary/25">
                     <div className="flex items-start gap-2 mb-2">
                       <Sparkles className="h-4 w-4 mt-0.5 text-primary shrink-0" />
