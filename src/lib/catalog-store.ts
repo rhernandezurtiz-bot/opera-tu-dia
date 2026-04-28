@@ -43,6 +43,21 @@ export const DAY_LABELS: Record<DayKey, string> = {
 };
 export const ALL_DAYS: DayKey[] = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"];
 
+/**
+ * Variante estructurada de un producto.
+ * Cada variante puede tener su propio precio, capacidad, sabores, stock y prep.
+ */
+export interface CatalogVariant {
+  id: string;
+  nombre: string;            // ej. "12 personas", "Grande", "Paquete fin de semana"
+  personas: number;          // 0 = no aplica (servicios)
+  precio: number;            // precio para esta variante
+  sabores: string[];         // sabores/opciones específicos de esta variante
+  stockDiario: number;       // 0 = ilimitado; >0 = unidades por día
+  tiempoPreparacion: number; // minutos
+  disponible: boolean;
+}
+
 export interface CatalogItem {
   id: string;
   nombre: string;
@@ -50,7 +65,8 @@ export interface CatalogItem {
   descripcion: string;
   precioBase: number;
   capacidad: string;            // ej. "12 personas", "60 minutos"
-  variantes: string[];          // tamaños, paquetes
+  variantes: string[];          // [legacy] tamaños como texto plano
+  variantesDetalle: CatalogVariant[]; // [nuevo] variantes estructuradas
   opciones: string[];           // sabores, colores, etc.
   anticipacionHoras: number;    // tiempo mínimo
   disponible: boolean;
@@ -69,6 +85,20 @@ export interface CatalogItem {
   stockMinimo: number;          // umbral para alerta de stock bajo
   unidad: Unidad;
   createdAt: number;
+}
+
+export function newVariant(patch: Partial<CatalogVariant> = {}): CatalogVariant {
+  return {
+    id: "v" + Math.random().toString(36).slice(2, 9),
+    nombre: "",
+    personas: 0,
+    precio: 0,
+    sabores: [],
+    stockDiario: 0,
+    tiempoPreparacion: 0,
+    disponible: true,
+    ...patch,
+  };
 }
 
 interface State {
