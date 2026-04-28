@@ -145,7 +145,19 @@ export interface Negocio {
   payments: PaymentsConfig;
 }
 
+/* ============== Canales (multicanal) ============== */
+
+export type Channel = "whatsapp" | "instagram" | "manual";
+
+export const CHANNEL_LABELS: Record<Channel, string> = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  manual: "Manual",
+};
+
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
+// Alias semántico — los mensajes pueden venir de cualquier canal
+export type ChannelMessageStatus = WhatsappStatus;
 
 export interface WhatsappMessage {
   id: string;
@@ -155,7 +167,16 @@ export interface WhatsappMessage {
   recibidoAt: number;
   estado: WhatsappStatus;
   ordenId?: string;
+  // Multicanal
+  canal: Channel;
+  // Identificador del usuario en el canal de origen (IG user id, número WA, etc.)
+  canalUserId?: string;
+  // @handle visible (Instagram) o nombre mostrado
+  canalHandle?: string;
 }
+
+// Alias público para usar el nombre nuevo sin romper imports existentes
+export type ChannelMessage = WhatsappMessage;
 
 export interface WhatsappConfig {
   phoneNumberId: string;
@@ -164,6 +185,17 @@ export interface WhatsappConfig {
   webhookUrl: string;
   conectado: boolean;
 }
+
+export interface InstagramConfig {
+  igBusinessAccountId: string;     // Instagram Business Account ID
+  pageId: string;                  // Facebook Page asociada
+  accessToken: string;             // Page access token con permisos de IG messaging
+  verifyToken: string;             // verify token para el webhook
+  webhookUrl: string;              // URL pública del webhook
+  conectado: boolean;
+}
+
+export type ChannelMode = "demo" | "produccion";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
