@@ -324,6 +324,51 @@ function Landing() {
         </div>
       </section>
 
+      {/* Control y visibilidad */}
+      <section
+        id="control"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>Gobierno operativo</SectionLabel>
+        <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
+          <div className="md:col-span-5">
+            <h2 className="text-[30px] md:text-[42px] leading-[1.06] font-semibold tracking-tight">
+              Control y visibilidad total.
+            </h2>
+            <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-md">
+              Cada acción, cada pedido y cada usuario auditable desde un único lugar. Sin
+              zonas oscuras en la operación.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-[12px] text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Tus datos siempre privados y organizados.
+            </div>
+          </div>
+          <div className="md:col-span-7 grid sm:grid-cols-2 gap-3">
+            <ControlItem
+              icon={History}
+              title="Historial de acciones"
+              body="Registro inmutable de cada cambio, mensaje y decisión sobre cada pedido."
+            />
+            <ControlItem
+              icon={Users}
+              title="Trazabilidad por usuario"
+              body="Quién hizo qué, cuándo y por qué. Responsabilidad clara en todo el equipo."
+            />
+            <ControlItem
+              icon={ListChecks}
+              title="Control de pedidos"
+              body="Estado, propietario y próxima acción visibles para cada operación abierta."
+            />
+            <ControlItem
+              icon={Layers}
+              title="Información centralizada"
+              body="Clientes, conversaciones y métricas en una sola fuente de verdad."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Decide contigo */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Inteligencia operativa</SectionLabel>
