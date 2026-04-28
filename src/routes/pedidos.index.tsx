@@ -118,10 +118,11 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 
 function PayPill({ status }: { status: PaymentStatus }) {
   const map: Record<PaymentStatus, { label: string; cls: string }> = {
+    no_requerido: { label: "Sin cobro", cls: "bg-muted text-muted-foreground border-border" },
     pendiente: { label: "Pendiente", cls: "bg-danger/8 text-danger/90 border-danger/25" },
-    anticipo_solicitado: { label: "Anticipo solicitado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
-    anticipo: { label: "Anticipo recibido", cls: "bg-warning/12 text-foreground/80 border-warning/30" },
+    link_enviado: { label: "Link enviado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
     pagado: { label: "Pagado", cls: "bg-success/10 text-success/90 border-success/20" },
+    fallido: { label: "Fallido", cls: "bg-danger/12 text-danger border-danger/35" },
     vencido: { label: "Vencido", cls: "bg-danger/15 text-danger border-danger/40" },
   };
   const m = map[status];

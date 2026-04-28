@@ -3,7 +3,27 @@ import { persist } from "zustand/middleware";
 
 export type RiskLevel = "bajo" | "medio" | "alto";
 export type OrderStatus = "nuevo" | "confirmado" | "en_proceso" | "listo" | "entregado" | "cancelado";
-export type PaymentStatus = "pendiente" | "anticipo_solicitado" | "anticipo" | "pagado" | "vencido";
+export type PaymentStatus =
+  | "no_requerido"
+  | "pendiente"
+  | "link_enviado"
+  | "pagado"
+  | "fallido"
+  | "vencido";
+
+export type PaymentEventKind =
+  | "link_generado"
+  | "mensaje_enviado"
+  | "recordatorio_enviado"
+  | "pago_recibido"
+  | "pago_fallido"
+  | "vencido";
+
+export interface PaymentEvent {
+  kind: PaymentEventKind;
+  at: number;
+  detail?: string;
+}
 export type OrderType = "producto" | "servicio" | "cita" | "personalizado";
 
 export const typeLabels: Record<OrderType, string> = {
@@ -69,6 +89,11 @@ export interface Order {
   ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
   ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
   paymentLink?: string; // link de pago generado (simulado)
+  paymentLinkAt?: number; // cuando se generó
+  paymentPaidAt?: number; // cuando se pagó
+  paymentReminderAt?: number; // último recordatorio enviado
+  paymentEvents?: PaymentEvent[];
+  paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
@@ -89,6 +114,12 @@ export interface Negocio {
   direccion: string;
   horarios: string;
   tiposActivos: OrderType[];
+  // Reglas de cobro automático
+  autoCobroEnabled: boolean;
+  umbralAnticipo: number; // si precio >= umbral → solicitar anticipo (no total)
+  porcentajeAnticipo: number; // % del total para anticipo
+  recordatorioMinutos: number; // tiempo sin pago antes de recordar
+  webhookSimMinutos: number; // tiempo simulado para "recibir" pago
 }
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
@@ -120,7 +151,7 @@ const seedOrders = (): Order[] => [
     tipo: "producto", descripcion: "Pastel de chocolate", cantidad: "1",
     fechaEntrega: today(), horaEntrega: "17:00", direccion: "Av. Reforma 123, CDMX",
     detalles: "Para 20 personas, texto: Feliz cumpleaños Mariana",
-    pago: "anticipo", precio: 850, notas: "Cliente recurrente",
+    pago: "pagado", precio: 850, notas: "Cliente recurrente",
     estado: "confirmado", riesgo: "bajo", faltantes: [],
     checklist: { pago: true, produccion: true, empaque: false, entrega: false },
     mensajeOriginal: "Hola, quiero el pastel de chocolate para hoy 5pm",
@@ -153,7 +184,7 @@ const seedOrders = (): Order[] => [
     tipo: "personalizado", descripcion: "Arreglo floral para boda", cantidad: "1",
     fechaEntrega: tomorrow(), horaEntrega: "11:00", direccion: "Jardín San Ángel",
     detalles: "Tonos blancos y dorados, 6 centros de mesa",
-    pago: "anticipo", precio: 4500, notas: "Cotización aprobada",
+    pago: "link_enviado", precio: 4500, notas: "Cotización aprobada",
     estado: "en_proceso", riesgo: "bajo", faltantes: [],
     checklist: { brief: true, propuesta: true, anticipo: true, ejecucion: false, entrega: false },
     mensajeOriginal: "Necesito arreglos para mi boda mañana",
@@ -208,6 +239,10 @@ interface State {
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string) => string;
+  markPaymentPaid: (id: string) => void;
+  markPaymentFailed: (id: string, motivo?: string) => void;
+  sendPaymentReminder: (id: string) => void;
+  setPaymentRules: (rules: Partial<Pick<Negocio, "autoCobroEnabled" | "umbralAnticipo" | "porcentajeAnticipo" | "recordatorioMinutos" | "webhookSimMinutos">>) => void;
 }
 
 export const useOperia = create<State>()(
@@ -225,6 +260,11 @@ export const useOperia = create<State>()(
         direccion: "Ciudad de México",
         horarios: "Lun a Sáb 9:00 - 19:00",
         tiposActivos: ["producto", "servicio", "cita", "personalizado"],
+        autoCobroEnabled: true,
+        umbralAnticipo: 1500, // arriba de $1,500 → solicita 50% anticipo; abajo → cobro total
+        porcentajeAnticipo: 50,
+        recordatorioMinutos: 30,
+        webhookSimMinutos: 1, // simulación: pago confirma a 1 min
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
@@ -263,17 +303,91 @@ export const useOperia = create<State>()(
       generatePaymentLink: (id) => {
         const token = Math.random().toString(36).slice(2, 10);
         const link = `https://pay.operia.app/${id}/${token}`;
+        const now = Date.now();
         set((s) => ({
-          orders: s.orders.map((o) =>
-            o.id === id
-              ? recompute({ ...o, paymentLink: link, pago: o.pago === "pagado" ? o.pago : "anticipo_solicitado" })
-              : o
-          ),
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            if (o.pago === "pagado" || o.pago === "no_requerido") return o;
+            const mode: "anticipo" | "total" =
+              s.negocio.autoCobroEnabled && o.precio >= s.negocio.umbralAnticipo
+                ? "anticipo"
+                : "total";
+            const events = o.paymentEvents ?? [];
+            return recompute({
+              ...o,
+              paymentLink: link,
+              paymentLinkAt: now,
+              paymentMode: mode,
+              pago: "link_enviado",
+              paymentEvents: [
+                ...events,
+                { kind: "link_generado", at: now, detail: mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total" },
+                { kind: "mensaje_enviado", at: now, detail: "Mensaje de cobro enviado por WhatsApp" },
+              ],
+            });
+          }),
         }));
         return link;
       },
+      markPaymentPaid: (id) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            if (o.pago === "pagado") return o;
+            const events = o.paymentEvents ?? [];
+            const newEstado: OrderStatus = o.estado === "nuevo" ? "confirmado" : o.estado;
+            return recompute({
+              ...o,
+              pago: "pagado",
+              paymentPaidAt: now,
+              estado: newEstado,
+              checklist: { ...o.checklist, pago: true },
+              paymentEvents: [
+                ...events,
+                { kind: "pago_recibido", at: now, detail: "Webhook de pago confirmado" },
+              ],
+            });
+          }),
+        }));
+      },
+      markPaymentFailed: (id, motivo) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            return recompute({
+              ...o,
+              pago: "fallido",
+              paymentEvents: [
+                ...events,
+                { kind: "pago_fallido", at: now, detail: motivo ?? "Pago rechazado" },
+              ],
+            });
+          }),
+        }));
+      },
+      sendPaymentReminder: (id) => {
+        const now = Date.now();
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            return {
+              ...o,
+              paymentReminderAt: now,
+              paymentEvents: [
+                ...events,
+                { kind: "recordatorio_enviado", at: now, detail: "Recordatorio enviado al cliente" },
+              ],
+            };
+          }),
+        }));
+      },
+      setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
     }),
-    { name: "operia-store-v4" }
+    { name: "operia-store-v5" }
   )
 );
 
@@ -301,7 +415,7 @@ function recompute(o: Order): Order {
     else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
   }
   // Pago
-  if (o.pago !== "pagado" && o.pago !== "anticipo") faltantes.push("Pago");
+  if (o.pago !== "pagado" && o.pago !== "no_requerido") faltantes.push("Pago");
   // Contacto
   if (!o.telefono) faltantes.push("Contacto");
 
@@ -310,6 +424,7 @@ function recompute(o: Order): Order {
   const todayISO = new Date().toISOString().slice(0, 10);
   if (
     pago !== "pagado" &&
+    pago !== "no_requerido" &&
     o.fechaEntrega &&
     o.fechaEntrega < todayISO &&
     o.estado !== "entregado" &&
@@ -522,7 +637,8 @@ export function parseWhatsapp(text: string): Order {
   // Pago
   let pago: PaymentStatus = "pendiente";
   if (/pagad|pagué|liquidad/i.test(text)) pago = "pagado";
-  else if (/anticipo|adelanto|se[ñn]a|dep[oó]sito/i.test(text)) pago = "anticipo";
+  // (Detección de "anticipo" mencionado en el mensaje no implica pago aún:
+  // queda en "pendiente" hasta que se envíe el link y/o se reciba el pago.)
 
   // Dirección / ubicación limpia
   const direccion = extractLocation(text);

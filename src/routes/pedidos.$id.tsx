@@ -260,19 +260,19 @@ function Detalle() {
               <div className="flex items-end gap-2 flex-wrap">
                 <Button
                   size="sm"
-                  variant={order.pago === "anticipo" ? "default" : "secondary"}
+                  variant={order.pago === "pagado" ? "default" : "secondary"}
                   className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "anticipo" }); toast.success("Anticipo recibido"); }}
+                  onClick={() => { updateOrder(order.id, { pago: "pagado", paymentPaidAt: Date.now(), checklist: { ...order.checklist, pago: true } }); toast.success("Pago marcado como recibido"); }}
                 >
-                  Marcar anticipo recibido
+                  Marcar como pagado
                 </Button>
                 <Button
                   size="sm"
-                  variant={order.pago === "pagado" ? "default" : "secondary"}
+                  variant="ghost"
                   className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "pagado" }); toast.success("Pago completo"); }}
+                  onClick={() => { updateOrder(order.id, { pago: "no_requerido" }); toast.success("Cobro marcado como no requerido"); }}
                 >
-                  Marcar como pagado
+                  Sin cobro
                 </Button>
               </div>
             </div>
@@ -496,10 +496,11 @@ function PipelineButton({
 
 function PaymentBadge({ status }: { status: PaymentStatus }) {
   const map: Record<PaymentStatus, { label: string; cls: string }> = {
+    no_requerido: { label: "Sin cobro", cls: "bg-muted text-muted-foreground border-border" },
     pendiente: { label: "Pendiente", cls: "bg-danger/8 text-danger/90 border-danger/25" },
-    anticipo_solicitado: { label: "Anticipo solicitado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
-    anticipo: { label: "Anticipo recibido", cls: "bg-warning/12 text-foreground/80 border-warning/30" },
+    link_enviado: { label: "Link enviado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
     pagado: { label: "Pagado", cls: "bg-success/10 text-success/90 border-success/20" },
+    fallido: { label: "Fallido", cls: "bg-danger/12 text-danger border-danger/35" },
     vencido: { label: "Vencido", cls: "bg-danger/15 text-danger border-danger/40" },
   };
   const m = map[status];

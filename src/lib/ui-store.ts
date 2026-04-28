@@ -56,7 +56,13 @@ export interface MoneySummary {
   ingresosEnRiesgo: number;
   pedidosSinAnticipo: number;
   montoSinAnticipo: number;
+  cobradoHoy: number;
+  pedidosCobradosHoy: number;
+  pedidosFallidos: number;
+  conversionPct: number; // pedidos pagados / pedidos con cobro requerido (últimos 30d)
 }
+
+const MS_30D = 1000 * 60 * 60 * 24 * 30;
 
 export function summarizeMoney(orders: Order[]): MoneySummary {
   const today = todayStr();
@@ -64,6 +70,13 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
   let ingresosEnRiesgo = 0;
   let pedidosSinAnticipo = 0;
   let montoSinAnticipo = 0;
+  let cobradoHoy = 0;
+  let pedidosCobradosHoy = 0;
+  let pedidosFallidos = 0;
+  let conversionDen = 0;
+  let conversionNum = 0;
+  const cutoff = Date.now() - MS_30D;
+
   for (const o of orders) {
     if (o.estado === "cancelado") continue;
     const monto = o.precio || 0;
@@ -71,12 +84,37 @@ export function summarizeMoney(orders: Order[]): MoneySummary {
     if ((o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado") {
       ingresosEnRiesgo += monto;
     }
-    if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado" || o.pago === "vencido") && o.estado !== "entregado") {
+    if (
+      (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "vencido" || o.pago === "fallido") &&
+      o.estado !== "entregado"
+    ) {
       pedidosSinAnticipo += 1;
       montoSinAnticipo += monto;
     }
+    if (o.pago === "fallido") pedidosFallidos += 1;
+    if (o.pago === "pagado" && o.paymentPaidAt) {
+      const paidDate = new Date(o.paymentPaidAt).toISOString().slice(0, 10);
+      if (paidDate === today) {
+        cobradoHoy += monto;
+        pedidosCobradosHoy += 1;
+      }
+    }
+    if (o.pago !== "no_requerido" && o.createdAt >= cutoff) {
+      conversionDen += 1;
+      if (o.pago === "pagado") conversionNum += 1;
+    }
   }
-  return { ingresosHoy, ingresosEnRiesgo, pedidosSinAnticipo, montoSinAnticipo };
+  const conversionPct = conversionDen === 0 ? 0 : Math.round((conversionNum / conversionDen) * 100);
+  return {
+    ingresosHoy,
+    ingresosEnRiesgo,
+    pedidosSinAnticipo,
+    montoSinAnticipo,
+    cobradoHoy,
+    pedidosCobradosHoy,
+    pedidosFallidos,
+    conversionPct,
+  };
 }
 
 /* ---------- Message templates ---------- */
@@ -164,14 +202,37 @@ export function buildReadyMessage(o: Order): string {
   return `¡Hola${n ? " " + n : ""}! 🎉 ${desc} ya está listo. Coordinamos la entrega según lo acordado. ¡Gracias!`;
 }
 
-// Recordatorio de anticipo / pago pendiente
-export function buildPaymentReminder(o: Order): string {
+// Recordatorio de pago / cobro automático
+export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: number }): string {
   const n = firstName(o.cliente);
-  const monto = o.precio ? ` (${money(o.precio)})` : "";
+  const pct = opts?.porcentajeAnticipo ?? 50;
+  const total = o.precio || 0;
+  const isAnticipo = o.paymentMode === "anticipo";
+  const cobro = isAnticipo ? Math.round((total * pct) / 100) : total;
+  const montoTxt = cobro ? money(cobro) : "tu pedido";
+  const concepto = isAnticipo ? `el anticipo de ${montoTxt}` : `el pago de ${montoTxt}`;
   if (o.paymentLink) {
-    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido${monto}, puedes realizar el anticipo aquí: ${o.paymentLink}`;
+    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido, puedes realizar ${concepto} aquí: ${o.paymentLink}`;
   }
-  return `Hola${n ? " " + n : ""} 😊 te recuerdo el anticipo${monto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+  return `Hola${n ? " " + n : ""} 😊 te recuerdo ${concepto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+}
+
+// Mensaje automático tras confirmar pago
+export function buildPaymentReceivedMessage(o: Order): string {
+  const n = firstName(o.cliente);
+  const fechaTxt = o.fechaEntrega
+    ? formatDateEs(o.fechaEntrega) + (o.horaEntrega ? ` a las ${o.horaEntrega}` : "")
+    : "la fecha acordada";
+  return `¡Pago recibido${n ? ", " + n : ""}! 🎉 Tu pedido está confirmado para ${fechaTxt}.`;
+}
+
+function formatDateEs(iso: string): string {
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+  if (iso === today) return "hoy";
+  if (iso === tomorrow) return "mañana";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "long" });
 }
 
 // Recordatorio "1 día antes"
@@ -242,14 +303,24 @@ export function nextAction(o: Order): NextAction | null {
     };
   }
 
-  // 3) Confirmado pero sin anticipo → solicitar anticipo
-  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "anticipo_solicitado")) {
+  // 3) Confirmado pero sin pago → solicitar pago
+  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "fallido")) {
     return {
       kind: "solicitar_anticipo",
-      label: o.pago === "anticipo_solicitado" ? "Reenviar link de pago" : "Solicitar anticipo",
-      reason: o.pago === "anticipo_solicitado" ? "Link enviado, sin pago aún" : "Sin anticipo recibido",
+      label:
+        o.pago === "link_enviado"
+          ? "Reenviar link de pago"
+          : o.pago === "fallido"
+            ? "Reintentar cobro"
+            : "Generar link de pago",
+      reason:
+        o.pago === "link_enviado"
+          ? "Link enviado, sin pago aún"
+          : o.pago === "fallido"
+            ? "Pago anterior falló"
+            : "Sin pago registrado",
       message: buildPaymentReminder(o),
-      tone: "warning",
+      tone: o.pago === "fallido" ? "danger" : "warning",
     };
   }
 
@@ -300,7 +371,7 @@ export function nextAction(o: Order): NextAction | null {
   }
 
   // 7) Pago pendiente sin urgencia → recordar pago
-  if (o.pago === "pendiente" || o.pago === "anticipo_solicitado") {
+  if (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "fallido") {
     return {
       kind: "recordar_pago",
       label: "Recordar pago",

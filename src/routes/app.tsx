@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useOperia, todayStr, type Order } from "@/lib/operia-store";
 import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@/lib/ui-store";
+import { usePaymentEngine } from "@/lib/payment-engine";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -373,8 +374,8 @@ function priorityOf(o: Order): Priority {
   if (o.fechaEntrega && o.fechaEntrega < today) return "alta";
   if (o.fechaEntrega === today) return "alta";
   if ((o.faltantes || []).length > 0) return "alta";
-  if (o.pago === "vencido") return "alta";
-  if ((o.pago === "pendiente" || o.pago === "anticipo_solicitado") && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
+  if (o.pago === "vencido" || o.pago === "fallido") return "alta";
+  if ((o.pago === "pendiente" || o.pago === "link_enviado") && (o.estado === "confirmado" || o.estado === "en_proceso")) return "alta";
   if (o.fechaEntrega === tomorrow) return "media";
   if ((o.faltantes || []).length > 0) return "media";
   return "baja";
