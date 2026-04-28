@@ -7,7 +7,7 @@ import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2, Wallet, Mess
 import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
 import { useCatalog } from "@/lib/catalog-store";
-import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, CLOSING_LABEL, type OrderDecision } from "@/lib/decision-engine";
 import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
 import { toast } from "sonner";
@@ -186,6 +186,9 @@ function DecisionPanel({ decision, onCopyMessage }: { decision: OrderDecision; o
         </span>
         <span className={`text-[11px] px-2 py-0.5 rounded-full border ${decision.canCharge ? "bg-success/10 border-success/30 text-success" : "bg-muted border-border text-muted-foreground"}`}>
           {decision.canCharge ? "Puede cobrarse" : "No cobrar aún"}
+        </span>
+        <span className="text-[11px] px-2 py-0.5 rounded-full border bg-primary/10 border-primary/30 text-primary ml-auto">
+          {CLOSING_LABEL[decision.closingAction]}
         </span>
       </div>
       <div className="p-4 space-y-3">
