@@ -336,6 +336,46 @@ function Detalle() {
                   )}
                 </div>
 
+                {/* Auto-envío: cuando se cumplen los 3 criterios (fecha confirmada + dirección + monto) */}
+                {isReadyForAutoPayment(order) && order.telefono && (
+                  <div className="p-3 rounded-2xl bg-primary/5 border border-primary/25">
+                    <div className="flex items-start gap-2 mb-2">
+                      <Sparkles className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                      <div className="text-[13px]">
+                        <div className="font-medium">Listo para cobrar automáticamente</div>
+                        <div className="text-muted-foreground text-[12px]">
+                          Fecha, dirección y monto confirmados. Genera el link y envíalo en un click.
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-[13px] text-foreground/85 whitespace-pre-wrap bg-background border border-border rounded-lg p-2.5 mb-2">
+                      {buildAutoPaymentMessage(order)}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => {
+                        const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
+                        const link = order.paymentLink ?? generatePaymentLink(order.id, provider);
+                        const msg = buildAutoPaymentMessage({ ...order, paymentLink: link });
+                        const url = `https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(msg)}`;
+                        window.open(url, "_blank", "noopener,noreferrer");
+                        updateOrder(order.id, {
+                          pago: "link_enviado",
+                          paymentReminderAt: Date.now(),
+                          paymentEvents: [
+                            ...(order.paymentEvents ?? []),
+                            { kind: "mensaje_enviado", at: Date.now(), detail: "Auto-envío por WhatsApp" },
+                          ],
+                        });
+                        toast.success("Mensaje enviado por WhatsApp");
+                      }}
+                    >
+                      <Send className="h-3.5 w-3.5 mr-1" /> Enviar automáticamente por WhatsApp
+                    </Button>
+                  </div>
+                )}
+
                 {/* Link generado */}
                 {order.paymentLink && (
                   <div>
