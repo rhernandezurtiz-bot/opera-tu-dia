@@ -115,3 +115,19 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
     </div>
   );
 }
+
+function PayPill({ status }: { status: PaymentStatus }) {
+  const map: Record<PaymentStatus, { label: string; cls: string }> = {
+    pendiente: { label: "Pendiente", cls: "bg-danger/8 text-danger/90 border-danger/25" },
+    anticipo_solicitado: { label: "Anticipo solicitado", cls: "bg-warning/15 text-foreground/80 border-warning/35" },
+    anticipo: { label: "Anticipo recibido", cls: "bg-warning/12 text-foreground/80 border-warning/30" },
+    pagado: { label: "Pagado", cls: "bg-success/10 text-success/90 border-success/20" },
+    vencido: { label: "Vencido", cls: "bg-danger/15 text-danger border-danger/40" },
+  };
+  const m = map[status];
+  return (
+    <span className={`inline-flex items-center px-2 h-[20px] rounded-full text-[10.5px] font-medium border ${m.cls}`}>
+      {m.label}
+    </span>
+  );
+}
