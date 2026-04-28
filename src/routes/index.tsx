@@ -1161,7 +1161,11 @@ function Plan({
           </li>
         ))}
       </ul>
-      {ctaHref ? (
+      {onCta ? (
+        <Button onClick={onCta} className="h-10 w-full">
+          {ctaLabel ?? "Comenzar"}
+        </Button>
+      ) : ctaHref ? (
         <Button asChild className="h-10 w-full">
           <a href={ctaHref}>{ctaLabel ?? "Comenzar"}</a>
         </Button>
