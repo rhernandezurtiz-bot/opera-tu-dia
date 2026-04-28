@@ -578,8 +578,7 @@ function buildClosingMessage(raw: RawDecision, order: Order, closing: ClosingAct
         return `Por ahora no manejamos eso 😊 ¿Quieres que te avise cuando tengamos algo similar?`;
       }
       if (raw.decisionType === "CAPACITY_EXCEEDED" && alt) {
-        const monto = alt.precioEstimado ? ` (${fmtClose(alt.precioEstimado)})` : "";
-        return `Sí podemos cubrirlo así 👇\n\n${alt.label}${monto ? ` — ${monto}` : ""}\n\n¿Te lo aparto así? 🙌`;
+        return `Sí podemos cubrirlo así 👇\n\n${alt.label}\n\n¿Te lo aparto así? 🙌`;
       }
       if (raw.decisionType === "OUT_OF_STOCK" && alt) {
         return `De eso ya nos quedan pocas piezas 😅 Te puedo ofrecer:\n\n• ${alt.label}\n\n¿Te lo aparto así para asegurarlo? 🙌`;
