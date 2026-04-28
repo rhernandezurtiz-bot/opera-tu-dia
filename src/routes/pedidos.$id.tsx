@@ -30,7 +30,7 @@ import {
   nextAction,
 } from "@/lib/ui-store";
 import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer, AVAILABILITY_LABEL, type CatalogValidation, type CheckResult, type AvailabilityStatus } from "@/lib/catalog-store";
-import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, CLOSING_LABEL, type OrderDecision } from "@/lib/decision-engine";
 import {
   ArrowLeft,
   Copy,
