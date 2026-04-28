@@ -19,6 +19,7 @@ import {
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
 import { LandingExample } from "@/components/LandingExample";
+import { DecideItem } from "@/components/DecideItem";
 
 export const Route = createFileRoute("/")({
   head: () => ({
