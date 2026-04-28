@@ -655,3 +655,212 @@ export const AVAILABILITY_LABEL: Record<AvailabilityStatus, string> = {
   no_disponible: "No disponible",
   revision: "Requiere revisión manual",
 };
+
+/* ============== Capacidad por fecha ============== */
+
+/**
+ * Cuenta cuántos pedidos activos consumen capacidad de un item en una fecha.
+ * Considera reserva por id (`stockReservadoFor`) y, si no hay, fallback por
+ * coincidencia de descripción.
+ */
+export function dailyUsageFor(
+  itemId: string,
+  fechaISO: string,
+  orders: Order[],
+): number {
+  if (!fechaISO) return 0;
+  const item = undefined as CatalogItem | undefined;
+  let count = 0;
+  for (const o of orders) {
+    if (o.estado === "cancelado") continue;
+    if (o.fechaEntrega !== fechaISO) continue;
+    if (o.stockReservadoFor === itemId) {
+      count += o.stockReservedQty || 1;
+    }
+  }
+  return count;
+}
+
+/** Capacidad libre de un item para una fecha (Infinity si ilimitada). */
+export function remainingCapacity(
+  item: CatalogItem,
+  fechaISO: string | undefined,
+  orders: Order[],
+): number {
+  if (!fechaISO) return Number.POSITIVE_INFINITY;
+  if (item.capacidadDiaria <= 0) return Number.POSITIVE_INFINITY;
+  return Math.max(0, item.capacidadDiaria - dailyUsageFor(item.id, fechaISO, orders));
+}
+
+/** Capacidad libre de una variante para una fecha (Infinity si ilimitada). */
+export function variantRemaining(
+  item: CatalogItem,
+  variant: CatalogVariant,
+  fechaISO: string | undefined,
+  orders: Order[],
+): number {
+  if (variant.stockDiario > 0 && fechaISO) {
+    // Cuenta usos por variante via notas (id de variante en stockReservedQty no aplica),
+    // aproximamos con el item: una variante no excede el item.
+    const usedItem = dailyUsageFor(item.id, fechaISO, orders);
+    return Math.max(0, variant.stockDiario - usedItem);
+  }
+  return remainingCapacity(item, fechaISO, orders);
+}
+
+/* ============== Selector de mejor opción ============== */
+
+export interface BestOptionRequest {
+  personas?: number;
+  sabor?: string;
+  fechaISO?: string;
+  hora?: string;
+  tipo?: OrderType;
+}
+
+export interface ScoredOption {
+  item: CatalogItem;
+  variant: CatalogVariant;
+  remaining: number;       // capacidad libre
+  prepMinutes: number;     // tiempo de preparación efectivo
+  margin: number;          // proxy de margen = precio
+  score: number;           // mayor = mejor
+  reason: string;
+}
+
+/**
+ * Selecciona la mejor variante disponible para una solicitud.
+ * Prioriza:
+ *   1. Disponibilidad inmediata (capacidad > 0)
+ *   2. Menor tiempo de preparación
+ *   3. Mayor margen (precio como proxy)
+ */
+export function selectBestOption(
+  catalog: CatalogItem[],
+  req: BestOptionRequest,
+  orders: Order[],
+): ScoredOption | null {
+  const candidates: ScoredOption[] = [];
+
+  for (const item of catalog) {
+    if (!item.disponible) continue;
+    if (req.tipo && item.tipo !== (req.tipo as CatalogKind)) continue;
+
+    const variants = item.variantesDetalle.length > 0
+      ? item.variantesDetalle
+      : [newVariant({
+          nombre: item.nombre,
+          personas: parseCapacityNumber(item.capacidad) ?? 0,
+          precio: item.precioBase,
+          sabores: item.opciones,
+          stockDiario: item.capacidadDiaria,
+          tiempoPreparacion: item.prepMinutos,
+        })];
+
+    for (const v of variants) {
+      if (!v.disponible) continue;
+
+      // Filtros duros
+      if (req.personas && v.personas > 0 && v.personas < req.personas) continue;
+      if (req.sabor && v.sabores.length > 0) {
+        const ok = v.sabores.some(
+          (s) => s.toLowerCase().includes(req.sabor!.toLowerCase()) ||
+                 req.sabor!.toLowerCase().includes(s.toLowerCase()),
+        );
+        if (!ok) continue;
+      }
+
+      const remaining = variantRemaining(item, v, req.fechaISO, orders);
+      if (remaining <= 0) continue;
+
+      const prep = v.tiempoPreparacion || item.prepMinutos || 0;
+      const precio = v.precio || item.precioBase || 0;
+
+      // Score: disponibilidad pesa más, luego prep (menor es mejor), luego precio (mayor es mejor)
+      const dispScore = remaining === Number.POSITIVE_INFINITY ? 1000 : Math.min(remaining * 100, 1000);
+      const prepScore = Math.max(0, 500 - prep);     // 0 prep = 500, 500 min = 0
+      const marginScore = Math.min(precio / 10, 500); // tope 500
+
+      const score = dispScore + prepScore + marginScore;
+
+      candidates.push({
+        item, variant: v, remaining, prepMinutes: prep, margin: precio, score,
+        reason: remaining < 5
+          ? `quedan ${remaining}, listo en ${prep} min`
+          : `disponible, listo en ${prep} min`,
+      });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0];
+}
+
+/**
+ * Dada una solicitud de N personas mayor a la capacidad de cualquier variante,
+ * propone una combinación de variantes que sumen al menos N personas.
+ * Prioriza menor cantidad de unidades y mayor capacidad libre.
+ */
+export interface ComboSuggestion {
+  pieces: { item: CatalogItem; variant: CatalogVariant; cantidad: number }[];
+  totalPersonas: number;
+  totalPrecio: number;
+}
+
+export function suggestVariantCombo(
+  catalog: CatalogItem[],
+  personas: number,
+  fechaISO: string | undefined,
+  orders: Order[],
+  req: Pick<BestOptionRequest, "sabor" | "tipo"> = {},
+): ComboSuggestion | null {
+  if (!personas || personas <= 0) return null;
+
+  // Recolecta variantes válidas con capacidad libre
+  const pool: { item: CatalogItem; variant: CatalogVariant; remaining: number }[] = [];
+  for (const item of catalog) {
+    if (!item.disponible) continue;
+    if (req.tipo && item.tipo !== (req.tipo as CatalogKind)) continue;
+    const vs = item.variantesDetalle.length > 0 ? item.variantesDetalle : [];
+    for (const v of vs) {
+      if (!v.disponible || v.personas <= 0) continue;
+      if (req.sabor && v.sabores.length > 0) {
+        const ok = v.sabores.some(
+          (s) => s.toLowerCase().includes(req.sabor!.toLowerCase()),
+        );
+        if (!ok) continue;
+      }
+      const remaining = variantRemaining(item, v, fechaISO, orders);
+      if (remaining <= 0) continue;
+      pool.push({ item, variant: v, remaining });
+    }
+  }
+  if (pool.length === 0) return null;
+
+  // Greedy: empezar por la variante más grande que quepa, completar con menores
+  pool.sort((a, b) => b.variant.personas - a.variant.personas);
+  const big = pool[0];
+  const nBig = Math.min(big.remaining, Math.floor(personas / big.variant.personas));
+  let cubierto = nBig * big.variant.personas;
+  const pieces: ComboSuggestion["pieces"] = nBig > 0
+    ? [{ item: big.item, variant: big.variant, cantidad: nBig }]
+    : [];
+
+  if (cubierto < personas) {
+    const resto = personas - cubierto;
+    const small = pool
+      .filter((p) => p.variant.personas >= resto)
+      .sort((a, b) => a.variant.personas - b.variant.personas)[0]
+      ?? pool[pool.length - 1];
+    if (small && small.remaining > 0) {
+      pieces.push({ item: small.item, variant: small.variant, cantidad: 1 });
+      cubierto += small.variant.personas;
+    }
+  }
+
+  if (pieces.length === 0) return null;
+
+  const totalPrecio = pieces.reduce((acc, p) => acc + p.variant.precio * p.cantidad, 0);
+  return { pieces, totalPersonas: cubierto, totalPrecio };
+}
