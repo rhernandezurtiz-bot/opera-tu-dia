@@ -260,6 +260,18 @@ export const useOperia = create<State>()(
         const has = s.negocio.tiposActivos.includes(t);
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
+      generatePaymentLink: (id) => {
+        const token = Math.random().toString(36).slice(2, 10);
+        const link = `https://pay.operia.app/${id}/${token}`;
+        set((s) => ({
+          orders: s.orders.map((o) =>
+            o.id === id
+              ? recompute({ ...o, paymentLink: link, pago: o.pago === "pagado" ? o.pago : "anticipo_solicitado" })
+              : o
+          ),
+        }));
+        return link;
+      },
     }),
     { name: "operia-store-v4" }
   )
