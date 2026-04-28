@@ -63,6 +63,7 @@ function Detalle() {
   const setClientNote = useOperia((s) => s.setClientNote);
   const toggleChecklist = useOperia((s) => s.toggleChecklist);
   const updateOrder = useOperia((s) => s.updateOrder);
+  const generatePaymentLink = useOperia((s) => s.generatePaymentLink);
   const removeOrder = useOperia((s) => s.removeOrder);
   const navigate = useNavigate();
 
