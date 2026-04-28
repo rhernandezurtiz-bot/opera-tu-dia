@@ -102,6 +102,10 @@ export interface Order {
   // Inventario
   stockReservadoFor?: string;   // catalog item id cuyo stock ya descontamos
   stockReservedQty?: number;    // cantidad descontada
+  // Canal de origen del pedido
+  canal?: Channel;              // "whatsapp" | "instagram" | "manual"
+  canalUserId?: string;         // id del usuario en el canal
+  canalHandle?: string;         // @handle visible (Instagram) o nombre
 }
 
 export type PaymentProvider = "mercadopago" | "stripe";
@@ -145,7 +149,19 @@ export interface Negocio {
   payments: PaymentsConfig;
 }
 
+/* ============== Canales (multicanal) ============== */
+
+export type Channel = "whatsapp" | "instagram" | "manual";
+
+export const CHANNEL_LABELS: Record<Channel, string> = {
+  whatsapp: "WhatsApp",
+  instagram: "Instagram",
+  manual: "Manual",
+};
+
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
+// Alias semántico — los mensajes pueden venir de cualquier canal
+export type ChannelMessageStatus = WhatsappStatus;
 
 export interface WhatsappMessage {
   id: string;
@@ -155,7 +171,16 @@ export interface WhatsappMessage {
   recibidoAt: number;
   estado: WhatsappStatus;
   ordenId?: string;
+  // Multicanal
+  canal: Channel;
+  // Identificador del usuario en el canal de origen (IG user id, número WA, etc.)
+  canalUserId?: string;
+  // @handle visible (Instagram) o nombre mostrado
+  canalHandle?: string;
 }
+
+// Alias público para usar el nombre nuevo sin romper imports existentes
+export type ChannelMessage = WhatsappMessage;
 
 export interface WhatsappConfig {
   phoneNumberId: string;
@@ -164,6 +189,17 @@ export interface WhatsappConfig {
   webhookUrl: string;
   conectado: boolean;
 }
+
+export interface InstagramConfig {
+  igBusinessAccountId: string;     // Instagram Business Account ID
+  pageId: string;                  // Facebook Page asociada
+  accessToken: string;             // Page access token con permisos de IG messaging
+  verifyToken: string;             // verify token para el webhook
+  webhookUrl: string;              // URL pública del webhook
+  conectado: boolean;
+}
+
+export type ChannelMode = "demo" | "produccion";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
@@ -179,6 +215,7 @@ const seedOrders = (): Order[] => [
     checklist: { pago: true, produccion: true, empaque: false, entrega: false },
     mensajeOriginal: "Hola, quiero el pastel de chocolate para hoy 5pm",
     createdAt: Date.now() - 86400000,
+    canal: "whatsapp",
   },
   {
     id: "o2", cliente: "Sofía Ramírez", telefono: "+52 55 9876 5432",
@@ -189,6 +226,7 @@ const seedOrders = (): Order[] => [
     checklist: {},
     mensajeOriginal: "Hola, necesito un masaje a domicilio para mañana",
     createdAt: Date.now() - 3600000,
+    canal: "whatsapp",
   },
   {
     id: "o3", cliente: "Ana Torres", telefono: "",
@@ -201,6 +239,7 @@ const seedOrders = (): Order[] => [
     checklist: {},
     mensajeOriginal: "Quiero agendar para hoy a las 3",
     createdAt: Date.now() - 1800000,
+    canal: "instagram", canalUserId: "ig_770331", canalHandle: "@anatorres",
   },
   {
     id: "o4", cliente: "Carolina Méndez", telefono: "+52 55 5555 1212",
@@ -212,6 +251,7 @@ const seedOrders = (): Order[] => [
     checklist: { brief: true, propuesta: true, anticipo: true, ejecucion: false, entrega: false },
     mensajeOriginal: "Necesito arreglos para mi boda mañana",
     createdAt: Date.now() - 7200000,
+    canal: "whatsapp",
   },
 ];
 
@@ -220,21 +260,37 @@ const seedMessages = (): WhatsappMessage[] => [
     id: "w1", cliente: "Lucía Fernández", telefono: "+52 55 4400 1122",
     texto: "Hola! Quisiera encargar 24 cupcakes de vainilla para el sábado. ¿Cuánto sería?",
     recibidoAt: Date.now() - 1000 * 60 * 8, estado: "nuevo",
+    canal: "whatsapp",
   },
   {
     id: "w2", cliente: "+52 55 7788 0011", telefono: "+52 55 7788 0011",
     texto: "Buen día, necesito agendar una sesión de masaje hoy en la tarde, lo más pronto posible 🙏",
     recibidoAt: Date.now() - 1000 * 60 * 22, estado: "nuevo",
+    canal: "whatsapp",
+  },
+  {
+    id: "ig1", cliente: "@sofi.makeup", telefono: "",
+    texto: "Hola! Vi tus pasteles en historias 😍 ¿tendrás un Lotus de 12 personas para el viernes?",
+    recibidoAt: Date.now() - 1000 * 60 * 14, estado: "nuevo",
+    canal: "instagram", canalUserId: "ig_178293", canalHandle: "@sofi.makeup",
+  },
+  {
+    id: "ig2", cliente: "@andresvr", telefono: "",
+    texto: "Hola, hacen arreglos florales? Es para una pedida mañana, presupuesto unos 1500 🙌",
+    recibidoAt: Date.now() - 1000 * 60 * 60, estado: "analizado",
+    canal: "instagram", canalUserId: "ig_998812", canalHandle: "@andresvr",
   },
   {
     id: "w3", cliente: "Roberto Salinas", telefono: "+52 55 9090 5050",
     texto: "Hola, ¿pueden hacerme un arreglo floral para mañana? Es para regalo, presupuesto unos 1500.",
     recibidoAt: Date.now() - 1000 * 60 * 60 * 2, estado: "analizado",
+    canal: "whatsapp",
   },
   {
     id: "w4", cliente: "Mariana López", telefono: "+52 55 1234 5678",
     texto: "Hola, quiero el pastel de chocolate para hoy 5pm",
     recibidoAt: Date.now() - 1000 * 60 * 60 * 20, estado: "convertido", ordenId: "o1",
+    canal: "whatsapp",
   },
 ];
 
@@ -245,6 +301,8 @@ interface State {
   riskRules: RiskRules;
   messages: WhatsappMessage[];
   whatsapp: WhatsappConfig;
+  instagram: InstagramConfig;
+  channelMode: ChannelMode; // demo | produccion (global, simple toggle)
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
   addOrder: (o: Order) => void;
@@ -260,6 +318,8 @@ interface State {
   setMessageStatus: (id: string, estado: WhatsappStatus) => void;
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
+  setInstagram: (c: Partial<InstagramConfig>) => void;
+  setChannelMode: (m: ChannelMode) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
   markPaymentPaid: (id: string) => void;
@@ -301,7 +361,9 @@ export const useOperia = create<State>()(
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
-      whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/whatsapp/webhook", conectado: false },
+      whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/whatsapp", conectado: false },
+      instagram: { igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram", conectado: false },
+      channelMode: "demo" as ChannelMode,
       clientNotes: {
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
       } as Record<string, string>,
@@ -314,6 +376,8 @@ export const useOperia = create<State>()(
         messages: s.messages.map((m) => (m.id === id ? { ...m, ordenId, estado: "convertido" } : m)),
       })),
       setWhatsapp: (c) => set((s) => ({ whatsapp: { ...s.whatsapp, ...c } })),
+      setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
+      setChannelMode: (m) => set(() => ({ channelMode: m })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
         orders: s.orders.map((o) => (o.id === id ? recompute({ ...o, ...patch }) : o)),
@@ -463,7 +527,30 @@ export const useOperia = create<State>()(
       setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
-    { name: "operia-store-v6", version: 6 }
+    {
+      name: "operia-store-v7",
+      version: 7,
+      migrate: (persisted: any, version) => {
+        if (!persisted) return persisted;
+        if (version < 7) {
+          if (Array.isArray(persisted.messages)) {
+            persisted.messages = persisted.messages.map((m: any) => ({ canal: "whatsapp", ...m }));
+          }
+          if (Array.isArray(persisted.orders)) {
+            persisted.orders = persisted.orders.map((o: any) => ({ canal: o.canal ?? "whatsapp", ...o }));
+          }
+          if (!persisted.instagram) {
+            persisted.instagram = {
+              igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "",
+              webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram",
+              conectado: false,
+            };
+          }
+          if (!persisted.channelMode) persisted.channelMode = "demo";
+        }
+        return persisted;
+      },
+    }
   )
 );
 
@@ -603,9 +690,10 @@ function extractLocation(text: string): string {
   return "";
 }
 
-export function parseWhatsapp(text: string): Order {
+export function parseWhatsapp(text: string, opts: { canal?: Channel; canalUserId?: string; canalHandle?: string } = {}): Order {
   const lower = text.toLowerCase();
   const id = "o" + Math.random().toString(36).slice(2, 9);
+  const canal: Channel = opts.canal ?? "whatsapp";
 
   // Tipo — prioridad: cita > servicio > personalizado > producto
   let tipo: OrderType = "producto";
@@ -773,8 +861,12 @@ export function parseWhatsapp(text: string): Order {
     faltantes: [], checklist: {},
     mensajeOriginal: text, createdAt: Date.now(),
     fechaConfirmada, horaAprox, horaConfirmada, fechaTextoOriginal, ocasion, ambiguo,
+    canal, canalUserId: opts.canalUserId, canalHandle: opts.canalHandle,
   });
 }
+
+// Alias semántico para multicanal
+export const parseChannelMessage = parseWhatsapp;
 
 export const todayStr = today;
 
