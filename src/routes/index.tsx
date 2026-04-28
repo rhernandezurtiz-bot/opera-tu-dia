@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { DemoRequestModal } from "@/components/DemoRequestModal";
 import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
