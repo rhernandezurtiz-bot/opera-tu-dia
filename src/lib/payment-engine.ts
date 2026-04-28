@@ -6,8 +6,11 @@ import {
   buildAutoPaymentMessage,
   buildAutoPaymentReminder,
   isReadyForAutoPayment,
+  adaptMessageForChannel,
 } from "./ui-store";
 import { sendWhatsAppMessage } from "./whatsapp";
+import { sendInstagramDM } from "./instagram";
+import { sendFacebookMessage } from "./facebook";
 import { useCatalog, validateOrder } from "./catalog-store";
 
 /**
@@ -50,14 +53,27 @@ export function usePaymentEngine() {
         const validation = validateOrder(o, catalog, orders);
         const blockedByCatalog = validation.blockPayment;
 
-        // Regla 1: criterios listos y sin link → generar link + enviar WhatsApp
+        // Regla 1: criterios listos y sin link → generar link + enviar por canal de origen
         if (!o.paymentLink && !blockedByCatalog && isReadyForAutoPayment(o) && !sendingNow.has(o.id)) {
           sendingNow.add(o.id);
           const link = generatePaymentLink(o.id);
-          // Construye el mensaje con el link recién generado
-          const msg = buildAutoPaymentMessage({ ...o, paymentLink: link });
-          if (o.telefono) {
-            const result = await sendWhatsAppMessage({ phone: o.telefono, message: msg });
+          // Construye el mensaje y adáptalo al tono del canal
+          const baseMsg = buildAutoPaymentMessage({ ...o, paymentLink: link });
+          const msg = adaptMessageForChannel(baseMsg, o.canal);
+          const canal = o.canal ?? "whatsapp";
+
+          let result: { ok: boolean; at: number; provider: string; messageId?: string; error?: string } | null = null;
+
+          if (canal === "instagram" && o.canalUserId) {
+            result = await sendInstagramDM({ userId: o.canalUserId, message: msg });
+          } else if (canal === "facebook" && o.canalUserId) {
+            result = await sendFacebookMessage({ userId: o.canalUserId, message: msg });
+          } else if (o.telefono) {
+            // whatsapp / manual con teléfono → WhatsApp
+            result = await sendWhatsAppMessage({ phone: o.telefono, message: msg });
+          }
+
+          if (result) {
             markLinkSent(o.id, {
               ok: result.ok,
               at: result.at,

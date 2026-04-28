@@ -499,3 +499,38 @@ export function buildHoursBeforeReminder(o: Order): string {
   }
   return `Hola${n ? " " + n : ""} 😊\n\nTu pedido sale ${cuando} 🙌\n\n¿Sigue todo bien con la entrega?`;
 }
+
+/* ---------- Tono por canal (multicanal) ---------- */
+
+import type { Channel } from "./operia-store";
+
+/**
+ * Adapta un mensaje base al tono propio del canal de origen del pedido.
+ * - WhatsApp: completo y cálido (mensaje base sin cambios).
+ * - Instagram: corto y emocional (acorta saludo, agrega emoji extra, corta líneas largas).
+ * - Facebook: claro y directo (intermedio, una línea menos).
+ * - Manual: igual al base.
+ */
+export function adaptMessageForChannel(message: string, canal?: Channel): string {
+  if (!canal || canal === "whatsapp" || canal === "manual") return message;
+
+  if (canal === "instagram") {
+    // versión más corta y emocional: junta dobles saltos en uno y agrega ✨
+    let m = message
+      .split("\n\n")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .slice(0, 3)
+      .join("\n");
+    if (!/[✨💖🙌😍🔥]/u.test(m)) m += " ✨";
+    return m;
+  }
+
+  if (canal === "facebook") {
+    // intermedio: conserva estructura pero quita líneas redundantes de cierre
+    const parts = message.split("\n\n").map((p) => p.trim()).filter(Boolean);
+    return parts.slice(0, 4).join("\n\n");
+  }
+
+  return message;
+}

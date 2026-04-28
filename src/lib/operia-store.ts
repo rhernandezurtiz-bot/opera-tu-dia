@@ -151,13 +151,16 @@ export interface Negocio {
 
 /* ============== Canales (multicanal) ============== */
 
-export type Channel = "whatsapp" | "instagram" | "manual";
+export type Channel = "whatsapp" | "instagram" | "facebook" | "manual";
 
 export const CHANNEL_LABELS: Record<Channel, string> = {
   whatsapp: "WhatsApp",
   instagram: "Instagram",
+  facebook: "Facebook",
   manual: "Manual",
 };
+
+export const CHANNEL_LIST: Channel[] = ["whatsapp", "instagram", "facebook", "manual"];
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
 // Alias semántico — los mensajes pueden venir de cualquier canal
@@ -195,6 +198,15 @@ export interface InstagramConfig {
   pageId: string;                  // Facebook Page asociada
   accessToken: string;             // Page access token con permisos de IG messaging
   verifyToken: string;             // verify token para el webhook
+  webhookUrl: string;              // URL pública del webhook
+  conectado: boolean;
+}
+
+export interface FacebookConfig {
+  pageId: string;                  // Facebook Page ID
+  accessToken: string;             // Page access token con pages_messaging
+  verifyToken: string;             // verify token para el webhook de Messenger
+  appSecret: string;               // para validar X-Hub-Signature-256 en producción
   webhookUrl: string;              // URL pública del webhook
   conectado: boolean;
 }
@@ -292,6 +304,18 @@ const seedMessages = (): WhatsappMessage[] => [
     recibidoAt: Date.now() - 1000 * 60 * 60 * 20, estado: "convertido", ordenId: "o1",
     canal: "whatsapp",
   },
+  {
+    id: "fb1", cliente: "Daniela Pérez", telefono: "",
+    texto: "Hola! Vi su página, ¿manejan envío a Coyoacán para mañana? Necesito un arreglo floral.",
+    recibidoAt: Date.now() - 1000 * 60 * 30, estado: "nuevo",
+    canal: "facebook", canalUserId: "fb_5512987", canalHandle: "Daniela Pérez",
+  },
+  {
+    id: "fb2", cliente: "Miguel Ángel R.", telefono: "+52 55 2233 4455",
+    texto: "Buen día, quiero cotizar 50 cupcakes para un evento el sábado 🙏",
+    recibidoAt: Date.now() - 1000 * 60 * 90, estado: "analizado",
+    canal: "facebook", canalUserId: "fb_8821123", canalHandle: "Miguel Ángel R.",
+  },
 ];
 
 interface State {
@@ -302,6 +326,7 @@ interface State {
   messages: WhatsappMessage[];
   whatsapp: WhatsappConfig;
   instagram: InstagramConfig;
+  facebook: FacebookConfig;
   channelMode: ChannelMode; // demo | produccion (global, simple toggle)
   // Notas internas del cliente, indexadas por clientKey() (teléfono o nombre normalizado)
   clientNotes: Record<string, string>;
@@ -319,6 +344,7 @@ interface State {
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setInstagram: (c: Partial<InstagramConfig>) => void;
+  setFacebook: (c: Partial<FacebookConfig>) => void;
   setChannelMode: (m: ChannelMode) => void;
   setClientNote: (key: string, note: string) => void;
   generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
@@ -363,6 +389,7 @@ export const useOperia = create<State>()(
       messages: seedMessages(),
       whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/whatsapp", conectado: false },
       instagram: { igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram", conectado: false },
+      facebook: { pageId: "", accessToken: "", verifyToken: "", appSecret: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook", conectado: false },
       channelMode: "demo" as ChannelMode,
       clientNotes: {
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
@@ -377,6 +404,7 @@ export const useOperia = create<State>()(
       })),
       setWhatsapp: (c) => set((s) => ({ whatsapp: { ...s.whatsapp, ...c } })),
       setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
+      setFacebook: (c) => set((s) => ({ facebook: { ...s.facebook, ...c } })),
       setChannelMode: (m) => set(() => ({ channelMode: m })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
@@ -508,9 +536,10 @@ export const useOperia = create<State>()(
           orders: s.orders.map((o) => {
             if (o.id !== id) return o;
             const events = o.paymentEvents ?? [];
+            const canalLabel = CHANNEL_LABELS[o.canal ?? "whatsapp"];
             const detail = payload.ok
-              ? `Enviado por WhatsApp · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
-              : `Falló envío por WhatsApp · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
+              ? `Enviado por ${canalLabel} · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
+              : `Falló envío por ${canalLabel} · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
             return {
               ...o,
               linkSentAt: payload.ok ? payload.at : o.linkSentAt,
@@ -528,8 +557,8 @@ export const useOperia = create<State>()(
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
     {
-      name: "operia-store-v7",
-      version: 7,
+      name: "operia-store-v8",
+      version: 8,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 7) {
@@ -547,6 +576,15 @@ export const useOperia = create<State>()(
             };
           }
           if (!persisted.channelMode) persisted.channelMode = "demo";
+        }
+        if (version < 8) {
+          if (!persisted.facebook) {
+            persisted.facebook = {
+              pageId: "", accessToken: "", verifyToken: "", appSecret: "",
+              webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook",
+              conectado: false,
+            };
+          }
         }
         return persisted;
       },

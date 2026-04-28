@@ -3,14 +3,15 @@ import { useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useOperia, type WhatsappStatus } from "@/lib/operia-store";
+import { ChannelBadge } from "@/components/ChannelBadge";
+import { useOperia, type WhatsappStatus, type Channel, CHANNEL_LABELS } from "@/lib/operia-store";
 import { MessageCircle, Search, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/inbox/")({
   head: () => ({
     meta: [
-      { title: "WhatsApp Inbox — Operia" },
-      { name: "description", content: "Mensajes entrantes de WhatsApp listos para convertir en órdenes." },
+      { title: "Inbox multicanal — Operia" },
+      { name: "description", content: "Mensajes entrantes de WhatsApp, Instagram y Facebook listos para convertir en órdenes." },
     ],
   }),
   component: InboxPage,
@@ -35,19 +36,27 @@ function InboxPage() {
   const whatsapp = useOperia((s) => s.whatsapp);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<WhatsappStatus | "todos">("todos");
+  const [canalFilter, setCanalFilter] = useState<Channel | "todos">("todos");
 
   const filtered = messages
     .filter((m) => (filter === "todos" ? true : m.estado === filter))
+    .filter((m) => (canalFilter === "todos" ? true : (m.canal ?? "whatsapp") === canalFilter))
     .filter((m) =>
       !q ? true : (m.cliente + " " + m.telefono + " " + m.texto).toLowerCase().includes(q.toLowerCase())
     )
     .sort((a, b) => b.recibidoAt - a.recibidoAt);
 
+  const countsByCanal = messages.reduce<Record<string, number>>((acc, m) => {
+    const c = m.canal ?? "whatsapp";
+    acc[c] = (acc[c] ?? 0) + 1;
+    return acc;
+  }, {});
+
   return (
     <AppShell>
       <PageHeader
-        title="WhatsApp Inbox"
-        subtitle="Mensajes entrantes que esperan ser convertidos en órdenes."
+        title="Inbox multicanal"
+        subtitle="Mensajes de WhatsApp, Instagram y Facebook listos para convertir en órdenes."
       />
 
       {!whatsapp.conectado && (
@@ -58,12 +67,32 @@ function InboxPage() {
           <div>
             <span className="font-medium text-foreground">Modo simulación.</span>{" "}
             <span className="text-muted-foreground">
-              Estás viendo mensajes de prueba. Para activar la integración real, conecta WhatsApp Business Cloud API en{" "}
+              Estás viendo mensajes de prueba. Para activar canales reales, conecta WhatsApp, Instagram o Facebook en{" "}
               <Link to="/configuracion" className="underline text-foreground">Ajustes</Link>.
             </span>
           </div>
         </div>
       )}
+
+      {/* Filtro por canal */}
+      <div className="flex gap-1 overflow-x-auto -mx-1 px-1 mb-3">
+        {(["todos", "whatsapp", "instagram", "facebook", "manual"] as const).map((c) => {
+          const count = c === "todos" ? messages.length : (countsByCanal[c] ?? 0);
+          return (
+            <button
+              key={c}
+              onClick={() => setCanalFilter(c)}
+              className={`px-3 h-9 rounded-lg text-[12px] font-medium whitespace-nowrap border transition-colors ${
+                canalFilter === c
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {c === "todos" ? "Todos" : CHANNEL_LABELS[c as Channel]} <span className="opacity-60">· {count}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-2 mb-5">
         <div className="relative flex-1">
@@ -121,6 +150,7 @@ function InboxPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-[14.5px] truncate">{m.cliente}</span>
+                      <ChannelBadge canal={m.canal} compact />
                       {m.telefono && m.cliente !== m.telefono && (
                         <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1">
                           <Phone className="h-3 w-3" />

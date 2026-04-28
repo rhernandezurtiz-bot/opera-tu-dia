@@ -184,6 +184,24 @@ function Index() {
         )}
       </section>
 
+      {/* Pedidos por canal */}
+      <section className="mb-10">
+        <Eyebrow>📡 Pedidos por canal</Eyebrow>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {(["whatsapp", "instagram", "facebook", "manual"] as const).map((c) => {
+            const items = orders.filter((o) => (o.canal ?? "whatsapp") === c && o.estado !== "cancelado");
+            const ingresos = items.filter((o) => o.pago === "pagado").reduce((acc, o) => acc + (o.precio || 0), 0);
+            const labels: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Facebook", manual: "Manual" };
+            return (
+              <Card key={c} className="p-4 rounded-xl">
+                <div className="text-[11.5px] text-muted-foreground font-medium">{labels[c]}</div>
+                <div className="text-[22px] leading-none font-semibold mt-1 tabular-nums">{items.length}</div>
+                <div className="text-[11.5px] text-muted-foreground mt-1">{money(ingresos)} cobrado</div>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
       {aConfirmar > 0 && (
         <Card className="mb-8 p-4 md:p-5 rounded-xl border-foreground/15 bg-foreground/3 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">

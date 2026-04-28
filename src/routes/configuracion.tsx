@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
@@ -31,6 +31,12 @@ function Config() {
   const setRiskRules = useOperia((s) => s.setRiskRules);
   const whatsapp = useOperia((s) => s.whatsapp);
   const setWhatsapp = useOperia((s) => s.setWhatsapp);
+  const instagram = useOperia((s) => s.instagram);
+  const setInstagram = useOperia((s) => s.setInstagram);
+  const facebook = useOperia((s) => s.facebook);
+  const setFacebook = useOperia((s) => s.setFacebook);
+  const channelMode = useOperia((s) => s.channelMode);
+  const setChannelMode = useOperia((s) => s.setChannelMode);
   const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
   const payments = negocio.payments;
 
@@ -168,6 +174,91 @@ function Config() {
             <span>
               Para activar la integración real, Operia necesitará conectarse a <strong>WhatsApp Business Cloud API</strong> mediante webhooks.
               Por ahora, los mensajes del Inbox son simulados para que pruebes el flujo de trabajo completo.
+            </span>
+          </div>
+        </Card>
+
+        {/* Canales conectados (Instagram + Facebook) */}
+        <Card className="p-5 rounded-xl lg:col-span-2">
+          <div className="flex items-center gap-2 mb-1">
+            <MessageCircle className="h-5 w-5 text-foreground/70" />
+            <h3 className="font-display text-lg">Canales conectados</h3>
+            <div className="ml-auto flex items-center gap-2 text-[12px]">
+              <span className="text-muted-foreground">Modo</span>
+              <select
+                value={channelMode}
+                onChange={(e) => setChannelMode(e.target.value as "demo" | "produccion")}
+                className="h-8 rounded-lg border border-border bg-background px-2 text-[12px]"
+              >
+                <option value="demo">Demo</option>
+                <option value="produccion">Producción</option>
+              </select>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Recibe pedidos por WhatsApp, Instagram DM y Facebook Messenger en un solo Inbox.
+          </p>
+
+          <div className="mb-5 p-4 rounded-2xl border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Instagram className="h-4 w-4" />
+              <span className="font-medium">Instagram DM</span>
+              <span className={`ml-auto text-[11px] px-2 py-0.5 rounded-full border ${instagram.conectado ? "bg-success/15 text-success border-success/30" : "bg-secondary text-muted-foreground border-border"}`}>
+                {instagram.conectado ? "Conectado" : "No conectado"}
+              </span>
+            </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <FieldRow label="IG Business Account ID" value={instagram.igBusinessAccountId} onChange={(v) => setInstagram({ igBusinessAccountId: v })} />
+              <FieldRow label="Page ID" value={instagram.pageId} onChange={(v) => setInstagram({ pageId: v })} />
+              <FieldRow label="Access Token" value={instagram.accessToken} onChange={(v) => setInstagram({ accessToken: v })} />
+              <FieldRow label="Verify Token" value={instagram.verifyToken} onChange={(v) => setInstagram({ verifyToken: v })} />
+              <div className="md:col-span-2">
+                <Label className="text-xs text-muted-foreground">Webhook URL</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={instagram.webhookUrl} onChange={(e) => setInstagram({ webhookUrl: e.target.value })} className="rounded-xl" />
+                  <Button variant="secondary" size="icon" className="rounded-xl shrink-0" onClick={() => { navigator.clipboard.writeText(instagram.webhookUrl); toast.success("URL copiada"); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button className="rounded-full mt-3" onClick={() => { setInstagram({ conectado: !instagram.conectado }); toast.success(instagram.conectado ? "Instagram desconectado" : "Instagram marcado como conectado"); }}>
+              {instagram.conectado ? "Desconectar" : "Marcar como conectado"}
+            </Button>
+          </div>
+
+          <div className="p-4 rounded-2xl border border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <Facebook className="h-4 w-4" />
+              <span className="font-medium">Facebook Messenger</span>
+              <span className={`ml-auto text-[11px] px-2 py-0.5 rounded-full border ${facebook.conectado ? "bg-success/15 text-success border-success/30" : "bg-secondary text-muted-foreground border-border"}`}>
+                {facebook.conectado ? "Conectado" : "No conectado"}
+              </span>
+            </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <FieldRow label="Page ID" value={facebook.pageId} onChange={(v) => setFacebook({ pageId: v })} />
+              <FieldRow label="Page Access Token" value={facebook.accessToken} onChange={(v) => setFacebook({ accessToken: v })} />
+              <FieldRow label="Verify Token" value={facebook.verifyToken} onChange={(v) => setFacebook({ verifyToken: v })} />
+              <FieldRow label="App Secret" value={facebook.appSecret} onChange={(v) => setFacebook({ appSecret: v })} />
+              <div className="md:col-span-2">
+                <Label className="text-xs text-muted-foreground">Webhook URL</Label>
+                <div className="flex gap-2 mt-1">
+                  <Input value={facebook.webhookUrl} onChange={(e) => setFacebook({ webhookUrl: e.target.value })} className="rounded-xl" />
+                  <Button variant="secondary" size="icon" className="rounded-xl shrink-0" onClick={() => { navigator.clipboard.writeText(facebook.webhookUrl); toast.success("URL copiada"); }}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button className="rounded-full mt-3" onClick={() => { setFacebook({ conectado: !facebook.conectado }); toast.success(facebook.conectado ? "Facebook desconectado" : "Facebook marcado como conectado"); }}>
+              {facebook.conectado ? "Desconectar" : "Marcar como conectado"}
+            </Button>
+          </div>
+
+          <div className="mt-4 p-3 rounded-2xl bg-secondary/50 text-xs text-muted-foreground flex gap-2">
+            <Info className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              En <strong>Demo</strong> los mensajes son simulados. En <strong>Producción</strong> se valida la firma de Meta y se envía vía Graph API.
             </span>
           </div>
         </Card>
