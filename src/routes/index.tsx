@@ -20,6 +20,14 @@ import {
   Cake,
   AlertCircle,
   Zap,
+  Plug,
+  Webhook,
+  Database,
+  Network,
+  Lock,
+  KeyRound,
+  FileLock2,
+  ScrollText,
 } from "lucide-react";
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
