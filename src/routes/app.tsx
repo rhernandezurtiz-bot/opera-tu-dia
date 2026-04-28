@@ -6,6 +6,8 @@ import { useCatalog } from "@/lib/catalog-store";
 import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
 import { useAutoReplyEngine } from "@/lib/auto-reply-engine";
 import { useLearningEngine } from "@/lib/learning-engine";
+import { useUsageLimits } from "@/lib/usage-limits";
+import { useSubscription, trialDaysLeft } from "@/lib/subscription-store";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,8 @@ import {
   Percent,
   Boxes,
   PackageX,
+  Zap,
+  ArrowUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +92,10 @@ function Index() {
           </Button>
         }
       />
+
+      <PlanBanner />
+
+      <RoiBlock orders={orders} />
 
       {/* Money */}
       <section className="mb-10">
@@ -597,3 +605,130 @@ function CommandCenter({
     </section>
   );
 }
+
+/* ---------- Plan banner (trial / límite alcanzado / cancelado) ---------- */
+
+function PlanBanner() {
+  const sub = useSubscription();
+  const usage = useUsageLimits();
+  const days = trialDaysLeft(sub);
+
+  if (sub.status === "canceled") {
+    return (
+      <Card className="p-3.5 mb-6 border-danger/40 bg-danger/5 flex items-center gap-3">
+        <AlertCircle className="h-4 w-4 text-danger shrink-0" />
+        <div className="flex-1 text-[13px]">
+          <strong>Suscripción cancelada.</strong> Operia ya no toma pedidos en automático.
+        </div>
+        <Button asChild size="sm">
+          <Link to="/planes">Reactivar</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  if (usage.pedidosBloqueado) {
+    return (
+      <Card className="p-3.5 mb-6 border-danger/40 bg-danger/5 flex items-center gap-3">
+        <AlertCircle className="h-4 w-4 text-danger shrink-0" />
+        <div className="flex-1 text-[13px]">
+          Llegaste al límite de <strong>{usage.pedidosMax} pedidos/mes</strong>. No podrás recibir más este mes.
+        </div>
+        <Button asChild size="sm">
+          <Link to="/planes"><ArrowUp className="h-3.5 w-3.5" /> Subir de plan</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  if (sub.status === "trialing" && days <= 5) {
+    return (
+      <Card className="p-3.5 mb-6 border-warning/40 bg-warning/5 flex items-center gap-3">
+        <Sparkles className="h-4 w-4 text-warning shrink-0" />
+        <div className="flex-1 text-[13px]">
+          Te quedan <strong>{days} día{days === 1 ? "" : "s"}</strong> de prueba gratis del plan {usage.plan.nombre}.
+        </div>
+        <Button asChild size="sm" variant="secondary">
+          <Link to="/suscripcion">Ver mi plan</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  if (Number.isFinite(usage.pedidosMax) && usage.pedidosUsados / usage.pedidosMax >= 0.8) {
+    return (
+      <Card className="p-3.5 mb-6 border-warning/40 bg-warning/5 flex items-center gap-3">
+        <Zap className="h-4 w-4 text-warning shrink-0" />
+        <div className="flex-1 text-[13px]">
+          Ya usaste <strong>{usage.pedidosUsados}/{usage.pedidosMax}</strong> pedidos del mes. Considera subir de plan.
+        </div>
+        <Button asChild size="sm" variant="secondary">
+          <Link to="/planes">Ver planes</Link>
+        </Button>
+      </Card>
+    );
+  }
+
+  return null;
+}
+
+/* ---------- ROI block: "Tu ROI con Operia" ---------- */
+
+function RoiBlock({ orders }: { orders: Order[] }) {
+  // Ventana últimos 30 días
+  const since = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recent = orders.filter((o) => (o.createdAt ?? 0) >= since);
+
+  // Ventas cerradas: pedidos con pago pagado
+  const cerrados = recent.filter((o) => o.pago === "pagado");
+  const ventasCerradas = cerrados.reduce((a, o) => a + (o.precio || 0), 0);
+
+  // Dinero recuperado: pedidos que tenían riesgo medio/alto y terminaron pagados o entregados
+  const recuperados = recent.filter(
+    (o) =>
+      (o.riesgo === "medio" || o.riesgo === "alto") &&
+      (o.pago === "pagado" || o.estado === "entregado"),
+  );
+  const dineroRecuperado = recuperados.reduce((a, o) => a + (o.precio || 0), 0);
+
+  // Pedidos automáticos
+  const automaticos = recent.length;
+
+  return (
+    <section className="mb-10">
+      <Eyebrow>✨ Tu ROI con Operia (últimos 30 días)</Eyebrow>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="p-5 border-success/30 bg-success/5">
+          <div className="text-[11px] uppercase tracking-wider text-success/90 font-medium">
+            Ventas cerradas
+          </div>
+          <div className="text-[28px] font-semibold mt-1 tabular-nums">{money(ventasCerradas)}</div>
+          <div className="text-[12px] text-muted-foreground mt-1">
+            {cerrados.length} {cerrados.length === 1 ? "pedido pagado" : "pedidos pagados"}
+          </div>
+        </Card>
+
+        <Card className="p-5 border-foreground/20">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+            Dinero recuperado
+          </div>
+          <div className="text-[28px] font-semibold mt-1 tabular-nums">{money(dineroRecuperado)}</div>
+          <div className="text-[12px] text-muted-foreground mt-1">
+            de {recuperados.length} pedidos en riesgo
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+            Pedidos gestionados
+          </div>
+          <div className="text-[28px] font-semibold mt-1 tabular-nums">{automaticos}</div>
+          <div className="text-[12px] text-muted-foreground mt-1">
+            por Operia, sin intervención humana
+          </div>
+        </Card>
+      </div>
+    </section>
+  );
+}
+

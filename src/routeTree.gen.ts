@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuscripcionRouteImport } from './routes/suscripcion'
 import { Route as RiesgosRouteImport } from './routes/riesgos'
 import { Route as ProduccionRouteImport } from './routes/produccion'
+import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InventarioRouteImport } from './routes/inventario'
@@ -35,6 +37,11 @@ import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/p
 import { Route as ApiPublicWebhooksInstagramRouteImport } from './routes/api/public/webhooks/instagram'
 import { Route as ApiPublicWebhooksFacebookRouteImport } from './routes/api/public/webhooks/facebook'
 
+const SuscripcionRoute = SuscripcionRouteImport.update({
+  id: '/suscripcion',
+  path: '/suscripcion',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RiesgosRoute = RiesgosRouteImport.update({
   id: '/riesgos',
   path: '/riesgos',
@@ -43,6 +50,11 @@ const RiesgosRoute = RiesgosRouteImport.update({
 const ProduccionRoute = ProduccionRouteImport.update({
   id: '/produccion',
   path: '/produccion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanesRoute = PlanesRouteImport.update({
+  id: '/planes',
+  path: '/planes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -174,8 +186,10 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planes': typeof PlanesRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/suscripcion': typeof SuscripcionRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-message': typeof ApiSendMessageRoute
@@ -201,8 +215,10 @@ export interface FileRoutesByTo {
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planes': typeof PlanesRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/suscripcion': typeof SuscripcionRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-message': typeof ApiSendMessageRoute
@@ -229,8 +245,10 @@ export interface FileRoutesById {
   '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/planes': typeof PlanesRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/suscripcion': typeof SuscripcionRoute
   '/api/send-facebook': typeof ApiSendFacebookRoute
   '/api/send-instagram': typeof ApiSendInstagramRoute
   '/api/send-message': typeof ApiSendMessageRoute
@@ -258,8 +276,10 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/login'
     | '/onboarding'
+    | '/planes'
     | '/produccion'
     | '/riesgos'
+    | '/suscripcion'
     | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-message'
@@ -285,8 +305,10 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/login'
     | '/onboarding'
+    | '/planes'
     | '/produccion'
     | '/riesgos'
+    | '/suscripcion'
     | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-message'
@@ -312,8 +334,10 @@ export interface FileRouteTypes {
     | '/inventario'
     | '/login'
     | '/onboarding'
+    | '/planes'
     | '/produccion'
     | '/riesgos'
+    | '/suscripcion'
     | '/api/send-facebook'
     | '/api/send-instagram'
     | '/api/send-message'
@@ -340,8 +364,10 @@ export interface RootRouteChildren {
   InventarioRoute: typeof InventarioRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  PlanesRoute: typeof PlanesRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
+  SuscripcionRoute: typeof SuscripcionRoute
   ApiSendFacebookRoute: typeof ApiSendFacebookRoute
   ApiSendInstagramRoute: typeof ApiSendInstagramRoute
   ApiSendMessageRoute: typeof ApiSendMessageRoute
@@ -360,6 +386,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/suscripcion': {
+      id: '/suscripcion'
+      path: '/suscripcion'
+      fullPath: '/suscripcion'
+      preLoaderRoute: typeof SuscripcionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/riesgos': {
       id: '/riesgos'
       path: '/riesgos'
@@ -372,6 +405,13 @@ declare module '@tanstack/react-router' {
       path: '/produccion'
       fullPath: '/produccion'
       preLoaderRoute: typeof ProduccionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planes': {
+      id: '/planes'
+      path: '/planes'
+      fullPath: '/planes'
+      preLoaderRoute: typeof PlanesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -548,8 +588,10 @@ const rootRouteChildren: RootRouteChildren = {
   InventarioRoute: InventarioRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  PlanesRoute: PlanesRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
+  SuscripcionRoute: SuscripcionRoute,
   ApiSendFacebookRoute: ApiSendFacebookRoute,
   ApiSendInstagramRoute: ApiSendInstagramRoute,
   ApiSendMessageRoute: ApiSendMessageRoute,

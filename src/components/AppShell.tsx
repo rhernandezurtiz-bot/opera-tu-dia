@@ -1,5 +1,5 @@
 import { Link, useLocation, Navigate } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package, Boxes, CalendarDays, Brain } from "lucide-react";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package, Boxes, CalendarDays, Brain, Sparkles } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
@@ -20,6 +20,7 @@ const nav = [
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/aprendizaje", label: "Aprendizaje", icon: Brain },
   { to: "/riesgos", label: "Riesgos", icon: AlertTriangle },
+  { to: "/suscripcion", label: "Plan", icon: Sparkles },
   { to: "/configuracion", label: "Ajustes", icon: Settings },
 ] as const;
 
@@ -136,7 +137,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-1 pt-1.5 pb-2 grid grid-cols-7 gap-0.5">
-        {nav.map((n) => {
+        {nav.slice(0, 7).map((n) => {
           const active = n.to === "/app" ? loc.pathname === "/app" : loc.pathname.startsWith(n.to);
           const Icon = n.icon;
           const showBadge = n.to === "/inbox" && unread > 0;
