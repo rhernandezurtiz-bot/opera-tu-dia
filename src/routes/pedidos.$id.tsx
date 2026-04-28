@@ -363,8 +363,8 @@ function Detalle() {
                   )}
                 </div>
 
-                {/* Auto-envío: cuando se cumplen los 3 criterios (fecha confirmada + dirección + monto) */}
-                {isReadyForAutoPayment(order) && order.telefono && (
+                {/* Auto-envío: cuando se cumplen los criterios + catálogo OK */}
+                {!fueraCatalogo && isReadyForAutoPayment(order) && order.telefono && (
                   <div className="p-3 rounded-2xl bg-primary/5 border border-primary/25">
                     <div className="flex items-start gap-2 mb-2">
                       <Sparkles className="h-4 w-4 mt-0.5 text-primary shrink-0" />
