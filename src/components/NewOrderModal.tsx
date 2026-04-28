@@ -187,6 +187,9 @@ function DecisionPanel({ decision, onCopyMessage }: { decision: OrderDecision; o
         <span className={`text-[11px] px-2 py-0.5 rounded-full border ${decision.canCharge ? "bg-success/10 border-success/30 text-success" : "bg-muted border-border text-muted-foreground"}`}>
           {decision.canCharge ? "Puede cobrarse" : "No cobrar aún"}
         </span>
+        <span className="text-[11px] px-2 py-0.5 rounded-full border bg-primary/10 border-primary/30 text-primary ml-auto">
+          {CLOSING_LABEL[decision.closingAction]}
+        </span>
       </div>
       <div className="p-4 space-y-3">
         <div className="text-[12.5px] text-muted-foreground">
