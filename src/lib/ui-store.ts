@@ -300,16 +300,25 @@ export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: num
   return `Hola${n ? " " + n : ""} 😊\n\nQuería confirmar que tengo todo listo de mi lado para ${noun}${cuando ? " " + cuando : ""} 🙌\n\nEn un momento te paso el link para apartarlo.`;
 }
 
-// Mensaje automático específico para auto-envío de link de pago
+// Mensaje automático para auto-envío de link de pago — tono vendedor, urgencia ligera
 export function buildAutoPaymentMessage(o: Order): string {
   const link = o.paymentLink ?? "[LINK]";
-  return `Perfecto 🙌\n\nTu pedido ya está listo para apartarse.\nPuedes realizar tu pago aquí:\n${link}\n\nEn cuanto se confirme, queda apartado automáticamente.`;
+  const n = firstName(o.cliente);
+  const noun = itemNoun(o);
+  const cuando = whenPhrase(o);
+  const isAnticipo = o.paymentMode === "anticipo";
+  const monto = o.anticipoMonto ? ` (${money(o.anticipoMonto)}${isAnticipo ? " de anticipo" : ""})` : "";
+  const intro = cuando ? `Te aparto ${noun} ${cuando}` : `Te aparto ${noun}`;
+  return `¡${n ? n + ", l" : "L"}isto! 🙌\n\n${intro}. Solo confirma con tu pago${monto} y queda asegurado:\n${link}\n\nLos cupos de esa fecha se llenan rápido, mejor adelantarlo ✨`;
 }
 
-// Recordatorio cálido (≥30 min sin pago) — solo se genera, no se envía solo
+// Recordatorio cálido (≥30 min sin pago) — más urgencia sin presionar
 export function buildAutoPaymentReminder(o: Order): string {
   const link = o.paymentLink ?? "[LINK]";
-  return `Hola 🙌\n\nTe dejo nuevamente el link para asegurar tu pedido:\n${link}`;
+  const n = firstName(o.cliente);
+  const noun = itemNoun(o);
+  const cuando = whenPhrase(o);
+  return `Hola${n ? " " + n : ""} 👋\n\nSigo pendiente con ${noun}${cuando ? " " + cuando : ""}. Para no perder el lugar, te dejo otra vez el link:\n${link}\n\n¿Lo cierro contigo? 🙌`;
 }
 
 // ¿Cumple los criterios para auto-cobro?
