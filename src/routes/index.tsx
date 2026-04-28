@@ -20,6 +20,7 @@ import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
 import { LandingExample } from "@/components/LandingExample";
 import { DecideItem } from "@/components/DecideItem";
+import { Testimonial } from "@/components/Testimonial";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -267,6 +268,34 @@ function Landing() {
               {x}
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* Testimonios */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Lo que dicen</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Negocios reales que dejaron de perder pedidos.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Testimonial
+            quote="Antes anotaba todo en libretas y mensajes sueltos. Con Operia ya no se me pasa ningún pastel ni ningún anticipo. Ahorro como 2 horas al día."
+            name="Mariana Cortés"
+            role="Pastelería Dulce Hogar · CDMX"
+            initial="M"
+          />
+          <Testimonial
+            quote="Tenía citas dobles y clientas molestas cada semana. Operia me ordena la agenda y me dice a quién recordarle. Cero errores este mes."
+            name="Andrea Reyes"
+            role="Salón Belle · Guadalajara"
+            initial="A"
+          />
+          <Testimonial
+            quote="Mis técnicos llegaban sin la dirección o sin saber qué hacer. Hoy todo el equipo ve el mismo plan del día. Cobramos más rápido y dejamos de perder servicios."
+            name="Luis Hernández"
+            role="Servicios Hogar Plus · Monterrey"
+            initial="L"
+          />
         </div>
       </section>
 
