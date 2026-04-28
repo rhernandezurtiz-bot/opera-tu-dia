@@ -420,6 +420,38 @@ function Detalle() {
                   </div>
                 )}
 
+                {/* Recordatorio automático: ≥30 min sin pago */}
+                {order.paymentLink &&
+                  order.pago === "link_enviado" &&
+                  order.paymentLinkAt &&
+                  Date.now() - order.paymentLinkAt >= 30 * 60 * 1000 && (
+                    <div className="border-t border-border pt-3">
+                      <div className="text-[12.5px] text-muted-foreground mb-1.5 flex items-center gap-2">
+                        <Bell className="h-3.5 w-3.5" />
+                        Recordatorio automático (≥30 min sin pago):
+                      </div>
+                      <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-2 bg-background border border-border rounded-lg p-2.5">
+                        {buildAutoPaymentReminder(order)}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="ghost" className="rounded-full" onClick={() => copiar(buildAutoPaymentReminder(order))}>
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar recordatorio
+                        </Button>
+                        {order.telefono && (
+                          <Button size="sm" variant="secondary" className="rounded-full" asChild>
+                            <a
+                              href={`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(buildAutoPaymentReminder(order))}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Send className="h-3.5 w-3.5 mr-1" /> Enviar recordatorio
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                 <div className="border-t border-border pt-3">
                   <div className="text-[12.5px] text-muted-foreground mb-1.5">Mensaje sugerido:</div>
                   <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-2">
