@@ -116,6 +116,55 @@ function Landing() {
         </div>
       </section>
 
+      {/* Así funciona en la vida real */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Así funciona en la vida real</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
+          Mensajes reales. Pedidos listos. Acción clara.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Example
+            icon={Cake}
+            input="Hola quiero un pastel mañana para 20 personas"
+            tipo="Producto · Pastel"
+            fields={[
+              { label: "Cliente", value: "Por confirmar", missing: true },
+              { label: "Fecha", value: "Mañana" },
+              { label: "Personas", value: "20" },
+              { label: "Sabor / dirección", value: "Faltan", missing: true },
+            ]}
+            action="Solicitar anticipo"
+            message="Hola 😊 para confirmar tu pastel para 20 personas necesito el sabor, la dirección y un anticipo. ¿Me ayudas?"
+          />
+          <Example
+            icon={Wrench}
+            input="¿Me arreglan una fuga el viernes en Providencia?"
+            tipo="Servicio · Plomería"
+            fields={[
+              { label: "Servicio", value: "Reparar fuga" },
+              { label: "Fecha", value: "Viernes" },
+              { label: "Zona", value: "Providencia" },
+              { label: "Hora exacta", value: "Falta", missing: true },
+            ]}
+            action="Confirmar horario"
+            message="Hola 😊 confirmo tu visita por la fuga el viernes en Providencia. ¿A qué hora te queda mejor?"
+          />
+          <Example
+            icon={Users}
+            input="¿Tienes lugar mañana 4pm para corte y tinte?"
+            tipo="Cita · Salón"
+            fields={[
+              { label: "Servicio", value: "Corte y tinte" },
+              { label: "Fecha", value: "Mañana" },
+              { label: "Hora", value: "4:00 pm" },
+              { label: "Cliente", value: "Por confirmar", missing: true },
+            ]}
+            action="Confirmar cita"
+            message="¡Hola! ✅ Te confirmo tu cita mañana a las 4 pm para corte y tinte. ¿Me confirmas tu nombre? ¡Te esperamos!"
+          />
+        </div>
+      </section>
+
       {/* Beneficios */}
       <section id="beneficios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Beneficios</SectionLabel>
