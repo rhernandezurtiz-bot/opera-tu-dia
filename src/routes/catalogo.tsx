@@ -40,6 +40,10 @@ function emptyDraft(): Omit<CatalogItem, "id" | "createdAt"> {
     diasDisponibles: [],
     prepMinutos: 0,
     bloquearSinDisponibilidad: true,
+    categoria: "General",
+    tipoInventario: "producto_terminado",
+    stockMinimo: 0,
+    unidad: "piezas",
   };
 }
 
