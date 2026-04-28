@@ -151,13 +151,16 @@ export interface Negocio {
 
 /* ============== Canales (multicanal) ============== */
 
-export type Channel = "whatsapp" | "instagram" | "manual";
+export type Channel = "whatsapp" | "instagram" | "facebook" | "manual";
 
 export const CHANNEL_LABELS: Record<Channel, string> = {
   whatsapp: "WhatsApp",
   instagram: "Instagram",
+  facebook: "Facebook",
   manual: "Manual",
 };
+
+export const CHANNEL_LIST: Channel[] = ["whatsapp", "instagram", "facebook", "manual"];
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
 // Alias semántico — los mensajes pueden venir de cualquier canal
