@@ -613,8 +613,8 @@ export const useOperia = create<State>()(
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
     {
-      name: "operia-store-v8",
-      version: 8,
+      name: "operia-store-v9",
+      version: 9,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 7) {
@@ -641,6 +641,10 @@ export const useOperia = create<State>()(
               conectado: false,
             };
           }
+        }
+        if (version < 9) {
+          if (!persisted.autoReplyMode) persisted.autoReplyMode = "sugerido";
+          if (!Array.isArray(persisted.autoReplyLog)) persisted.autoReplyLog = [];
         }
         return persisted;
       },
