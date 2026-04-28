@@ -890,5 +890,3 @@ function CatalogValidationBlock({
     </Card>
   );
 }
-
-}
