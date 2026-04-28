@@ -14,6 +14,8 @@ import {
   TrendingUp,
   AlertOctagon,
   Wallet,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
