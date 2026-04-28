@@ -63,6 +63,11 @@ export interface CatalogItem {
   diasDisponibles: DayKey[];    // [] = todos los días
   prepMinutos: number;          // tiempo mínimo de preparación (minutos)
   bloquearSinDisponibilidad: boolean; // si true, falla cierra cobro automático
+  // Inventario
+  categoria: string;            // ej. "Pasteles", "Insumos", "Sesiones"
+  tipoInventario: InventoryKind;
+  stockMinimo: number;          // umbral para alerta de stock bajo
+  unidad: Unidad;
   createdAt: number;
 }
 
@@ -71,6 +76,10 @@ interface State {
   addItem: (i: Omit<CatalogItem, "id" | "createdAt">) => string;
   updateItem: (id: string, patch: Partial<CatalogItem>) => void;
   removeItem: (id: string) => void;
+  // Mutaciones de stock
+  decrementStock: (id: string, qty?: number) => void;
+  incrementStock: (id: string, qty?: number) => void;
+  setStock: (id: string, qty: number) => void;
 }
 
 const seed = (): CatalogItem[] => [
@@ -87,12 +96,16 @@ const seed = (): CatalogItem[] => [
     disponible: true,
     notas: "Solo manejamos pasteles de aprox. 12 personas.",
     stockDisponible: 0,
-    capacidadDiaria: 4,
+    capacidadDiaria: 5,
     horarioDesde: "10:00",
     horarioHasta: "19:00",
     diasDisponibles: ["mar", "mie", "jue", "vie", "sab"],
     prepMinutos: 60,
     bloquearSinDisponibilidad: true,
+    categoria: "Pasteles",
+    tipoInventario: "capacidad_diaria",
+    stockMinimo: 1,
+    unidad: "piezas",
     createdAt: Date.now(),
   },
 ];
