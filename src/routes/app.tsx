@@ -202,7 +202,7 @@ function Index() {
           })}
         </div>
       </section>
-
+      {aConfirmar > 0 && (
         <Card className="mb-8 p-4 md:p-5 rounded-xl border-foreground/15 bg-foreground/3 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
             <div className="h-9 w-9 rounded-lg bg-foreground text-background grid place-items-center shrink-0">
