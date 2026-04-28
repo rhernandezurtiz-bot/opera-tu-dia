@@ -18,17 +18,17 @@ import operiaIcon from "@/assets/operia-icon.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Operia — Convierte mensajes de WhatsApp en órdenes organizadas" },
+      { title: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
       {
         name: "description",
         content:
-          "Operia organiza tus pedidos de WhatsApp, te dice qué hacer hoy y evita que pierdas dinero por datos faltantes.",
+          "Operia convierte mensajes de WhatsApp en órdenes claras, te dice qué hacer y te ayuda a cobrar a tiempo. Menos caos, más dinero.",
       },
-      { property: "og:title", content: "Operia — Tu día, en orden" },
+      { property: "og:title", content: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
       {
         property: "og:description",
         content:
-          "Pega un mensaje de WhatsApp y obtén un pedido listo para confirmar, producir y entregar.",
+          "Convierte mensajes en órdenes, recupera pagos pendientes y entrega a tiempo. Empieza gratis.",
       },
     ],
   }),
