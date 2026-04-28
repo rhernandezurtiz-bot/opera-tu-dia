@@ -121,6 +121,9 @@ function Index() {
         </Card>
       )}
 
+      {/* Tu día en Operia — priority command center */}
+      <CommandCenter orders={orders} updateOrder={updateOrder} />
+
       <div className="grid lg:grid-cols-3 gap-8 lg:gap-10">
         <section className="lg:col-span-2">
           <SectionHeading
