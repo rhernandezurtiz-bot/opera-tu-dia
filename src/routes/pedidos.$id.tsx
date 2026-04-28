@@ -320,11 +320,20 @@ function Detalle() {
               </div>
             ) : (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
+                {fueraCatalogo && (
+                  <div className="p-3 rounded-2xl bg-warning/15 border border-warning/30 text-[13px]">
+                    <div className="font-medium mb-0.5">Este pedido necesita ajuste antes de cobrarse.</div>
+                    <div className="text-muted-foreground text-[12px]">
+                      Resuelve las alertas del catálogo arriba para habilitar el cobro automático.
+                    </div>
+                  </div>
+                )}
                 {/* Acciones principales */}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     className="rounded-full"
+                    disabled={fueraCatalogo}
                     onClick={() => {
                       const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
                       generatePaymentLink(order.id, provider);
