@@ -37,8 +37,72 @@ function InboxDetail() {
   const setMessageStatus = useOperia((s) => s.setMessageStatus);
   const linkMessageOrder = useOperia((s) => s.linkMessageOrder);
   const addOrder = useOperia((s) => s.addOrder);
+  const orders = useOperia((s) => s.orders);
+  const catalog = useCatalog((s) => s.items);
+  const autoReplyMode = useOperia((s) => s.autoReplyMode);
+  const logAutoReply = useOperia((s) => s.logAutoReply);
+  const updateAutoReplyLog = useOperia((s) => s.updateAutoReplyLog);
 
   const [draft, setDraft] = useState<Order | null>(null);
+  const [autoReplyText, setAutoReplyText] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  // Calcular respuesta automática para este mensaje
+  const auto = useMemo(() => {
+    if (!message) return null;
+    return autoReplyForMessage(message, catalog, orders);
+  }, [message, catalog, orders]);
+
+  useEffect(() => {
+    if (auto && autoReplyText === null) setAutoReplyText(auto.message);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auto?.message]);
+
+  const enviarAuto = async () => {
+    if (!message || !autoReplyText) return;
+    setSending(true);
+    const canal = message.canal ?? "whatsapp";
+    const logId = logAutoReply({
+      canal, cliente: message.cliente, messageId: message.id, ordenId: message.ordenId,
+      recibido: message.texto,
+      intencion: auto?.intent ?? "desconocido",
+      decision: auto?.decision ?? "requiere_revision",
+      respuesta: autoReplyText,
+      enviado: false, modo: autoReplyMode === "manual" ? "manual" : autoReplyMode,
+      resultado: "pendiente",
+    });
+
+    let result: { ok: boolean; error?: string } = { ok: false, error: "Sin destinatario" };
+    try {
+      if (canal === "instagram" && message.canalUserId) {
+        const r = await sendInstagramDM({ userId: message.canalUserId, message: autoReplyText });
+        result = { ok: r.ok, error: r.error };
+      } else if (canal === "facebook" && message.canalUserId) {
+        const r = await sendFacebookMessage({ userId: message.canalUserId, message: autoReplyText });
+        result = { ok: r.ok, error: r.error };
+      } else if (message.telefono) {
+        const r = await sendWhatsAppMessage({ phone: message.telefono, message: autoReplyText });
+        result = { ok: r.ok, error: r.error };
+      }
+    } catch (err: any) {
+      result = { ok: false, error: err?.message ?? "Error desconocido" };
+    }
+
+    updateAutoReplyLog(logId, {
+      enviado: result.ok,
+      resultado: result.ok ? "ok" : "error",
+      error: result.error,
+    });
+
+    setSending(false);
+    if (result.ok) {
+      toast.success(`Respuesta enviada por ${CHANNEL_LABELS[canal]}`);
+      setMessageStatus(message.id, "respondido");
+    } else {
+      toast.error(result.error ?? "No se pudo enviar la respuesta");
+    }
+  };
 
   const analizar = () => {
     if (!message) return;
