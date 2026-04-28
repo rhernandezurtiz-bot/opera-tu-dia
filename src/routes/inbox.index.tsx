@@ -150,6 +150,7 @@ function InboxPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-[14.5px] truncate">{m.cliente}</span>
+                      <ChannelBadge canal={m.canal} compact />
                       {m.telefono && m.cliente !== m.telefono && (
                         <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1">
                           <Phone className="h-3 w-3" />
