@@ -536,9 +536,10 @@ export const useOperia = create<State>()(
           orders: s.orders.map((o) => {
             if (o.id !== id) return o;
             const events = o.paymentEvents ?? [];
+            const canalLabel = CHANNEL_LABELS[o.canal ?? "whatsapp"];
             const detail = payload.ok
-              ? `Enviado por WhatsApp · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
-              : `Falló envío por WhatsApp · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
+              ? `Enviado por ${canalLabel} · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
+              : `Falló envío por ${canalLabel} · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
             return {
               ...o,
               linkSentAt: payload.ok ? payload.at : o.linkSentAt,
