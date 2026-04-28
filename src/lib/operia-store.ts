@@ -213,6 +213,42 @@ export interface FacebookConfig {
 
 export type ChannelMode = "demo" | "produccion";
 
+/* ============== Auto-respuesta ============== */
+
+export type AutoReplyMode = "manual" | "sugerido" | "automatico";
+
+export type AutoReplyIntent =
+  | "pedido_nuevo"
+  | "seguimiento"
+  | "pregunta"
+  | "cotizacion"
+  | "desconocido";
+
+export type AutoReplyDecision =
+  | "venta_posible"
+  | "sin_disponibilidad"
+  | "faltan_datos"
+  | "listo_cobrar"
+  | "ya_pago"
+  | "requiere_revision";
+
+export interface AutoReplyLogEntry {
+  id: string;
+  at: number;
+  canal: Channel;
+  cliente: string;
+  messageId?: string;
+  ordenId?: string;
+  recibido: string;
+  intencion: AutoReplyIntent;
+  decision: AutoReplyDecision;
+  respuesta: string;
+  enviado: boolean;
+  modo: AutoReplyMode;
+  resultado?: "ok" | "error" | "pendiente";
+  error?: string;
+}
+
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); };
 
