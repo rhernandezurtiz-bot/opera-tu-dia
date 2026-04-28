@@ -568,6 +568,33 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
+function SolutionItem({
+  n,
+  icon: Icon,
+  title,
+  body,
+}: {
+  n: string;
+  icon: any;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Card className="p-6 rounded-xl h-full flex flex-col">
+      <div className="flex items-center justify-between mb-5">
+        <div className="h-9 w-9 rounded-lg border border-border grid place-items-center">
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums">
+          {n}
+        </span>
+      </div>
+      <div className="text-[15.5px] font-semibold tracking-tight mb-1.5">{title}</div>
+      <p className="text-[13px] text-muted-foreground leading-relaxed">{body}</p>
+    </Card>
+  );
+}
+
 function ProblemItem({ title, detail }: { title: string; detail: string }) {
   return (
     <div className="bg-background p-6 md:p-7">
