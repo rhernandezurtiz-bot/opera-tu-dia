@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook } from "lucide-react";
+import { useOperia, typeLabels, type RiskRules, type OrderType, type AutoReplyMode, CHANNEL_LABELS } from "@/lib/operia-store";
+import { DECISION_LABELS, INTENT_LABELS } from "@/lib/auto-reply";
+import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock, Instagram, Facebook, Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
