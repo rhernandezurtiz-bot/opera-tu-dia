@@ -391,7 +391,7 @@ function Landing() {
             </div>
           </div>
           <Button asChild variant="secondary" className="h-10 shrink-0">
-            <a href="#contacto">Calcular impacto</a>
+            <a href="#contacto">Solicitar demo</a>
           </Button>
         </Card>
       </section>
