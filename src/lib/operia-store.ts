@@ -89,6 +89,11 @@ export interface Order {
   ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
   ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
   paymentLink?: string; // link de pago generado (simulado)
+  paymentLinkAt?: number; // cuando se generó
+  paymentPaidAt?: number; // cuando se pagó
+  paymentReminderAt?: number; // último recordatorio enviado
+  paymentEvents?: PaymentEvent[];
+  paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
