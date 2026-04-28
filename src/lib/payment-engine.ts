@@ -46,9 +46,9 @@ export function usePaymentEngine() {
       for (const o of orders) {
         if (o.estado === "cancelado" || o.estado === "entregado") continue;
 
-        // Bloquea cobro automático si el pedido no coincide con catálogo
-        const validation = validateOrder(o, catalog);
-        const blockedByCatalog = validation.status === "fuera_catalogo";
+        // Bloquea cobro automático si la validación de catálogo lo indica
+        const validation = validateOrder(o, catalog, orders);
+        const blockedByCatalog = validation.blockPayment;
 
         // Regla 1: criterios listos y sin link → generar link + enviar WhatsApp
         if (!o.paymentLink && !blockedByCatalog && isReadyForAutoPayment(o) && !sendingNow.has(o.id)) {

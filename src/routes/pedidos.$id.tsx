@@ -29,7 +29,7 @@ import {
   money,
   nextAction,
 } from "@/lib/ui-store";
-import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer } from "@/lib/catalog-store";
+import { useCatalog, validateOrder, buildOutOfCatalogMessage, buildAlternativeOffer, AVAILABILITY_LABEL, type CatalogValidation, type CheckResult, type AvailabilityStatus } from "@/lib/catalog-store";
 import {
   ArrowLeft,
   Copy,
@@ -104,9 +104,10 @@ function Detalle() {
   // Historial del cliente: excluir la orden actual
   const stats = cKey ? getClientStats(allOrders.filter((o) => o.id !== order.id), cKey) : null;
 
-  // Validación contra catálogo
-  const validation = validateOrder(order, catalog);
+  // Validación contra catálogo (incluye capacidad diaria con resto de pedidos)
+  const validation = validateOrder(order, catalog, allOrders);
   const fueraCatalogo = validation.status === "fuera_catalogo";
+  const blockPayment = validation.blockPayment;
 
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
@@ -248,6 +249,11 @@ function Detalle() {
               window.open(`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(t)}`, "_blank", "noopener,noreferrer");
             }}
             onAlternative={() => buildAlternativeOffer(catalog, order.tipo)}
+            onRecheck={() => {
+              if (validation.availability === "disponible") toast.success("Disponibilidad confirmada ✓");
+              else if (validation.availability === "no_disponible") toast.error("No disponible — revisa el checklist");
+              else toast.message("Requiere revisión manual");
+            }}
           />
 
           {/* Cobro del pedido */}
@@ -320,7 +326,7 @@ function Detalle() {
               </div>
             ) : (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
-                {fueraCatalogo && (
+                {blockPayment && (
                   <div className="p-3 rounded-2xl bg-warning/15 border border-warning/30 text-[13px]">
                     <div className="font-medium mb-0.5">Este pedido necesita ajuste antes de cobrarse.</div>
                     <div className="text-muted-foreground text-[12px]">
@@ -333,7 +339,7 @@ function Detalle() {
                   <Button
                     size="sm"
                     className="rounded-full"
-                    disabled={fueraCatalogo}
+                    disabled={blockPayment}
                     onClick={() => {
                       const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
                       generatePaymentLink(order.id, provider);
@@ -364,7 +370,7 @@ function Detalle() {
                 </div>
 
                 {/* Auto-envío: cuando se cumplen los criterios + catálogo OK */}
-                {!fueraCatalogo && isReadyForAutoPayment(order) && order.telefono && (
+                {!blockPayment && isReadyForAutoPayment(order) && order.telefono && (
                   <div className="p-3 rounded-2xl bg-primary/5 border border-primary/25">
                     <div className="flex items-start gap-2 mb-2">
                       <Sparkles className="h-4 w-4 mt-0.5 text-primary shrink-0" />
@@ -784,61 +790,101 @@ function NextActionPanel({
 }
 
 /* -------- Validación contra catálogo -------- */
-import type { CatalogValidation } from "@/lib/catalog-store";
+
+function AvailabilityBadge({ status }: { status: AvailabilityStatus }) {
+  const map: Record<AvailabilityStatus, string> = {
+    disponible: "bg-success/15 text-success border-success/30",
+    no_disponible: "bg-danger/15 text-danger border-danger/30",
+    pendiente: "bg-warning/15 text-foreground/80 border-warning/30",
+    revision: "bg-secondary text-foreground/70 border-border",
+  };
+  const emoji: Record<AvailabilityStatus, string> = {
+    disponible: "🟢", no_disponible: "🔴", pendiente: "🟡", revision: "⚪",
+  };
+  return (
+    <span className={`text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${map[status]}`}>
+      {emoji[status]} {AVAILABILITY_LABEL[status]}
+    </span>
+  );
+}
+
+function CheckRow({ c }: { c: CheckResult }) {
+  const tone =
+    c.status === "ok" ? "text-success" :
+    c.status === "fail" ? "text-danger" :
+    c.status === "warn" ? "text-warning" : "text-muted-foreground";
+  const icon =
+    c.status === "ok" ? "✓" :
+    c.status === "fail" ? "✕" :
+    c.status === "warn" ? "!" : "·";
+  return (
+    <li className="flex items-center justify-between gap-3 py-1 text-[13px]">
+      <span className="flex items-center gap-2 min-w-0">
+        <span className={`inline-grid place-items-center h-5 w-5 rounded-full border bg-background ${tone}`}>{icon}</span>
+        <span className="truncate">{c.label}</span>
+      </span>
+      {c.detail && <span className="text-[11.5px] text-muted-foreground truncate">{c.detail}</span>}
+    </li>
+  );
+}
 
 function CatalogValidationBlock({
   validation,
   onCopy,
   onWhatsApp,
   onAlternative,
+  onRecheck,
 }: {
   validation: CatalogValidation;
   onCopy: (text: string) => void;
   onWhatsApp: (text: string) => void;
   onAlternative: () => string;
+  onRecheck: () => void;
 }) {
-  if (validation.status === "sin_match") return null;
+  if (validation.status === "sin_match" && validation.checks.length === 0) return null;
 
-  if (validation.status === "ok") {
-    return (
-      <Card className="p-3.5 rounded-xl border-success/30 bg-success/8 flex items-center gap-2">
-        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
-        <div className="text-[13px]">
-          <span className="font-medium text-success">Coincide con tu catálogo</span>
-          {validation.match && <> · {validation.match.nombre}</>}
-        </div>
-      </Card>
-    );
-  }
+  const isOk = validation.availability === "disponible";
+  const isFail = validation.availability === "no_disponible";
 
-  // fuera_catalogo
-  const msg = buildOutOfCatalogMessage(validation);
   return (
-    <Card className="p-4 rounded-xl border-warning/40 bg-warning/10">
-      <div className="flex items-center gap-2 mb-2">
-        <AlertTriangle className="h-4 w-4 text-foreground/70" />
-        <h3 className="font-display text-[15px]">Solicitud fuera de catálogo</h3>
-        <span className="ml-auto text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/15 text-danger border border-danger/30">
-          No confirmable todavía
-        </span>
+    <Card className={`p-4 rounded-xl ${
+      isOk ? "border-success/30 bg-success/5" :
+      isFail ? "border-warning/40 bg-warning/10" :
+      "border-border"
+    }`}>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        {isFail ? <AlertTriangle className="h-4 w-4 text-foreground/70" />
+          : <CheckCircle2 className={`h-4 w-4 ${isOk ? "text-success" : "text-muted-foreground"}`} />}
+        <h3 className="font-display text-[15px]">Validación previa</h3>
+        <span className="ml-auto"><AvailabilityBadge status={validation.availability} /></span>
       </div>
-      <ul className="space-y-1 mb-3">
-        {validation.alerts.map((a, i) => (
-          <li key={i} className="text-[13px] text-foreground/85 flex gap-2">
-            <span className="text-danger">•</span> {a}
-          </li>
-        ))}
-      </ul>
-      <div className="bg-background border border-border rounded-lg p-2.5 text-[13px] whitespace-pre-wrap mb-3">
-        {msg}
-      </div>
+
+      {validation.checks.length > 0 && (
+        <ul className="mb-3 divide-y divide-border/60 border border-border rounded-lg bg-background px-3">
+          {validation.checks.map((c) => <CheckRow key={c.key} c={c} />)}
+        </ul>
+      )}
+
+      {isFail && validation.alerts.length > 0 && (
+        <div className="bg-background border border-border rounded-lg p-2.5 text-[13px] whitespace-pre-wrap mb-3">
+          {buildOutOfCatalogMessage(validation)}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="secondary" className="rounded-full" onClick={() => onCopy(msg)}>
-          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={onRecheck}>
+          <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Confirmar disponibilidad
         </Button>
-        <Button size="sm" className="rounded-full" onClick={() => onWhatsApp(msg)}>
-          <Send className="h-3.5 w-3.5 mr-1" /> Enviar por WhatsApp
-        </Button>
+        {isFail && (
+          <>
+            <Button size="sm" className="rounded-full" onClick={() => onWhatsApp(buildOutOfCatalogMessage(validation))}>
+              <Send className="h-3.5 w-3.5 mr-1" /> Enviar aviso por WhatsApp
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => onCopy(buildOutOfCatalogMessage(validation))}>
+              <Copy className="h-3.5 w-3.5 mr-1" /> Copiar aviso
+            </Button>
+          </>
+        )}
         <Button size="sm" variant="ghost" className="rounded-full" onClick={() => {
           const alt = onAlternative();
           onCopy(alt);

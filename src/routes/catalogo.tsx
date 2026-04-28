@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCatalog, type CatalogItem, type CatalogKind } from "@/lib/catalog-store";
-import { Plus, Trash2, Save, Package, Sparkles, CalendarClock } from "lucide-react";
+import { useCatalog, type CatalogItem, type CatalogKind, type DayKey, ALL_DAYS, DAY_LABELS } from "@/lib/catalog-store";
+import { Plus, Trash2, Save, Package } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/catalogo")({
@@ -33,6 +33,13 @@ function emptyDraft(): Omit<CatalogItem, "id" | "createdAt"> {
     anticipacionHoras: 24,
     disponible: true,
     notas: "",
+    stockDisponible: 0,
+    capacidadDiaria: 0,
+    horarioDesde: "",
+    horarioHasta: "",
+    diasDisponibles: [],
+    prepMinutos: 0,
+    bloquearSinDisponibilidad: true,
   };
 }
 
@@ -114,6 +121,11 @@ function CatalogCard({ item, onRemove, onUpdate }: { item: CatalogItem; onRemove
         {item.precioBase > 0 && <Field label="Precio base" value={`$${item.precioBase.toLocaleString("es-MX")}`} />}
         {item.capacidad && <Field label="Capacidad" value={item.capacidad} />}
         {item.anticipacionHoras > 0 && <Field label="Anticipación" value={`${item.anticipacionHoras}h`} />}
+        {item.prepMinutos > 0 && <Field label="Preparación" value={`${item.prepMinutos} min`} />}
+        {item.stockDisponible > 0 && <Field label="Stock" value={String(item.stockDisponible)} />}
+        {item.capacidadDiaria > 0 && <Field label="Cap. diaria" value={String(item.capacidadDiaria)} />}
+        {(item.horarioDesde && item.horarioHasta) && <Field label="Horario" value={`${item.horarioDesde}–${item.horarioHasta}`} />}
+        {item.diasDisponibles.length > 0 && <Field label="Días" value={item.diasDisponibles.map((d) => DAY_LABELS[d]).join(", ")} />}
       </div>
       {item.opciones.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
@@ -179,10 +191,60 @@ function ItemForm({ value, onChange }: { value: Omit<CatalogItem, "id" | "create
       <Labeled label="Tiempo mínimo de anticipación (horas)">
         <Input type="number" value={value.anticipacionHoras || ""} onChange={(e) => set("anticipacionHoras", Number(e.target.value) || 0)} />
       </Labeled>
+      <Labeled label="Tiempo mínimo de preparación (minutos)">
+        <Input type="number" value={value.prepMinutos || ""} onChange={(e) => set("prepMinutos", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Stock disponible (0 = no aplica)">
+        <Input type="number" value={value.stockDisponible || ""} onChange={(e) => set("stockDisponible", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Capacidad diaria (0 = ilimitada)">
+        <Input type="number" value={value.capacidadDiaria || ""} onChange={(e) => set("capacidadDiaria", Number(e.target.value) || 0)} />
+      </Labeled>
+      <Labeled label="Horario desde (HH:mm)">
+        <Input type="time" value={value.horarioDesde} onChange={(e) => set("horarioDesde", e.target.value)} />
+      </Labeled>
+      <Labeled label="Horario hasta (HH:mm)">
+        <Input type="time" value={value.horarioHasta} onChange={(e) => set("horarioHasta", e.target.value)} />
+      </Labeled>
+      <Labeled label="Días disponibles (vacío = todos)" full>
+        <div className="flex flex-wrap gap-1.5">
+          {ALL_DAYS.map((d) => {
+            const active = value.diasDisponibles.includes(d);
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => {
+                  const next = active
+                    ? value.diasDisponibles.filter((x) => x !== d)
+                    : [...value.diasDisponibles, d];
+                  set("diasDisponibles", next as DayKey[]);
+                }}
+                className={`px-3 h-8 rounded-full text-[12px] border transition-colors ${
+                  active
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-secondary text-foreground/70 border-border hover:bg-secondary/70"
+                }`}
+              >
+                {DAY_LABELS[d]}
+              </button>
+            );
+          })}
+        </div>
+      </Labeled>
       <Labeled label="Disponible">
         <div className="flex items-center gap-2 h-10">
           <Switch checked={value.disponible} onCheckedChange={(v) => set("disponible", v)} />
           <span className="text-[13px] text-muted-foreground">{value.disponible ? "Sí" : "No"}</span>
+        </div>
+      </Labeled>
+      <Labeled label="Bloquear venta si no hay disponibilidad">
+        <div className="flex items-center gap-2 h-10">
+          <Switch
+            checked={value.bloquearSinDisponibilidad}
+            onCheckedChange={(v) => set("bloquearSinDisponibilidad", v)}
+          />
+          <span className="text-[13px] text-muted-foreground">{value.bloquearSinDisponibilidad ? "Sí" : "No"}</span>
         </div>
       </Labeled>
       <Labeled label="Notas internas" full>
