@@ -39,14 +39,19 @@ export const Route = createFileRoute("/app")({
 function Index() {
   // Activa motor de cobro automático (genera links, simula webhooks, recordatorios)
   usePaymentEngine();
+  // Activa motor de inventario (descuenta/restaura stock según ciclo del pedido)
+  useInventoryEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
+  const catalogItems = useCatalog((s) => s.items);
   const today = todayStr();
   const todays = orders.filter((o) => o.fechaEntrega === today && o.estado !== "cancelado");
   const risky = orders.filter(
     (o) => (o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado" && o.estado !== "cancelado",
   );
+  const inv = getInventoryMetrics(catalogItems, orders);
+  const capLibreHoy = inv.capacidadHoy.reduce((a, c) => a + c.libre, 0);
 
   const aConfirmar = todays.filter((o) => o.estado === "nuevo").length;
   const porHacer = todays.filter((o) => o.estado !== "entregado").length;
