@@ -18,17 +18,17 @@ import operiaIcon from "@/assets/operia-icon.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Operia — Convierte mensajes de WhatsApp en órdenes organizadas" },
+      { title: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
       {
         name: "description",
         content:
-          "Operia organiza tus pedidos de WhatsApp, te dice qué hacer hoy y evita que pierdas dinero por datos faltantes.",
+          "Operia convierte mensajes de WhatsApp en órdenes claras, te dice qué hacer y te ayuda a cobrar a tiempo. Menos caos, más dinero.",
       },
-      { property: "og:title", content: "Operia — Tu día, en orden" },
+      { property: "og:title", content: "Operia — Deja de perder pedidos y dinero en WhatsApp" },
       {
         property: "og:description",
         content:
-          "Pega un mensaje de WhatsApp y obtén un pedido listo para confirmar, producir y entregar.",
+          "Convierte mensajes en órdenes, recupera pagos pendientes y entrega a tiempo. Empieza gratis.",
       },
     ],
   }),
@@ -57,7 +57,7 @@ function Landing() {
               <Link to="/login">Entrar</Link>
             </Button>
             <Button asChild size="sm" className="h-9">
-              <Link to="/login">Probar Operia</Link>
+              <Link to="/login">Empieza gratis</Link>
             </Button>
           </div>
         </div>
@@ -71,18 +71,19 @@ function Landing() {
             <span>Para negocios que venden por WhatsApp</span>
           </div>
           <h1 className="text-[40px] md:text-[58px] leading-[1.05] font-semibold tracking-tight">
-            Convierte mensajes de WhatsApp en{" "}
-            <span className="bg-foreground text-background px-2 rounded-md">órdenes organizadas</span>.
+            Deja de perder pedidos y{" "}
+            <span className="bg-foreground text-background px-2 rounded-md">dinero</span>{" "}
+            en WhatsApp.
           </h1>
           <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
-            Pega un mensaje y Operia lo convierte en un pedido con cliente, fecha,
-            hora, dirección y datos faltantes. Te dice qué hacer hoy y evita errores
-            que te cuestan dinero.
+            Operia convierte mensajes en órdenes claras, te dice qué hacer y te
+            ayuda a cobrar a tiempo. Menos caos, menos errores, más dinero en la
+            caja.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-12 px-6 text-[14px]">
               <Link to="/login">
-                Probar Operia <ArrowRight className="h-4 w-4" />
+                Empieza gratis <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <a
@@ -93,7 +94,7 @@ function Landing() {
             </a>
           </div>
           <p className="mt-5 text-[12.5px] text-muted-foreground">
-            Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
+            Sin tarjeta. Sin instalación. Tu primer pedido organizado en menos de 1 minuto.
           </p>
         </div>
       </section>
@@ -102,12 +103,12 @@ function Landing() {
       <section id="como-funciona" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Cómo funciona</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          De un mensaje confuso a un pedido listo en segundos.
+          De un WhatsApp confuso a un pedido cobrado, sin perder tiempo.
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
-          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia un mensaje de WhatsApp y pégalo en Operia." />
-          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y lo que falta." />
-          <Step n="3" icon={ChefHat} title="Sabes qué hacer" body="Confirma, produce y entrega siguiendo el plan del día." />
+          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia el WhatsApp del cliente y pégalo. Operia lee y entiende." />
+          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y qué falta para no perder el pedido." />
+          <Step n="3" icon={ChefHat} title="Te dice qué hacer" body="Confirma, cobra y entrega siguiendo el plan del día. Cero adivinar." />
         </div>
       </section>
 
@@ -115,13 +116,13 @@ function Landing() {
       <section id="beneficios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Beneficios</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Menos errores, más tiempo, más dinero.
+          Cada pedido cuenta. Cada peso, también.
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
-          <Benefit icon={AlertCircle} title="Nunca pierdas un pedido" body="Operia te avisa qué falta confirmar y qué tiene riesgo." />
-          <Benefit icon={Wallet} title="Cobra a tiempo" body="Controla anticipos, pagos pendientes e ingresos del día." />
-          <Benefit icon={Users} title="Recuerda a tus clientes" body="Historial de cada cliente: qué pidió, cuánto gastó y cuándo." />
-          <Benefit icon={ChefHat} title="Plan del día claro" body="Sabes qué producir y a qué hora, sin pegarte a la libreta." />
+          <Benefit icon={AlertCircle} title="No pierdas pedidos" body="Operia te avisa qué falta antes de que el cliente desaparezca o cancele." />
+          <Benefit icon={Wallet} title="Cobra a tiempo" body="Detecta pagos pendientes y te da el mensaje listo para pedir el anticipo." />
+          <Benefit icon={ChefHat} title="Ten control del día" body="Sabes qué producir, a qué hora y para quién. Sin libretas, sin caos." />
+          <Benefit icon={Users} title="Sabes qué hacer ahora" body="Cada pedido tiene una acción clara: confirmar, cobrar, recordar o entregar." />
         </div>
       </section>
 
@@ -200,15 +201,15 @@ function Landing() {
       <section id="contacto" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border">
         <Card className="p-8 md:p-12 rounded-2xl text-center">
           <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight max-w-2xl mx-auto">
-            Empieza a ordenar tu día en menos de 2 minutos.
+            Cada pedido perdido es dinero que ya no vuelve.
           </h2>
           <p className="text-muted-foreground mt-3 max-w-xl mx-auto text-[14.5px]">
-            Sin tarjeta. Sin instalación. Pega tu primer mensaje y verás la diferencia.
+            Empieza gratis hoy. Pega tu primer mensaje y deja de perder pedidos en WhatsApp.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
               <Link to="/login">
-                Probar Operia <ArrowRight className="h-4 w-4" />
+                Empieza gratis <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <a
