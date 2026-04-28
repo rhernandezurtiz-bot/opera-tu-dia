@@ -326,9 +326,22 @@ export const useOperia = create<State>()(
         const has = s.negocio.tiposActivos.includes(t);
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
-      generatePaymentLink: (id) => {
+      generatePaymentLink: (id, providerArg) => {
+        const state = useOperia.getState();
+        const order = state.orders.find((o) => o.id === id);
+        const cfg = state.negocio.payments;
+        // Si el config dice "ambos", default = mercadopago a menos que se pase explícito
+        const provider: PaymentProvider =
+          providerArg ??
+          (cfg.proveedorPrincipal === "stripe"
+            ? "stripe"
+            : "mercadopago");
         const token = Math.random().toString(36).slice(2, 10);
-        const link = `https://pay.operia.app/${id}/${token}`;
+        const orderShort = id.slice(0, 8);
+        const link =
+          provider === "mercadopago"
+            ? `https://mercadopago.com.mx/checkout/v1/redirect?pref_id=demo_${orderShort}_${token}`
+            : `https://checkout.stripe.com/c/pay/demo_${orderShort}_${token}`;
         const now = Date.now();
         set((s) => ({
           orders: s.orders.map((o) => {
@@ -338,21 +351,32 @@ export const useOperia = create<State>()(
               s.negocio.autoCobroEnabled && o.precio >= s.negocio.umbralAnticipo
                 ? "anticipo"
                 : "total";
+            const anticipo =
+              mode === "anticipo"
+                ? Math.round((o.precio * s.negocio.porcentajeAnticipo) / 100)
+                : o.precio;
             const events = o.paymentEvents ?? [];
             return recompute({
               ...o,
               paymentLink: link,
               paymentLinkAt: now,
               paymentMode: mode,
+              paymentProvider: provider,
+              anticipoMonto: anticipo,
               pago: "link_enviado",
               paymentEvents: [
                 ...events,
-                { kind: "link_generado", at: now, detail: mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total" },
-                { kind: "mensaje_enviado", at: now, detail: "Mensaje de cobro enviado por WhatsApp" },
+                {
+                  kind: "link_generado",
+                  at: now,
+                  detail: `${provider === "mercadopago" ? "Mercado Pago" : "Stripe"} · ${mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total"}`,
+                },
               ],
             });
           }),
         }));
+        // Suprimir warning unused
+        void order;
         return link;
       },
       markPaymentPaid: (id) => {
