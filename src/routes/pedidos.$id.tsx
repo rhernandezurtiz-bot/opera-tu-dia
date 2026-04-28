@@ -987,19 +987,33 @@ function DecisionCard({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" className="rounded-full" onClick={enviarWhatsApp}>
-          <Send className="h-3.5 w-3.5 mr-1" /> Enviar respuesta
+        <Button
+          size="sm"
+          className="rounded-full"
+          onClick={() => {
+            if (decision.closingAction === "SEND_PAYMENT_LINK" && canCharge) {
+              onGenerarCobro();
+            }
+            enviarWhatsApp();
+          }}
+        >
+          {decision.closingAction === "SEND_PAYMENT_LINK" && <Wallet className="h-3.5 w-3.5 mr-1" />}
+          {decision.closingAction === "OFFER_ALTERNATIVE" && <Sparkles className="h-3.5 w-3.5 mr-1" />}
+          {(decision.closingAction === "ASK_MINIMAL_INFO" || decision.closingAction === "ASK_CONFIRMATION") && (
+            <Send className="h-3.5 w-3.5 mr-1" />
+          )}
+          {CLOSING_LABEL[decision.closingAction]}
         </Button>
         <Button size="sm" variant="secondary" className="rounded-full" onClick={copiarMensaje}>
-          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
         </Button>
-        {decision.alternatives.length > 0 && (
+        {decision.alternatives.length > 0 && decision.closingAction !== "OFFER_ALTERNATIVE" && (
           <Button size="sm" variant="secondary" className="rounded-full" onClick={copiarAlternativa}>
             <Sparkles className="h-3.5 w-3.5 mr-1" /> Ofrecer alternativa
           </Button>
         )}
-        {canCharge && (
-          <Button size="sm" variant="secondary" className="rounded-full" onClick={onGenerarCobro}>
+        {canCharge && decision.closingAction !== "SEND_PAYMENT_LINK" && (
+          <Button size="sm" variant="ghost" className="rounded-full" onClick={onGenerarCobro}>
             <Wallet className="h-3.5 w-3.5 mr-1" /> Generar cobro
           </Button>
         )}
