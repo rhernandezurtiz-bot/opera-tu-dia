@@ -348,7 +348,7 @@ export function nextAction(o: Order): NextAction | null {
   }
 
   // 7) Pago pendiente sin urgencia → recordar pago
-  if (o.pago === "pendiente" || o.pago === "anticipo_solicitado") {
+  if (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "fallido") {
     return {
       kind: "recordar_pago",
       label: "Recordar pago",
