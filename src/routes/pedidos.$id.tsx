@@ -782,3 +782,70 @@ function NextActionPanel({
     </Card>
   );
 }
+
+/* -------- Validación contra catálogo -------- */
+import type { CatalogValidation } from "@/lib/catalog-store";
+
+function CatalogValidationBlock({
+  validation,
+  onCopy,
+  onWhatsApp,
+  onAlternative,
+}: {
+  validation: CatalogValidation;
+  onCopy: (text: string) => void;
+  onWhatsApp: (text: string) => void;
+  onAlternative: () => string;
+}) {
+  if (validation.status === "sin_match") return null;
+
+  if (validation.status === "ok") {
+    return (
+      <Card className="p-3.5 rounded-xl border-success/30 bg-success/8 flex items-center gap-2">
+        <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+        <div className="text-[13px]">
+          <span className="font-medium text-success">Coincide con tu catálogo</span>
+          {validation.match && <> · {validation.match.nombre}</>}
+        </div>
+      </Card>
+    );
+  }
+
+  // fuera_catalogo
+  const msg = buildOutOfCatalogMessage(validation);
+  return (
+    <Card className="p-4 rounded-xl border-warning/40 bg-warning/10">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="h-4 w-4 text-foreground/70" />
+        <h3 className="font-display text-[15px]">Solicitud fuera de catálogo</h3>
+        <span className="ml-auto text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/15 text-danger border border-danger/30">
+          No confirmable todavía
+        </span>
+      </div>
+      <ul className="space-y-1 mb-3">
+        {validation.alerts.map((a, i) => (
+          <li key={i} className="text-[13px] text-foreground/85 flex gap-2">
+            <span className="text-danger">•</span> {a}
+          </li>
+        ))}
+      </ul>
+      <div className="bg-background border border-border rounded-lg p-2.5 text-[13px] whitespace-pre-wrap mb-3">
+        {msg}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" className="rounded-full" onClick={() => onCopy(msg)}>
+          <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
+        </Button>
+        <Button size="sm" className="rounded-full" onClick={() => onWhatsApp(msg)}>
+          <Send className="h-3.5 w-3.5 mr-1" /> Enviar por WhatsApp
+        </Button>
+        <Button size="sm" variant="ghost" className="rounded-full" onClick={() => {
+          const alt = onAlternative();
+          onCopy(alt);
+        }}>
+          <Sparkles className="h-3.5 w-3.5 mr-1" /> Ofrecer alternativa
+        </Button>
+      </div>
+    </Card>
+  );
+}
