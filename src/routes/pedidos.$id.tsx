@@ -129,6 +129,9 @@ function Detalle() {
         }
       />
 
+      {/* Próxima acción sugerida */}
+      <NextActionPanel order={order} onCopy={copiar} onAdvance={(estado) => { updateOrder(order.id, { estado }); toast.success("Estado actualizado"); }} />
+
       {/* Pipeline 1-clic */}
       <Card className="p-3 rounded-2xl mb-5 flex flex-wrap gap-2 items-center">
         <span className="text-xs text-muted-foreground px-2">Avanzar pedido:</span>
