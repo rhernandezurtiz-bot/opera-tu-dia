@@ -153,36 +153,53 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
 
   // --- B. Bloqueos duros → respuestas específicas con alternativa ---
 
-  // 1. Producto no existe en catálogo
+  const sabor = validation.parsed.sabor;
+  const fechaISO = matchedOrder?.fechaEntrega || draftOrder?.fechaEntrega;
+
+  // 1. Producto no existe en catálogo → recomendar la mejor opción disponible
   if (p.producto || (!m && validation.parsed.productoTexto)) {
+    const best = selectBestOption(catalog, { personas, sabor, fechaISO, tipo: draftOrder?.tipo }, orders);
+    if (best) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Eso no lo manejamos, pero te recomiendo: ${formatBest(best)}. ${capitalize(best.reason)}. ¿Te lo aparto?`,
+        { validation, draftOrder });
+    }
     const opciones = buildAlternativeOffer(catalog);
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Por ahora no manejamos eso, pero te puedo ofrecer:\n\n${stripHeader(opciones)}\n\n¿Te late alguna?`,
+      `Hola 👋 Eso no lo manejamos, pero te puedo ofrecer:\n\n${stripHeader(opciones)}\n\n¿Te late alguna?`,
       { validation, draftOrder });
   }
 
-  // 2. Capacidad excedida (ej. 25 personas, máx 12)
+  // 2. Capacidad excedida (ej. 25 personas, máx 12) → combinación real de variantes
   if (p.capacidad && m && personas) {
-    const combo = suggestCombo(catalog, personas, m);
-    const alt = combo
-      ? `puedo ofrecerte ${combo}`
-      : `puedo ofrecerte varias piezas para cubrir el total`;
+    const combo = suggestVariantCombo(catalog, personas, fechaISO, orders, { sabor, tipo: draftOrder?.tipo });
+    if (combo) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Para ${personas} personas no manejamos ese tamaño, pero puedo armarte ${formatCombo(combo)}. ¿Te funciona?`,
+        { validation, draftOrder });
+    }
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Para ${personas} personas no manejamos ese tamaño, pero ${alt}. ¿Te funciona?`,
+      `Hola 👋 Para ${personas} personas no manejamos ese tamaño. ¿Quieres que te proponga varias piezas que sumen el total?`,
       { validation, draftOrder });
   }
 
-  // 3. Stock insuficiente
+  // 3. Stock insuficiente → mejor alternativa disponible
   if (p.stock && m) {
+    const best = selectBestOption(catalog, { personas, sabor, fechaISO, tipo: draftOrder?.tipo }, orders);
+    if (best && best.item.id !== m.id) {
+      return finalize(intent, "sin_disponibilidad", canal,
+        `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo: ${formatBest(best)}. ¿Te lo aparto?`,
+        { validation, draftOrder });
+    }
     const alt = buildAlternativeOffer(catalog, draftOrder?.tipo);
     return finalize(intent, "sin_disponibilidad", canal,
-      `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo disponible:\n\n${stripHeader(alt)}\n\n¿Te interesa alguno?`,
+      `Hola 👋 Justo se nos agotó ${m.nombre.toLowerCase()}. Lo que sí tengo:\n\n${stripHeader(alt)}\n\n¿Te interesa alguno?`,
       { validation, draftOrder });
   }
 
-  // 4. Tiempo de preparación / anticipación insuficiente
+  // 4. Tiempo de preparación / anticipación insuficiente → próxima fecha real
   if ((p.anticipacion || p.prep) && m) {
-    const next = nextAvailableDate(m);
+    const next = nextAvailableDate(m, orders);
     const cuando = next ? `la fecha más cercana sería el ${next}` : `necesitamos un poco más de tiempo`;
     return finalize(intent, "sin_disponibilidad", canal,
       `Hola 👋 Para esa fecha ya no alcanzamos a prepararlo, pero ${cuando}. ¿Te lo aparto?`,
@@ -204,9 +221,9 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
       { validation, draftOrder });
   }
 
-  // 7. Capacidad diaria llena
+  // 7. Capacidad diaria llena → siguiente fecha con cupo real
   if (p.capacidadDiaria && m) {
-    const next = nextAvailableDate(m);
+    const next = nextAvailableDate(m, orders);
     return finalize(intent, "sin_disponibilidad", canal,
       `Hola 👋 Para esa fecha ya no tenemos cupo, pero ${next ? `te lo aparto para el ${next}` : `te ofrezco la siguiente fecha disponible`}. ¿Va?`,
       { validation, draftOrder });
