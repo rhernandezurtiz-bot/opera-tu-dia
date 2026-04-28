@@ -252,21 +252,37 @@ const seedMessages = (): WhatsappMessage[] => [
     id: "w1", cliente: "Lucía Fernández", telefono: "+52 55 4400 1122",
     texto: "Hola! Quisiera encargar 24 cupcakes de vainilla para el sábado. ¿Cuánto sería?",
     recibidoAt: Date.now() - 1000 * 60 * 8, estado: "nuevo",
+    canal: "whatsapp",
   },
   {
     id: "w2", cliente: "+52 55 7788 0011", telefono: "+52 55 7788 0011",
     texto: "Buen día, necesito agendar una sesión de masaje hoy en la tarde, lo más pronto posible 🙏",
     recibidoAt: Date.now() - 1000 * 60 * 22, estado: "nuevo",
+    canal: "whatsapp",
+  },
+  {
+    id: "ig1", cliente: "@sofi.makeup", telefono: "",
+    texto: "Hola! Vi tus pasteles en historias 😍 ¿tendrás un Lotus de 12 personas para el viernes?",
+    recibidoAt: Date.now() - 1000 * 60 * 14, estado: "nuevo",
+    canal: "instagram", canalUserId: "ig_178293", canalHandle: "@sofi.makeup",
+  },
+  {
+    id: "ig2", cliente: "@andresvr", telefono: "",
+    texto: "Hola, hacen arreglos florales? Es para una pedida mañana, presupuesto unos 1500 🙌",
+    recibidoAt: Date.now() - 1000 * 60 * 60, estado: "analizado",
+    canal: "instagram", canalUserId: "ig_998812", canalHandle: "@andresvr",
   },
   {
     id: "w3", cliente: "Roberto Salinas", telefono: "+52 55 9090 5050",
     texto: "Hola, ¿pueden hacerme un arreglo floral para mañana? Es para regalo, presupuesto unos 1500.",
     recibidoAt: Date.now() - 1000 * 60 * 60 * 2, estado: "analizado",
+    canal: "whatsapp",
   },
   {
     id: "w4", cliente: "Mariana López", telefono: "+52 55 1234 5678",
     texto: "Hola, quiero el pastel de chocolate para hoy 5pm",
     recibidoAt: Date.now() - 1000 * 60 * 60 * 20, estado: "convertido", ordenId: "o1",
+    canal: "whatsapp",
   },
 ];
 
