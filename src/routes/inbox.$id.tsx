@@ -6,9 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { parseWhatsapp, useOperia, typeLabels, type Order, type OrderType } from "@/lib/operia-store";
+import { parseWhatsapp, useOperia, typeLabels, CHANNEL_LABELS, type Order, type OrderType } from "@/lib/operia-store";
 import { buildSmartReply, buildConfirmMessage, buildPaymentMessage, buildReadyMessage } from "@/lib/ui-store";
-import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone, Clock, CalendarClock } from "lucide-react";
+import { autoReplyForMessage, INTENT_LABELS, DECISION_LABELS, DECISION_TONE } from "@/lib/auto-reply";
+import { useCatalog } from "@/lib/catalog-store";
+import { sendWhatsAppMessage } from "@/lib/whatsapp";
+import { sendInstagramDM } from "@/lib/instagram";
+import { sendFacebookMessage } from "@/lib/facebook";
+import { ArrowLeft, Sparkles, Save, Copy, CheckCircle2, AlertTriangle, MessageCircle, Phone, Clock, CalendarClock, Send, Pencil, X, Bot } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/inbox/$id")({
