@@ -207,6 +207,7 @@ interface State {
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setClientNote: (key: string, note: string) => void;
+  generatePaymentLink: (id: string) => string;
 }
 
 export const useOperia = create<State>()(
