@@ -133,7 +133,14 @@ export interface EvaluateInput {
   business?: BusinessConfig;
 }
 
+type RawDecision = Omit<OrderDecision, "closingAction">;
+
 export function evaluateOrderDecision(input: EvaluateInput): OrderDecision {
+  const raw = _evaluateRaw(input);
+  return applyClosingAction(raw, input.order);
+}
+
+function _evaluateRaw(input: EvaluateInput): RawDecision {
   const { order, catalog, allOrders = [] } = input;
 
   const text = [order.mensajeOriginal, order.descripcion, order.detalles].filter(Boolean).join(" — ");
