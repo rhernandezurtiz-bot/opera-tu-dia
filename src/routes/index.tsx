@@ -739,20 +739,18 @@ function Landing() {
           <h2 className="text-[28px] md:text-[40px] font-semibold tracking-tight max-w-2xl mx-auto leading-[1.08]">
             Tu operación ya es compleja. Tu sistema no debería serlo.
           </h2>
-          <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-[14.5px]">
-            Agenda una demo y en 20 minutos te mostramos cómo se vería tu
-            operación funcionando con control total.
+          <p className="text-muted-foreground mt-4 max-w-xl mx-auto text-[14.5px] leading-relaxed">
+            Agenda una demo y te mostramos cómo se vería Operia funcionando con
+            tu operación.
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
             <Button asChild size="lg" className="h-12 px-6">
               <a href="mailto:hola@operia.app?subject=Solicitar%20demo%20Operia">
                 Solicitar demo <ArrowRight className="h-4 w-4" />
               </a>
             </Button>
             <Button asChild size="lg" variant="ghost" className="h-12 px-5">
-              <a href="mailto:hola@operia.app?subject=Demo%20personalizada%20para%20mi%20negocio">
-                Ver cómo funcionaría en mi negocio
-              </a>
+              <Link to="/login">Ver demo de plataforma</Link>
             </Button>
           </div>
           <p className="text-[12px] text-muted-foreground mt-5">
@@ -761,9 +759,26 @@ function Landing() {
         </Card>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-[12px] text-muted-foreground">
-        © {new Date().getFullYear()} Operia. Infraestructura operativa para
-        ventas conversacionales.
+      <footer className="border-t border-border">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-[12.5px] text-muted-foreground">
+          <div className="flex items-center gap-2.5">
+            <img src={operiaIcon} alt="" className="h-5 w-5 rounded-full" />
+            <span className="text-foreground font-medium">Operia</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">
+              Plataforma operativa para ventas conversacionales
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a
+              href="mailto:hola@operia.app"
+              className="hover:text-foreground transition-colors"
+            >
+              hola@operia.app
+            </a>
+            <span>© {new Date().getFullYear()} Operia</span>
+          </div>
+        </div>
       </footer>
     </div>
   );
