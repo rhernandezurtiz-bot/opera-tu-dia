@@ -139,6 +139,25 @@ function CatalogCard({ item, onRemove, onUpdate }: { item: CatalogItem; onRemove
           ))}
         </div>
       )}
+      {item.variantesDetalle.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/60">
+          <div className="text-[10.5px] uppercase tracking-wide text-muted-foreground mb-1.5">Variantes</div>
+          <div className="space-y-1">
+            {item.variantesDetalle.map((v) => (
+              <div key={v.id} className="flex items-center justify-between text-[12px]">
+                <span className="font-medium truncate">
+                  {v.nombre}
+                  {v.personas > 0 && <span className="text-muted-foreground"> · {v.personas} pers</span>}
+                </span>
+                <span className="text-muted-foreground tabular-nums">
+                  {v.precio > 0 && `$${v.precio.toLocaleString("es-MX")}`}
+                  {v.stockDiario > 0 && <span className="ml-2">· stock {v.stockDiario}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {item.notas && <div className="mt-2 text-[11.5px] text-muted-foreground italic">{item.notas}</div>}
     </Card>
   );
