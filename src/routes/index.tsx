@@ -454,8 +454,8 @@ function Landing() {
               ingresos.
             </div>
           </div>
-          <Button asChild variant="secondary" className="h-10 shrink-0">
-            <a href="#contacto">Solicitar demo</a>
+          <Button variant="secondary" className="h-10 shrink-0" onClick={openDemo}>
+            Solicitar demo
           </Button>
         </Card>
       </section>
