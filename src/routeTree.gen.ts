@@ -26,6 +26,7 @@ import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
 import { Route as InboxIndexRouteImport } from './routes/inbox.index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
+import { Route as InboxMetaRouteImport } from './routes/inbox.meta'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
 import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
@@ -123,6 +124,11 @@ const PedidosIdRoute = PedidosIdRouteImport.update({
   path: '/pedidos/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InboxMetaRoute = InboxMetaRouteImport.update({
+  id: '/inbox/meta',
+  path: '/inbox/meta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InboxIdRoute = InboxIdRouteImport.update({
   id: '/inbox/$id',
   path: '/inbox/$id',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
@@ -232,6 +239,7 @@ export interface FileRoutesByTo {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
+  '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes/'
     | '/inbox/'
@@ -325,6 +335,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes'
     | '/inbox'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
+    | '/inbox/meta'
     | '/pedidos/$id'
     | '/clientes/'
     | '/inbox/'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   ApiSendWhatsappRoute: typeof ApiSendWhatsappRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
   InboxIdRoute: typeof InboxIdRoute
+  InboxMetaRoute: typeof InboxMetaRoute
   PedidosIdRoute: typeof PedidosIdRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
@@ -518,6 +531,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PedidosIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inbox/meta': {
+      id: '/inbox/meta'
+      path: '/inbox/meta'
+      fullPath: '/inbox/meta'
+      preLoaderRoute: typeof InboxMetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inbox/$id': {
       id: '/inbox/$id'
       path: '/inbox/$id'
@@ -618,6 +638,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSendWhatsappRoute: ApiSendWhatsappRoute,
   ClientesKeyRoute: ClientesKeyRoute,
   InboxIdRoute: InboxIdRoute,
+  InboxMetaRoute: InboxMetaRoute,
   PedidosIdRoute: PedidosIdRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
