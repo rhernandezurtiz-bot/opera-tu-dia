@@ -527,6 +527,18 @@ function Metric({ value, label }: { value: string; label: string }) {
   );
 }
 
+function ProblemItem({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="bg-background p-6 md:p-7">
+      <div className="flex items-center gap-2.5 mb-2">
+        <AlertCircle className="h-4 w-4 text-foreground/70" />
+        <div className="text-[14.5px] font-semibold tracking-tight">{title}</div>
+      </div>
+      <p className="text-[13px] text-muted-foreground leading-relaxed">{detail}</p>
+    </div>
+  );
+}
+
 function Step({
   n,
   icon: Icon,
