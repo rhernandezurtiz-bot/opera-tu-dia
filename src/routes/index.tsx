@@ -154,6 +154,47 @@ function Landing() {
         </div>
       </section>
 
+      {/* La solución */}
+      <section
+        id="solucion"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>La solución</SectionLabel>
+        <h2 className="text-[30px] md:text-[44px] leading-[1.06] font-semibold tracking-tight max-w-3xl">
+          Operia convierte WhatsApp en un sistema operable.
+        </h2>
+        <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-2xl">
+          Una capa operativa sobre tus conversaciones. Estructura, asigna, prioriza y
+          coordina — para que el equipo trabaje sobre datos, no sobre chats.
+        </p>
+        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SolutionItem
+            n="01"
+            icon={Layers}
+            title="Estructura pedidos"
+            body="Cada conversación se transforma en un pedido con campos, estado y trazabilidad."
+          />
+          <SolutionItem
+            n="02"
+            icon={Users}
+            title="Asigna responsabilidades"
+            body="Define dueños por pedido, etapa y canal. Sin ambigüedad sobre quién ejecuta qué."
+          />
+          <SolutionItem
+            n="03"
+            icon={Zap}
+            title="Prioriza tareas"
+            body="El motor identifica urgencias, faltantes y riesgos para enfocar al equipo en lo crítico."
+          />
+          <SolutionItem
+            n="04"
+            icon={LineChart}
+            title="Visibilidad para el equipo"
+            body="Tablero único con estado en vivo, métricas y alertas. Decisiones sobre datos reales."
+          />
+        </div>
+      </section>
+
       {/* Plataforma */}
       <section
         id="plataforma"
@@ -523,6 +564,33 @@ function Metric({ value, label }: { value: string; label: string }) {
     <Card className="p-4 rounded-xl">
       <div className="text-[22px] font-semibold tracking-tight tabular-nums">{value}</div>
       <div className="text-[12px] text-muted-foreground mt-0.5">{label}</div>
+    </Card>
+  );
+}
+
+function SolutionItem({
+  n,
+  icon: Icon,
+  title,
+  body,
+}: {
+  n: string;
+  icon: any;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Card className="p-6 rounded-xl h-full flex flex-col">
+      <div className="flex items-center justify-between mb-5">
+        <div className="h-9 w-9 rounded-lg border border-border grid place-items-center">
+          <Icon className="h-4 w-4" />
+        </div>
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums">
+          {n}
+        </span>
+      </div>
+      <div className="text-[15.5px] font-semibold tracking-tight mb-1.5">{title}</div>
+      <p className="text-[13px] text-muted-foreground leading-relaxed">{body}</p>
     </Card>
   );
 }
