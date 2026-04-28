@@ -42,6 +42,8 @@ function Index() {
   usePaymentEngine();
   // Activa motor de inventario (descuenta/restaura stock según ciclo del pedido)
   useInventoryEngine();
+  // Activa motor de respuestas automáticas (sugerido / automático)
+  useAutoReplyEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
