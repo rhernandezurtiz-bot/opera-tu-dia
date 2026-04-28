@@ -137,7 +137,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-1 pt-1.5 pb-2 grid grid-cols-7 gap-0.5">
-        {nav.map((n) => {
+        {nav.slice(0, 7).map((n) => {
           const active = n.to === "/app" ? loc.pathname === "/app" : loc.pathname.startsWith(n.to);
           const Icon = n.icon;
           const showBadge = n.to === "/inbox" && unread > 0;
