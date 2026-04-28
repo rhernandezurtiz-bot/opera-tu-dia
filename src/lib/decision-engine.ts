@@ -461,3 +461,156 @@ export const DECISION_TONE: Record<DecisionType, "success" | "warning" | "danger
   TIME_NOT_AVAILABLE: "warning",
   NEEDS_MANUAL_REVIEW: "muted",
 };
+
+export const CLOSING_LABEL: Record<ClosingAction, string> = {
+  SEND_PAYMENT_LINK: "Generar y enviar link de pago",
+  ASK_CONFIRMATION: "Enviar confirmación",
+  OFFER_ALTERNATIVE: "Enviar propuesta",
+  ASK_MINIMAL_INFO: "Enviar pregunta",
+};
+
+/* ============== Closing engine — convierte decisión en cierre comercial ============== */
+
+function fmtClose(n: number): string {
+  return "$" + n.toLocaleString("es-MX");
+}
+
+function dateLabelClose(iso?: string): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso + "T12:00:00");
+    return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  } catch { return iso; }
+}
+
+/**
+ * Aplica la acción de cierre. Reescribe customerMessage con tono comercial,
+ * urgencia suave y un único call-to-action claro.
+ */
+export function applyClosingAction(raw: RawDecision, order: Order): OrderDecision {
+  const closing = pickClosingAction(raw, order);
+  const customerMessage = buildClosingMessage(raw, order, closing);
+  return { ...raw, closingAction: closing, customerMessage };
+}
+
+function pickClosingAction(raw: RawDecision, order: Order): ClosingAction {
+  switch (raw.decisionType) {
+    case "READY_TO_SELL":
+      return order.pago === "pagado" ? "ASK_CONFIRMATION" : "SEND_PAYMENT_LINK";
+    case "CAPACITY_EXCEEDED":
+    case "OUT_OF_CATALOG":
+    case "OUT_OF_STOCK":
+      return "OFFER_ALTERNATIVE";
+    case "TIME_NOT_AVAILABLE":
+      // siempre venimos con una fecha sugerida → propuesta concreta
+      return raw.alternatives.length > 0 ? "OFFER_ALTERNATIVE" : "ASK_CONFIRMATION";
+    case "NEEDS_MORE_INFO": {
+      // Si solo falta logística (entrega/recolección) o contacto y todo lo demás está → ASK_CONFIRMATION
+      const onlyLogistics = raw.missingFields.every((f) => f === "direccion" || f === "contacto");
+      if (onlyLogistics && raw.matchedItem) return "ASK_CONFIRMATION";
+      return "ASK_MINIMAL_INFO";
+    }
+    case "NEEDS_MANUAL_REVIEW":
+    default:
+      return "ASK_MINIMAL_INFO";
+  }
+}
+
+function buildClosingMessage(raw: RawDecision, order: Order, closing: ClosingAction): string {
+  const item = raw.matchedItem;
+  const variant = raw.matchedVariant;
+  const precio = variant?.precio || item?.precioBase || order.precio || 0;
+  const fechaTxt = order.fechaEntrega
+    ? `${dateLabelClose(order.fechaEntrega)}${order.horaEntrega ? ` a las ${order.horaEntrega}` : ""}`
+    : "";
+  const cierreTxt = item
+    ? variant
+      ? `tu ${item.nombre.toLowerCase()} (${variant.nombre})`
+      : `tu ${item.nombre.toLowerCase()}`
+    : "tu pedido";
+
+  switch (closing) {
+    case "SEND_PAYMENT_LINK": {
+      const partes: string[] = ["¡Perfecto! 🙌 Ya puedo apartarlo."];
+      if (item && fechaTxt) {
+        partes[0] = `¡Perfecto! 🙌 Ya puedo apartar ${cierreTxt} para ${fechaTxt}.`;
+      } else if (item) {
+        partes[0] = `¡Perfecto! 🙌 Ya puedo apartar ${cierreTxt}.`;
+      }
+      const monto = precio ? ` (${fmtClose(precio)})` : "";
+      partes.push(`Aquí puedes asegurar tu pedido${monto}: [paymentLink]`);
+      partes.push("En cuanto quede listo el pago, lo dejamos confirmado 🎂");
+      return partes.join("\n\n");
+    }
+
+    case "ASK_CONFIRMATION": {
+      if (raw.decisionType === "READY_TO_SELL" && order.pago === "pagado") {
+        return `¡Listo! Tu pedido para ${fechaTxt || "la fecha acordada"} ya quedó confirmado 🙌 Cualquier cosa te aviso por aquí.`;
+      }
+      // Falta logística
+      const falta = raw.missingFields[0];
+      if (falta === "direccion") {
+        return `Listo 🙌 Solo confírmame si sería entrega o recolección y te paso el link para apartarlo.`;
+      }
+      if (falta === "contacto") {
+        return `Listo 🙌 Pásame un WhatsApp para coordinar y te mando el link para asegurar tu pedido.`;
+      }
+      // Time not available — confirmar nueva fecha
+      const sugerida = raw.alternatives.find((a) => a.fechaSugerida)?.fechaSugerida;
+      if (sugerida) {
+        return `Para que quede bien preparado, te lo dejaríamos para ${dateLabelClose(sugerida)}. ¿Te confirmo así y te paso el link para apartarlo? 🙌`;
+      }
+      return `Listo 🙌 Confírmame y te paso el link para asegurar tu pedido.`;
+    }
+
+    case "OFFER_ALTERNATIVE": {
+      const alt = raw.alternatives[0];
+      if (raw.decisionType === "OUT_OF_CATALOG") {
+        // sabor o producto fuera de catálogo
+        if (item && raw.alternatives.length > 0 && raw.reason.toLowerCase().includes("sabor")) {
+          const sabores = raw.alternatives.map((a) => a.label).join(", ");
+          return `¡Buena elección! 🙌 Ese sabor de ${item.nombre.toLowerCase()} no lo manejamos, pero sí tenemos ${sabores}. ¿Cuál te aparto?`;
+        }
+        if (raw.alternatives.length > 0) {
+          const opciones = raw.alternatives.map((a) => `• ${a.label}`).join("\n");
+          return `No manejamos eso, pero te puedo ofrecer:\n\n${opciones}\n\n¿Te late alguna para apartarla? 🙌`;
+        }
+        return `Por ahora no manejamos eso 😊 ¿Quieres que te avise cuando tengamos algo similar?`;
+      }
+      if (raw.decisionType === "CAPACITY_EXCEEDED" && alt) {
+        const monto = alt.precioEstimado ? ` (${fmtClose(alt.precioEstimado)})` : "";
+        return `Sí podemos cubrirlo así 👇\n\n${alt.label}${monto ? ` — ${monto}` : ""}\n\n¿Te lo aparto así? 🙌`;
+      }
+      if (raw.decisionType === "OUT_OF_STOCK" && alt) {
+        return `De eso ya nos quedan pocas piezas 😅 Te puedo ofrecer:\n\n• ${alt.label}\n\n¿Te lo aparto así para asegurarlo? 🙌`;
+      }
+      if (raw.decisionType === "TIME_NOT_AVAILABLE" && alt?.fechaSugerida) {
+        return `Para hacerlo bien necesitamos un poco más de tiempo. Te lo dejaríamos para ${dateLabelClose(alt.fechaSugerida)} 🙌\n\n¿Te aparto así?`;
+      }
+      // fallback genérico
+      const opciones = raw.alternatives.map((a) => `• ${a.label}`).join("\n");
+      return `Te puedo ofrecer estas opciones 🙌\n\n${opciones}\n\n¿Cuál te aparto?`;
+    }
+
+    case "ASK_MINIMAL_INFO": {
+      // Pide MÁXIMO 2 cosas, en orden de prioridad: fecha/hora → cantidad/personas → producto
+      const wantsDate = raw.missingFields.includes("fecha") || raw.missingFields.includes("hora");
+      const wantsProduct = raw.missingFields.includes("producto");
+      const partes: string[] = [];
+      if (wantsDate) partes.push("para cuándo lo necesitas");
+      if (!raw.parsed.personas && !raw.parsed.cantidad && partes.length < 2) partes.push("para cuántas personas");
+      if (wantsProduct && partes.length < 2) partes.push("qué producto te interesa");
+      if (partes.length === 0) partes.push("un par de detalles para apartarlo");
+
+      const intro = item
+        ? `¡Sí podemos hacer ${cierreTxt}! 🙌`
+        : `¡Claro! Para apartarlo 🙌`;
+
+      const pregunta = partes.length === 1
+        ? `¿Me confirmas ${partes[0]}?`
+        : `¿Me confirmas ${partes[0]} y ${partes[1]}?`;
+
+      return `${intro} ${pregunta}`;
+    }
+  }
+}
