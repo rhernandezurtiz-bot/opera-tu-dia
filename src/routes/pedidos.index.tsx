@@ -4,7 +4,7 @@ import { AppShell, PageHeader, RiskBadge, StatusBadge, UrgencyChip } from "@/com
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { useOperia, typeLabels } from "@/lib/operia-store";
+import { useOperia, typeLabels, type PaymentStatus } from "@/lib/operia-store";
 
 export const Route = createFileRoute("/pedidos/")({
   head: () => ({
