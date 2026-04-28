@@ -436,6 +436,27 @@ export const useOperia = create<State>()(
           }),
         }));
       },
+      markLinkSent: (id, payload) => {
+        set((s) => ({
+          orders: s.orders.map((o) => {
+            if (o.id !== id) return o;
+            const events = o.paymentEvents ?? [];
+            const detail = payload.ok
+              ? `Enviado por WhatsApp · ${payload.provider}${payload.messageId ? ` · ${payload.messageId}` : ""}`
+              : `Falló envío por WhatsApp · ${payload.provider}${payload.error ? ` · ${payload.error}` : ""}`;
+            return {
+              ...o,
+              linkSentAt: payload.ok ? payload.at : o.linkSentAt,
+              linkSendResult: payload.ok ? "ok" : "error",
+              linkSendError: payload.ok ? undefined : payload.error,
+              paymentEvents: [
+                ...events,
+                { kind: "mensaje_enviado", at: payload.at, detail },
+              ],
+            };
+          }),
+        }));
+      },
       setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
