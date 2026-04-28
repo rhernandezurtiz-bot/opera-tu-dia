@@ -357,8 +357,8 @@ export function nextAction(o: Order): NextAction | null {
   if ((o.faltantes || []).length > 0) {
     return {
       kind: "completar_datos",
-      label: "Pedir datos faltantes",
-      reason: `Faltan: ${o.faltantes.join(", ")}`,
+      label: "Confirmar y pedir detalle",
+      reason: `Por confirmar: ${o.faltantes.slice(0, 2).join(", ")}`,
       message: buildSmartReply(o),
       tone: "warning",
     };
