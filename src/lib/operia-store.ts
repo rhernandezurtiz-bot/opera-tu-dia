@@ -202,6 +202,15 @@ export interface InstagramConfig {
   conectado: boolean;
 }
 
+export interface FacebookConfig {
+  pageId: string;                  // Facebook Page ID
+  accessToken: string;             // Page access token con pages_messaging
+  verifyToken: string;             // verify token para el webhook de Messenger
+  appSecret: string;               // para validar X-Hub-Signature-256 en producción
+  webhookUrl: string;              // URL pública del webhook
+  conectado: boolean;
+}
+
 export type ChannelMode = "demo" | "produccion";
 
 const today = () => new Date().toISOString().slice(0, 10);
