@@ -285,7 +285,85 @@ function InboxDetail() {
         )}
       </div>
 
-      {/* Suggested replies */}
+      {/* Respuesta automática (intent + decisión + acciones) */}
+      {auto && (
+        <section className="mt-8">
+          <Card className="p-5 rounded-xl border-primary/30 bg-primary/4">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <Bot className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Respuesta generada automáticamente</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                {INTENT_LABELS[auto.intent]}
+              </span>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full border ${
+                DECISION_TONE[auto.decision] === "success" ? "bg-success/10 text-success border-success/20" :
+                DECISION_TONE[auto.decision] === "danger" ? "bg-danger/10 text-danger border-danger/20" :
+                DECISION_TONE[auto.decision] === "warning" ? "bg-warning/10 text-foreground/80 border-warning/30" :
+                "bg-foreground/5 text-foreground/80 border-border"
+              }`}>
+                {DECISION_LABELS[auto.decision]}
+              </span>
+              <span className="ml-auto text-[11px] text-muted-foreground">
+                Canal: {CHANNEL_LABELS[message.canal ?? "whatsapp"]} · Modo: {autoReplyMode}
+              </span>
+            </div>
+
+            {auto.needsReview && (
+              <div className="mb-3 p-3 rounded-2xl bg-warning/10 border border-warning/30 text-xs flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Este mensaje requiere revisión humana — Operia no lo enviará en automático.
+              </div>
+            )}
+
+            {editing ? (
+              <Textarea
+                value={autoReplyText ?? ""}
+                onChange={(e) => setAutoReplyText(e.target.value)}
+                className="rounded-xl text-sm min-h-32 resize-none"
+              />
+            ) : (
+              <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap p-3 rounded-2xl bg-card border border-border">
+                {autoReplyText}
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Button
+                onClick={enviarAuto}
+                disabled={sending || !autoReplyText}
+                size="lg"
+                className="rounded-full"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {sending ? "Enviando…" : "Enviar automático"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="rounded-full"
+                onClick={() => setEditing((v) => !v)}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                {editing ? "Listo" : "Editar"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="rounded-full"
+                onClick={() => { setAutoReplyText(auto.message); setEditing(false); toast.message("Respuesta restaurada"); }}
+              >
+                Restaurar sugerida
+              </Button>
+              <Button
+                variant="ghost"
+                className="rounded-full text-muted-foreground"
+                onClick={() => { setAutoReplyText(null); setMessageStatus(message.id, "respondido"); toast.message("Respuesta cancelada"); }}
+              >
+                <X className="h-4 w-4 mr-1" /> Cancelar
+              </Button>
+            </div>
+          </Card>
+        </section>
+      )}
+
       <section className="mt-8">
         <h2 className="font-display text-xl mb-3">Respuestas sugeridas</h2>
         <p className="text-sm text-muted-foreground mb-4">
