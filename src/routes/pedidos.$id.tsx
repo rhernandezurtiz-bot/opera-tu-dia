@@ -104,9 +104,10 @@ function Detalle() {
   // Historial del cliente: excluir la orden actual
   const stats = cKey ? getClientStats(allOrders.filter((o) => o.id !== order.id), cKey) : null;
 
-  // Validación contra catálogo
-  const validation = validateOrder(order, catalog);
+  // Validación contra catálogo (incluye capacidad diaria con resto de pedidos)
+  const validation = validateOrder(order, catalog, allOrders);
   const fueraCatalogo = validation.status === "fuera_catalogo";
+  const blockPayment = validation.blockPayment;
 
   const copiar = (text: string, label = "Mensaje copiado") => {
     navigator.clipboard.writeText(text);
