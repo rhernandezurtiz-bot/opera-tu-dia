@@ -135,6 +135,8 @@ export interface Negocio {
   porcentajeAnticipo: number; // % del total para anticipo
   recordatorioMinutos: number; // tiempo sin pago antes de recordar
   webhookSimMinutos: number; // tiempo simulado para "recibir" pago
+  // Configuración de pasarelas (Mercado Pago / Stripe)
+  payments: PaymentsConfig;
 }
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
