@@ -406,7 +406,7 @@ function askForMoreInfo(args: {
   humanIntro: string;
   matched?: CatalogItem;
   variant?: CatalogVariant;
-}): OrderDecision {
+}): RawDecision {
   const { ask, reason, humanIntro, matched, variant, parsed } = args;
   const limited = ask.slice(0, 2);
 
