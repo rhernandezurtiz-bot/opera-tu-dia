@@ -65,6 +65,9 @@ function Detalle() {
   const toggleChecklist = useOperia((s) => s.toggleChecklist);
   const updateOrder = useOperia((s) => s.updateOrder);
   const generatePaymentLink = useOperia((s) => s.generatePaymentLink);
+  const markPaymentPaid = useOperia((s) => s.markPaymentPaid);
+  const markPaymentFailed = useOperia((s) => s.markPaymentFailed);
+  const paymentsCfg = useOperia((s) => s.negocio.payments);
   const removeOrder = useOperia((s) => s.removeOrder);
   const navigate = useNavigate();
 
