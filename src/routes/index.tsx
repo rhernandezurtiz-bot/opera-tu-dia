@@ -103,12 +103,12 @@ function Landing() {
       <section id="como-funciona" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Cómo funciona</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          De un mensaje confuso a un pedido listo en segundos.
+          De un WhatsApp confuso a un pedido cobrado, sin perder tiempo.
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
-          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia un mensaje de WhatsApp y pégalo en Operia." />
-          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y lo que falta." />
-          <Step n="3" icon={ChefHat} title="Sabes qué hacer" body="Confirma, produce y entrega siguiendo el plan del día." />
+          <Step n="1" icon={MessageSquare} title="Pega el mensaje" body="Copia el WhatsApp del cliente y pégalo. Operia lee y entiende." />
+          <Step n="2" icon={ListChecks} title="Operia lo organiza" body="Detecta cliente, fecha, hora, dirección y qué falta para no perder el pedido." />
+          <Step n="3" icon={ChefHat} title="Te dice qué hacer" body="Confirma, cobra y entrega siguiendo el plan del día. Cero adivinar." />
         </div>
       </section>
 
@@ -116,13 +116,13 @@ function Landing() {
       <section id="beneficios" className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Beneficios</SectionLabel>
         <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-10 max-w-2xl">
-          Menos errores, más tiempo, más dinero.
+          Cada pedido cuenta. Cada peso, también.
         </h2>
         <div className="grid md:grid-cols-2 gap-4">
-          <Benefit icon={AlertCircle} title="Nunca pierdas un pedido" body="Operia te avisa qué falta confirmar y qué tiene riesgo." />
-          <Benefit icon={Wallet} title="Cobra a tiempo" body="Controla anticipos, pagos pendientes e ingresos del día." />
-          <Benefit icon={Users} title="Recuerda a tus clientes" body="Historial de cada cliente: qué pidió, cuánto gastó y cuándo." />
-          <Benefit icon={ChefHat} title="Plan del día claro" body="Sabes qué producir y a qué hora, sin pegarte a la libreta." />
+          <Benefit icon={AlertCircle} title="No pierdas pedidos" body="Operia te avisa qué falta antes de que el cliente desaparezca o cancele." />
+          <Benefit icon={Wallet} title="Cobra a tiempo" body="Detecta pagos pendientes y te da el mensaje listo para pedir el anticipo." />
+          <Benefit icon={ChefHat} title="Ten control del día" body="Sabes qué producir, a qué hora y para quién. Sin libretas, sin caos." />
+          <Benefit icon={Users} title="Sabes qué hacer ahora" body="Cada pedido tiene una acción clara: confirmar, cobrar, recordar o entregar." />
         </div>
       </section>
 
