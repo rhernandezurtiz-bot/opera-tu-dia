@@ -179,11 +179,15 @@ function ItemForm({ value, onChange }: { value: Omit<CatalogItem, "id" | "create
       <Labeled label="Capacidad o tamaño">
         <Input value={value.capacidad} onChange={(e) => set("capacidad", e.target.value)} placeholder="12 personas" />
       </Labeled>
-      <Labeled label="Variantes (separadas por coma)">
-        <Input
-          value={value.variantes.join(", ")}
-          onChange={(e) => set("variantes", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-          placeholder="Mediano, Grande"
+      <Labeled label="Variantes (tamaño · precio · sabores · stock · prep)" full>
+        <VariantEditor
+          variants={value.variantesDetalle}
+          onChange={(vs) => onChange({
+            ...value,
+            variantesDetalle: vs,
+            // Mantén legacy `variantes` (string[]) sincronizado con los nombres
+            variantes: vs.map((v) => v.nombre).filter(Boolean),
+          })}
         />
       </Labeled>
       <Labeled label="Sabores / opciones (separadas por coma)">
