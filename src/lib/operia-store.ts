@@ -99,6 +99,9 @@ export interface Order {
   paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
   paymentProvider?: PaymentProvider; // proveedor usado para el link
   anticipoMonto?: number; // monto del anticipo cobrado/solicitado (calculado)
+  // Inventario
+  stockReservadoFor?: string;   // catalog item id cuyo stock ya descontamos
+  stockReservedQty?: number;    // cantidad descontada
 }
 
 export type PaymentProvider = "mercadopago" | "stripe";

@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useOperia, todayStr, type Order } from "@/lib/operia-store";
 import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@/lib/ui-store";
 import { usePaymentEngine } from "@/lib/payment-engine";
+import { useCatalog } from "@/lib/catalog-store";
+import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +21,8 @@ import {
   Send,
   CreditCard,
   Percent,
+  Boxes,
+  PackageX,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,14 +39,19 @@ export const Route = createFileRoute("/app")({
 function Index() {
   // Activa motor de cobro automático (genera links, simula webhooks, recordatorios)
   usePaymentEngine();
+  // Activa motor de inventario (descuenta/restaura stock según ciclo del pedido)
+  useInventoryEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
+  const catalogItems = useCatalog((s) => s.items);
   const today = todayStr();
   const todays = orders.filter((o) => o.fechaEntrega === today && o.estado !== "cancelado");
   const risky = orders.filter(
     (o) => (o.riesgo === "alto" || o.riesgo === "medio") && o.estado !== "entregado" && o.estado !== "cancelado",
   );
+  const inv = getInventoryMetrics(catalogItems, orders);
+  const capLibreHoy = inv.capacidadHoy.reduce((a, c) => a + c.libre, 0);
 
   const aConfirmar = todays.filter((o) => o.estado === "nuevo").length;
   const porHacer = todays.filter((o) => o.estado !== "entregado").length;
@@ -130,7 +139,51 @@ function Index() {
         </div>
       </section>
 
-      {/* Quick action callout */}
+      {/* Inventario */}
+      <section className="mb-10">
+        <Eyebrow>📦 Inventario y disponibilidad</Eyebrow>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <MoneyCard
+            icon={Boxes}
+            label="Capacidad libre hoy"
+            value={String(capLibreHoy)}
+            hint={`${inv.capacidadHoy.length} ${inv.capacidadHoy.length === 1 ? "ítem con cap. diaria" : "ítems con cap. diaria"}`}
+            tone="default"
+          />
+          <MoneyCard
+            icon={AlertOctagon}
+            label="Stock bajo"
+            value={String(inv.bajoStock.length)}
+            hint={inv.bajoStock.slice(0, 2).map((i) => i.nombre).join(", ") || "Todo OK"}
+            tone="warning"
+          />
+          <MoneyCard
+            icon={PackageX}
+            label="Stock crítico"
+            value={String(inv.stockCritico.length)}
+            hint={inv.stockCritico.length === 0 ? "Sin productos agotados" : "Bloquean ventas"}
+            tone="danger"
+          />
+          <MoneyCard
+            icon={AlertCircle}
+            label="Pedidos bloqueados"
+            value={String(inv.pedidosBloqueados.length)}
+            hint="Por inventario / disponibilidad"
+            tone="warning"
+          />
+        </div>
+        {(inv.bajoStock.length > 0 || inv.stockCritico.length > 0) && (
+          <div className="mt-3">
+            <Link
+              to="/inventario"
+              className="text-[12.5px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+            >
+              Ver inventario <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        )}
+      </section>
+
       {aConfirmar > 0 && (
         <Card className="mb-8 p-4 md:p-5 rounded-xl border-foreground/15 bg-foreground/3 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">

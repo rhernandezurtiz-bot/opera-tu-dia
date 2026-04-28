@@ -4,6 +4,39 @@ import type { Order, OrderType } from "./operia-store";
 
 export type CatalogKind = "producto" | "servicio" | "cita";
 
+// Inventory typing — más rico que CatalogKind: incluye insumos y capacidad pura.
+export type InventoryKind =
+  | "producto_terminado"
+  | "insumo"
+  | "servicio"
+  | "capacidad_diaria";
+
+export type Unidad =
+  | "piezas"
+  | "kg"
+  | "litros"
+  | "horas"
+  | "espacios"
+  | "porciones";
+
+export const UNIDAD_LABELS: Record<Unidad, string> = {
+  piezas: "piezas",
+  kg: "kg",
+  litros: "litros",
+  horas: "horas",
+  espacios: "espacios",
+  porciones: "porciones",
+};
+
+export const ALL_UNIDADES: Unidad[] = ["piezas", "kg", "litros", "horas", "espacios", "porciones"];
+
+export const INVENTORY_KIND_LABELS: Record<InventoryKind, string> = {
+  producto_terminado: "Producto terminado",
+  insumo: "Insumo",
+  servicio: "Servicio",
+  capacidad_diaria: "Capacidad diaria",
+};
+
 export type DayKey = "lun" | "mar" | "mie" | "jue" | "vie" | "sab" | "dom";
 export const DAY_LABELS: Record<DayKey, string> = {
   lun: "Lun", mar: "Mar", mie: "Mié", jue: "Jue", vie: "Vie", sab: "Sáb", dom: "Dom",
@@ -30,6 +63,11 @@ export interface CatalogItem {
   diasDisponibles: DayKey[];    // [] = todos los días
   prepMinutos: number;          // tiempo mínimo de preparación (minutos)
   bloquearSinDisponibilidad: boolean; // si true, falla cierra cobro automático
+  // Inventario
+  categoria: string;            // ej. "Pasteles", "Insumos", "Sesiones"
+  tipoInventario: InventoryKind;
+  stockMinimo: number;          // umbral para alerta de stock bajo
+  unidad: Unidad;
   createdAt: number;
 }
 
@@ -38,6 +76,10 @@ interface State {
   addItem: (i: Omit<CatalogItem, "id" | "createdAt">) => string;
   updateItem: (id: string, patch: Partial<CatalogItem>) => void;
   removeItem: (id: string) => void;
+  // Mutaciones de stock
+  decrementStock: (id: string, qty?: number) => void;
+  incrementStock: (id: string, qty?: number) => void;
+  setStock: (id: string, qty: number) => void;
 }
 
 const seed = (): CatalogItem[] => [
@@ -54,12 +96,16 @@ const seed = (): CatalogItem[] => [
     disponible: true,
     notas: "Solo manejamos pasteles de aprox. 12 personas.",
     stockDisponible: 0,
-    capacidadDiaria: 4,
+    capacidadDiaria: 5,
     horarioDesde: "10:00",
     horarioHasta: "19:00",
     diasDisponibles: ["mar", "mie", "jue", "vie", "sab"],
     prepMinutos: 60,
     bloquearSinDisponibilidad: true,
+    categoria: "Pasteles",
+    tipoInventario: "capacidad_diaria",
+    stockMinimo: 1,
+    unidad: "piezas",
     createdAt: Date.now(),
   },
 ];
@@ -76,10 +122,30 @@ export const useCatalog = create<State>()(
       updateItem: (id, patch) =>
         set((s) => ({ items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) })),
       removeItem: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
+      decrementStock: (id, qty = 1) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id && it.stockDisponible > 0
+              ? { ...it, stockDisponible: Math.max(0, it.stockDisponible - qty) }
+              : it,
+          ),
+        })),
+      incrementStock: (id, qty = 1) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id ? { ...it, stockDisponible: it.stockDisponible + qty } : it,
+          ),
+        })),
+      setStock: (id, qty) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id ? { ...it, stockDisponible: Math.max(0, qty) } : it,
+          ),
+        })),
     }),
     {
-      name: "operia-catalog-v2",
-      version: 2,
+      name: "operia-catalog-v3",
+      version: 3,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 2 && Array.isArray(persisted.items)) {
@@ -91,6 +157,18 @@ export const useCatalog = create<State>()(
             diasDisponibles: [],
             prepMinutos: 0,
             bloquearSinDisponibilidad: true,
+            ...it,
+          }));
+        }
+        if (version < 3 && Array.isArray(persisted.items)) {
+          persisted.items = persisted.items.map((it: any) => ({
+            categoria: "General",
+            tipoInventario:
+              it.tipo === "servicio" ? "servicio"
+                : it.capacidadDiaria > 0 ? "capacidad_diaria"
+                : "producto_terminado",
+            stockMinimo: 0,
+            unidad: it.tipo === "servicio" || it.tipo === "cita" ? "espacios" : "piezas",
             ...it,
           }));
         }

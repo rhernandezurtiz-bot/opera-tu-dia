@@ -13,6 +13,7 @@ import { Route as RiesgosRouteImport } from './routes/riesgos'
 import { Route as ProduccionRouteImport } from './routes/produccion'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InventarioRouteImport } from './routes/inventario'
 import { Route as ConfiguracionRouteImport } from './routes/configuracion'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as AppRouteImport } from './routes/app'
@@ -45,6 +46,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventarioRoute = InventarioRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfiguracionRoute = ConfiguracionRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/app': typeof AppRoute
   '/catalogo': typeof CatalogoRoute
   '/configuracion': typeof ConfiguracionRoute
+  '/inventario': typeof InventarioRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/catalogo'
     | '/configuracion'
+    | '/inventario'
     | '/login'
     | '/onboarding'
     | '/produccion'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/catalogo'
     | '/configuracion'
+    | '/inventario'
     | '/login'
     | '/onboarding'
     | '/produccion'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/catalogo'
     | '/configuracion'
+    | '/inventario'
     | '/login'
     | '/onboarding'
     | '/produccion'
@@ -237,6 +249,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRoute
   CatalogoRoute: typeof CatalogoRoute
   ConfiguracionRoute: typeof ConfiguracionRoute
+  InventarioRoute: typeof InventarioRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   ProduccionRoute: typeof ProduccionRoute
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventario': {
+      id: '/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof InventarioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuracion': {
@@ -381,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRoute,
   CatalogoRoute: CatalogoRoute,
   ConfiguracionRoute: ConfiguracionRoute,
+  InventarioRoute: InventarioRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   ProduccionRoute: ProduccionRoute,
