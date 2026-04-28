@@ -247,6 +247,13 @@ export interface AutoReplyLogEntry {
   modo: AutoReplyMode;
   resultado?: "ok" | "error" | "pendiente";
   error?: string;
+  // Aprendizaje
+  productoDetectado?: string;        // nombre del item del catálogo
+  productoId?: string;               // id del CatalogItem
+  varianteId?: string;               // id de la variante
+  precioEstimado?: number;           // precio de la variante elegida
+  outcome?: "pagado" | "no_pagado" | "rechazado" | "pendiente";
+  outcomeAt?: number;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);

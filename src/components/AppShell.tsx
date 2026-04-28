@@ -1,5 +1,5 @@
 import { Link, useLocation, Navigate } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package, Boxes, CalendarDays } from "lucide-react";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package, Boxes, CalendarDays, Brain } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
@@ -18,6 +18,7 @@ const nav = [
   { to: "/inventario", label: "Inventario", icon: Boxes },
   { to: "/capacidad", label: "Capacidad", icon: CalendarDays },
   { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/aprendizaje", label: "Aprendizaje", icon: Brain },
   { to: "/riesgos", label: "Riesgos", icon: AlertTriangle },
   { to: "/configuracion", label: "Ajustes", icon: Settings },
 ] as const;
