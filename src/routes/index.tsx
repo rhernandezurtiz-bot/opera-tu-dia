@@ -283,14 +283,14 @@ function Landing() {
           <Plan
             name="Inicial"
             price="$499"
-            tagline="Para empezar a ordenar tu día."
+            tagline="Para empezar a organizar tus pedidos."
             features={["Hasta 50 pedidos / mes", "Inbox de WhatsApp", "Plan del día", "1 usuario"]}
           />
           <Plan
             name="Pro"
             highlighted
             price="$999"
-            tagline="Para negocios que venden todos los días."
+            tagline="Para negocios que reciben pedidos todos los días."
             features={[
               "Pedidos ilimitados",
               "Clientes y notas",
@@ -301,7 +301,7 @@ function Landing() {
           <Plan
             name="Negocio"
             price="$1,999"
-            tagline="Para equipos y operación seria."
+            tagline="Para equipos que no pueden perder pedidos ni dinero."
             features={[
               "Todo lo de Pro",
               "Usuarios ilimitados",
