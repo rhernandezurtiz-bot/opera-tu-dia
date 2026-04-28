@@ -21,6 +21,8 @@ import {
   Send,
   CreditCard,
   Percent,
+  Boxes,
+  PackageX,
 } from "lucide-react";
 import { toast } from "sonner";
 
