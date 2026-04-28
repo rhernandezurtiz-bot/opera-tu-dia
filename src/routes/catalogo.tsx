@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCatalog, type CatalogItem, type CatalogKind, type DayKey, ALL_DAYS, DAY_LABELS } from "@/lib/catalog-store";
+import { useCatalog, type CatalogItem, type CatalogKind, type CatalogVariant, type DayKey, ALL_DAYS, DAY_LABELS, newVariant } from "@/lib/catalog-store";
 import { Plus, Trash2, Save, Package } from "lucide-react";
 import { toast } from "sonner";
 
