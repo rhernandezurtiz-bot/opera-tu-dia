@@ -57,7 +57,7 @@ function Landing() {
               <Link to="/login">Entrar</Link>
             </Button>
             <Button asChild size="sm" className="h-9">
-              <Link to="/login">Probar Operia</Link>
+              <Link to="/login">Empieza gratis</Link>
             </Button>
           </div>
         </div>
@@ -71,18 +71,19 @@ function Landing() {
             <span>Para negocios que venden por WhatsApp</span>
           </div>
           <h1 className="text-[40px] md:text-[58px] leading-[1.05] font-semibold tracking-tight">
-            Convierte mensajes de WhatsApp en{" "}
-            <span className="bg-foreground text-background px-2 rounded-md">órdenes organizadas</span>.
+            Deja de perder pedidos y{" "}
+            <span className="bg-foreground text-background px-2 rounded-md">dinero</span>{" "}
+            en WhatsApp.
           </h1>
           <p className="mt-6 text-[16px] md:text-[18px] text-muted-foreground leading-relaxed max-w-2xl">
-            Pega un mensaje y Operia lo convierte en un pedido con cliente, fecha,
-            hora, dirección y datos faltantes. Te dice qué hacer hoy y evita errores
-            que te cuestan dinero.
+            Operia convierte mensajes en órdenes claras, te dice qué hacer y te
+            ayuda a cobrar a tiempo. Menos caos, menos errores, más dinero en la
+            caja.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" className="h-12 px-6 text-[14px]">
               <Link to="/login">
-                Probar Operia <ArrowRight className="h-4 w-4" />
+                Empieza gratis <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <a
@@ -93,7 +94,7 @@ function Landing() {
             </a>
           </div>
           <p className="mt-5 text-[12.5px] text-muted-foreground">
-            Tus pedidos, clientes y notas se mantienen organizados en un solo lugar.
+            Sin tarjeta. Sin instalación. Tu primer pedido organizado en menos de 1 minuto.
           </p>
         </div>
       </section>
