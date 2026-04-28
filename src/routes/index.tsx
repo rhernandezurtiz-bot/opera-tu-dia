@@ -366,16 +366,16 @@ function Landing() {
           </div>
           <div className="md:col-span-7 grid sm:grid-cols-3 gap-3">
             <CostCard
-              value="15–30%"
-              label="de pedidos se pierden por falta de seguimiento."
+              title="Pedidos sin cierre"
+              label="Conversaciones que avanzan, pero nunca terminan en venta confirmada."
             />
             <CostCard
-              value="20–40%"
-              label="de retrasos por información incompleta."
+              title="Retrabajo y errores"
+              label="Información incompleta que genera retrasos y reclamos del cliente."
             />
             <CostCard
-              value="10–25%"
-              label="de cobros nunca ejecutados."
+              title="Cobros olvidados"
+              label="Anticipos y saldos pendientes que no se ejecutan a tiempo."
             />
           </div>
         </div>
