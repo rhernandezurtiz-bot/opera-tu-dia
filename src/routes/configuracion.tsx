@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useOperia, typeLabels, type RiskRules, type OrderType } from "@/lib/operia-store";
-import { Plus, Trash2, MessageCircle, Copy, Info } from "lucide-react";
+import { Plus, Trash2, MessageCircle, Copy, Info, CreditCard, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/configuracion")({
@@ -31,6 +31,8 @@ function Config() {
   const setRiskRules = useOperia((s) => s.setRiskRules);
   const whatsapp = useOperia((s) => s.whatsapp);
   const setWhatsapp = useOperia((s) => s.setWhatsapp);
+  const setPaymentsConfig = useOperia((s) => s.setPaymentsConfig);
+  const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
 
@@ -166,6 +168,109 @@ function Config() {
             <span>
               Para activar la integración real, Operia necesitará conectarse a <strong>WhatsApp Business Cloud API</strong> mediante webhooks.
               Por ahora, los mensajes del Inbox son simulados para que pruebes el flujo de trabajo completo.
+            </span>
+          </div>
+        </Card>
+
+        <Card className="p-5 rounded-xl lg:col-span-2">
+          <div className="flex items-center gap-2 mb-1">
+            <CreditCard className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg">Pagos</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configura cómo Operia genera links de pago automáticos desde cada pedido.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-3 mb-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">Proveedor principal</Label>
+              <select
+                value={payments.proveedorPrincipal}
+                onChange={(e) => setPaymentsConfig({ proveedorPrincipal: e.target.value as "mercadopago" | "stripe" | "ambos" })}
+                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+              >
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="stripe">Stripe</option>
+                <option value="ambos">Ambos</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Moneda</Label>
+              <select
+                value={payments.moneda}
+                onChange={(e) => setPaymentsConfig({ moneda: e.target.value as "MXN" | "USD" })}
+                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+              >
+                <option value="MXN">MXN — Peso mexicano</option>
+                <option value="USD">USD — Dólar</option>
+              </select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Modo</Label>
+              <select
+                value={payments.modo}
+                onChange={(e) => setPaymentsConfig({ modo: e.target.value as "simulacion" | "produccion" })}
+                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+              >
+                <option value="simulacion">Simulación</option>
+                <option value="produccion">Producción</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-3 mb-4">
+            <div>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                <Lock className="h-3 w-3" /> Mercado Pago Access Token
+              </Label>
+              <Input placeholder="APP_USR-..." disabled className="mt-1 rounded-xl" />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                <Lock className="h-3 w-3" /> Stripe Secret Key
+              </Label>
+              <Input placeholder="sk_live_..." disabled className="mt-1 rounded-xl" />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <Label className="text-xs text-muted-foreground">Webhook URL</Label>
+            <div className="flex gap-2 mt-1">
+              <Input
+                value={payments.webhookUrl}
+                onChange={(e) => setPaymentsConfig({ webhookUrl: e.target.value })}
+                className="rounded-xl"
+              />
+              <Button
+                variant="secondary"
+                size="icon"
+                className="rounded-xl shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText(payments.webhookUrl);
+                  toast.success("URL copiada");
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-muted-foreground">Mercado Pago:</span>
+            <span className={`text-xs px-2 py-1 rounded-full ${payments.mercadopagoConectado ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+              {payments.mercadopagoConectado ? "Conectado" : "No conectado"}
+            </span>
+            <span className="text-sm text-muted-foreground ml-3">Stripe:</span>
+            <span className={`text-xs px-2 py-1 rounded-full ${payments.stripeConectado ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+              {payments.stripeConectado ? "Conectado" : "No conectado"}
+            </span>
+          </div>
+
+          <div className="mt-4 p-3 rounded-2xl bg-secondary/50 text-xs text-muted-foreground flex gap-2">
+            <Lock className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              Por seguridad, las credenciales reales (Access Token, Secret Key) nunca se guardan en el frontend.
+              Se configuran como secretos del backend. Estos campos son visuales para previsualizar la conexión.
             </span>
           </div>
         </Card>

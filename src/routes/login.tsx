@@ -32,7 +32,8 @@ function Login() {
     if (hydrated && user) {
       navigate({ to: onboarded ? "/app" : "/onboarding" });
     }
-  }, [hydrated, user, onboarded, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, user, onboarded]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

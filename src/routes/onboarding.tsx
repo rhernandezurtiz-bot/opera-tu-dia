@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Navigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,14 @@ function Onboarding() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
+  // Redirección imperativa con guardia (evita loops por re-render durante hidratación)
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!user) navigate({ to: "/login" });
+    else if (onboarded) navigate({ to: "/app" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, user, onboarded]);
+
   const [step, setStep] = useState(0);
   const [nombre, setNombre] = useState(negocio.nombre === "Mi Negocio" ? "" : negocio.nombre);
   const [tipo, setTipo] = useState(negocio.tipoNegocio || "");
@@ -47,8 +55,7 @@ function Onboarding() {
   const [horarios, setHorarios] = useState(negocio.horarios || "");
   const [oferta, setOferta] = useState("");
 
-  if (hydrated && !user) return <Navigate to="/login" />;
-  if (hydrated && onboarded) return <Navigate to="/app" />;
+  if (hydrated && (!user || onboarded)) return null;
 
   const steps = [
     { label: "Nombre", valid: !!nombre.trim() },

@@ -94,6 +94,21 @@ export interface Order {
   paymentReminderAt?: number; // último recordatorio enviado
   paymentEvents?: PaymentEvent[];
   paymentMode?: "anticipo" | "total"; // modo de cobro decidido por reglas
+  paymentProvider?: PaymentProvider; // proveedor usado para el link
+  anticipoMonto?: number; // monto del anticipo cobrado/solicitado (calculado)
+}
+
+export type PaymentProvider = "mercadopago" | "stripe";
+
+export interface PaymentsConfig {
+  proveedorPrincipal: "mercadopago" | "stripe" | "ambos";
+  moneda: "MXN" | "USD";
+  modo: "simulacion" | "produccion";
+  // Las credenciales reales NUNCA viven en el store ni en frontend.
+  // Estos campos son solo placeholders visuales para Ajustes.
+  mercadopagoConectado: boolean;
+  stripeConectado: boolean;
+  webhookUrl: string;
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
@@ -120,6 +135,8 @@ export interface Negocio {
   porcentajeAnticipo: number; // % del total para anticipo
   recordatorioMinutos: number; // tiempo sin pago antes de recordar
   webhookSimMinutos: number; // tiempo simulado para "recibir" pago
+  // Configuración de pasarelas (Mercado Pago / Stripe)
+  payments: PaymentsConfig;
 }
 
 export type WhatsappStatus = "nuevo" | "analizado" | "convertido" | "respondido";
@@ -238,16 +255,17 @@ interface State {
   linkMessageOrder: (id: string, ordenId: string) => void;
   setWhatsapp: (c: Partial<WhatsappConfig>) => void;
   setClientNote: (key: string, note: string) => void;
-  generatePaymentLink: (id: string) => string;
+  generatePaymentLink: (id: string, provider?: PaymentProvider) => string;
   markPaymentPaid: (id: string) => void;
   markPaymentFailed: (id: string, motivo?: string) => void;
   sendPaymentReminder: (id: string) => void;
   setPaymentRules: (rules: Partial<Pick<Negocio, "autoCobroEnabled" | "umbralAnticipo" | "porcentajeAnticipo" | "recordatorioMinutos" | "webhookSimMinutos">>) => void;
+  setPaymentsConfig: (cfg: Partial<PaymentsConfig>) => void;
 }
 
 export const useOperia = create<State>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       orders: seedOrders(),
       miembros: [
         { id: "m1", nombre: "Laura", rol: "Operaciones" },
@@ -259,20 +277,27 @@ export const useOperia = create<State>()(
         telefono: "+52 55 0000 0000",
         direccion: "Ciudad de México",
         horarios: "Lun a Sáb 9:00 - 19:00",
-        tiposActivos: ["producto", "servicio", "cita", "personalizado"],
-        autoCobroEnabled: true,
-        umbralAnticipo: 1500, // arriba de $1,500 → solicita 50% anticipo; abajo → cobro total
+        tiposActivos: ["producto", "servicio", "cita", "personalizado"] as OrderType[],
+        autoCobroEnabled: true as boolean,
+        umbralAnticipo: 1500,
         porcentajeAnticipo: 50,
         recordatorioMinutos: 30,
-        webhookSimMinutos: 1, // simulación: pago confirma a 1 min
+        webhookSimMinutos: 1,
+        payments: {
+          proveedorPrincipal: "mercadopago" as PaymentsConfig["proveedorPrincipal"],
+          moneda: "MXN" as PaymentsConfig["moneda"],
+          modo: "simulacion" as PaymentsConfig["modo"],
+          mercadopagoConectado: false,
+          stripeConectado: false,
+          webhookUrl: "https://tu-dominio.com/api/public/webhooks/mercadopago",
+        },
       },
       riskRules: { fecha: true, hora: true, direccion: true, pago: true, telefono: false, descripcion: true },
       messages: seedMessages(),
       whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/whatsapp/webhook", conectado: false },
       clientNotes: {
-        // Demo: clientes recurrentes con notas internas
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
-      },
+      } as Record<string, string>,
       setClientNote: (key, note) => set((s) => ({ clientNotes: { ...s.clientNotes, [key]: note } })),
       addMessage: (m) => set((s) => ({ messages: [m, ...s.messages] })),
       setMessageStatus: (id, estado) => set((s) => ({
@@ -300,9 +325,21 @@ export const useOperia = create<State>()(
         const has = s.negocio.tiposActivos.includes(t);
         return { negocio: { ...s.negocio, tiposActivos: has ? s.negocio.tiposActivos.filter((x) => x !== t) : [...s.negocio.tiposActivos, t] } };
       }),
-      generatePaymentLink: (id) => {
+      generatePaymentLink: (id: string, providerArg?: PaymentProvider): string => {
+        const state = get();
+        const cfg = state.negocio.payments;
+        // Si el config dice "ambos", default = mercadopago a menos que se pase explícito
+        const provider: PaymentProvider =
+          providerArg ??
+          (cfg.proveedorPrincipal === "stripe"
+            ? "stripe"
+            : "mercadopago");
         const token = Math.random().toString(36).slice(2, 10);
-        const link = `https://pay.operia.app/${id}/${token}`;
+        const orderShort = id.slice(0, 8);
+        const link =
+          provider === "mercadopago"
+            ? `https://mercadopago.com.mx/checkout/v1/redirect?pref_id=demo_${orderShort}_${token}`
+            : `https://checkout.stripe.com/c/pay/demo_${orderShort}_${token}`;
         const now = Date.now();
         set((s) => ({
           orders: s.orders.map((o) => {
@@ -312,17 +349,26 @@ export const useOperia = create<State>()(
               s.negocio.autoCobroEnabled && o.precio >= s.negocio.umbralAnticipo
                 ? "anticipo"
                 : "total";
+            const anticipo =
+              mode === "anticipo"
+                ? Math.round((o.precio * s.negocio.porcentajeAnticipo) / 100)
+                : o.precio;
             const events = o.paymentEvents ?? [];
             return recompute({
               ...o,
               paymentLink: link,
               paymentLinkAt: now,
               paymentMode: mode,
+              paymentProvider: provider,
+              anticipoMonto: anticipo,
               pago: "link_enviado",
               paymentEvents: [
                 ...events,
-                { kind: "link_generado", at: now, detail: mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total" },
-                { kind: "mensaje_enviado", at: now, detail: "Mensaje de cobro enviado por WhatsApp" },
+                {
+                  kind: "link_generado",
+                  at: now,
+                  detail: `${provider === "mercadopago" ? "Mercado Pago" : "Stripe"} · ${mode === "anticipo" ? `Anticipo ${s.negocio.porcentajeAnticipo}%` : "Pago total"}`,
+                },
               ],
             });
           }),
@@ -386,8 +432,9 @@ export const useOperia = create<State>()(
         }));
       },
       setPaymentRules: (rules) => set((s) => ({ negocio: { ...s.negocio, ...rules } })),
+      setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
-    { name: "operia-store-v5" }
+    { name: "operia-store-v6", version: 6 }
   )
 );
 
