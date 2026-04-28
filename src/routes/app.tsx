@@ -4,6 +4,7 @@ import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@
 import { usePaymentEngine } from "@/lib/payment-engine";
 import { useCatalog } from "@/lib/catalog-store";
 import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
+import { useAutoReplyEngine } from "@/lib/auto-reply-engine";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
