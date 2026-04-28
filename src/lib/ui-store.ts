@@ -231,12 +231,23 @@ export function nextAction(o: Order): NextAction | null {
     };
   }
 
+  // 2.5) Pago vencido → prioridad máxima
+  if (o.pago === "vencido") {
+    return {
+      kind: "recordar_pago",
+      label: "Cobrar pago vencido",
+      reason: "Pago vencido — fecha de entrega ya pasó",
+      message: buildPaymentReminder(o),
+      tone: "danger",
+    };
+  }
+
   // 3) Confirmado pero sin anticipo → solicitar anticipo
-  if (o.estado === "confirmado" && o.pago === "pendiente") {
+  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "anticipo_solicitado")) {
     return {
       kind: "solicitar_anticipo",
-      label: "Solicitar anticipo",
-      reason: "Sin anticipo recibido",
+      label: o.pago === "anticipo_solicitado" ? "Reenviar link de pago" : "Solicitar anticipo",
+      reason: o.pago === "anticipo_solicitado" ? "Link enviado, sin pago aún" : "Sin anticipo recibido",
       message: buildPaymentReminder(o),
       tone: "warning",
     };
