@@ -19,6 +19,7 @@ import {
 import operiaLogo from "@/assets/operia-logo.png";
 import operiaIcon from "@/assets/operia-icon.png";
 import { LandingExample } from "@/components/LandingExample";
+import { DecideItem } from "@/components/DecideItem";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -177,6 +178,80 @@ function Landing() {
           <Benefit icon={Wallet} title="Cobra a tiempo" body="Detecta pagos pendientes y te da el mensaje listo para pedir el anticipo." />
           <Benefit icon={ChefHat} title="Ten control del día" body="Sabes qué producir, a qué hora y para quién. Sin libretas, sin caos." />
           <Benefit icon={Users} title="Sabes qué hacer ahora" body="Cada pedido tiene una acción clara: confirmar, cobrar, recordar o entregar." />
+        </div>
+      </section>
+
+      {/* Decide contigo */}
+      <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
+        <SectionLabel>Inteligencia operativa</SectionLabel>
+        <h2 className="text-[28px] md:text-[36px] font-semibold tracking-tight mb-3 max-w-2xl">
+          Operia no solo organiza. Decide contigo.
+        </h2>
+        <p className="text-muted-foreground text-[14.5px] mb-10 max-w-xl">
+          Cada pedido llega con una recomendación clara. Tú apruebas y envías. Cero adivinar.
+        </p>
+
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          <ul className="space-y-4">
+            <DecideItem
+              icon={AlertCircle}
+              title="Te dice qué falta"
+              body="Detecta los datos que faltan antes de que se conviertan en un problema o un pedido perdido."
+            />
+            <DecideItem
+              icon={Sparkles}
+              title="Te dice qué es urgente"
+              body="Ordena el día por prioridad: rojo hoy, amarillo mañana, verde resuelto."
+            />
+            <DecideItem
+              icon={Send}
+              title="Te dice qué hacer"
+              body="Una acción por pedido y un mensaje listo para enviar al cliente. Un clic y listo."
+            />
+          </ul>
+
+          <Card className="p-5 rounded-2xl bg-secondary/40">
+            <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-3">
+              Vista en Operia
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <div className="text-[14px] font-semibold truncate">María López</div>
+                  <div className="text-[12.5px] text-muted-foreground truncate">
+                    Pastel chocolate · 20 personas · mañana
+                  </div>
+                </div>
+                <span className="text-[10.5px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-danger/10 text-danger/90 border border-danger/20 shrink-0">
+                  🔴 Urgente
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-[12px]">
+                <span className="text-danger/90 font-medium">⚠ Falta pago</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">Entrega en 18 h</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center text-muted-foreground my-3">
+              <ArrowDown className="h-4 w-4" />
+            </div>
+
+            <div className="rounded-xl border border-foreground/15 bg-foreground/3 p-4">
+              <div className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground mb-1">
+                Acción recomendada
+              </div>
+              <div className="text-[14px] font-semibold mb-2">Solicitar anticipo</div>
+              <div className="text-[12.5px] text-foreground/80 italic leading-snug mb-3">
+                "Hola María 😊 te recuerdo el anticipo ($1,800) para confirmar tu pastel
+                de mañana. ¿Me ayudas con eso?"
+              </div>
+              <Button size="sm" className="w-full h-9">
+                <Send className="h-3.5 w-3.5" /> Solicitar anticipo
+              </Button>
+            </div>
+          </Card>
         </div>
       </section>
 
