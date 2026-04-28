@@ -20,36 +20,48 @@ export type Database = {
           channel: Database["public"]["Enums"]["meta_channel_type"]
           connected: boolean
           created_at: string
+          error_message: string | null
           external_account_id: string | null
           id: string
           last_message_at: string | null
+          last_outbound_at: string | null
           owner_id: string
           reply_mode: Database["public"]["Enums"]["meta_reply_mode"]
+          status: Database["public"]["Enums"]["meta_channel_status"]
           updated_at: string
+          verify_token: string
         }
         Insert: {
           account_label?: string | null
           channel: Database["public"]["Enums"]["meta_channel_type"]
           connected?: boolean
           created_at?: string
+          error_message?: string | null
           external_account_id?: string | null
           id?: string
           last_message_at?: string | null
+          last_outbound_at?: string | null
           owner_id: string
           reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
+          status?: Database["public"]["Enums"]["meta_channel_status"]
           updated_at?: string
+          verify_token?: string
         }
         Update: {
           account_label?: string | null
           channel?: Database["public"]["Enums"]["meta_channel_type"]
           connected?: boolean
           created_at?: string
+          error_message?: string | null
           external_account_id?: string | null
           id?: string
           last_message_at?: string | null
+          last_outbound_at?: string | null
           owner_id?: string
           reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
+          status?: Database["public"]["Enums"]["meta_channel_status"]
           updated_at?: string
+          verify_token?: string
         }
         Relationships: []
       }
@@ -183,6 +195,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      meta_channel_status: "no_conectado" | "pendiente" | "conectado" | "error"
       meta_channel_type: "whatsapp" | "instagram" | "facebook"
       meta_message_direction: "inbound" | "outbound"
       meta_message_status:
@@ -320,6 +333,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      meta_channel_status: ["no_conectado", "pendiente", "conectado", "error"],
       meta_channel_type: ["whatsapp", "instagram", "facebook"],
       meta_message_direction: ["inbound", "outbound"],
       meta_message_status: [

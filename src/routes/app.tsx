@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { useOperia, todayStr, type Order } from "@/lib/operia-store";
 import { useUI, buildMissingMessage, summarizeMoney, money, nextAction } from "@/lib/ui-store";
 import { usePaymentEngine } from "@/lib/payment-engine";
@@ -505,6 +506,12 @@ function CommandCenter({
   orders: Order[];
   updateOrder: (id: string, patch: Partial<Order>) => void;
 }) {
+  // Gate render until client-mounted: priorityOf() / nextAction() leen Date.now(),
+  // lo que causa hydration mismatch entre SSR y cliente.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
   const active = orders.filter((o) => o.estado !== "entregado" && o.estado !== "cancelado");
   const ranked = active
     .map((o) => ({ o, action: nextAction(o), p: priorityOf(o) }))
