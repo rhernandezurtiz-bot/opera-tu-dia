@@ -202,14 +202,37 @@ export function buildReadyMessage(o: Order): string {
   return `¡Hola${n ? " " + n : ""}! 🎉 ${desc} ya está listo. Coordinamos la entrega según lo acordado. ¡Gracias!`;
 }
 
-// Recordatorio de anticipo / pago pendiente
-export function buildPaymentReminder(o: Order): string {
+// Recordatorio de pago / cobro automático
+export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: number }): string {
   const n = firstName(o.cliente);
-  const monto = o.precio ? ` (${money(o.precio)})` : "";
+  const pct = opts?.porcentajeAnticipo ?? 50;
+  const total = o.precio || 0;
+  const isAnticipo = o.paymentMode === "anticipo";
+  const cobro = isAnticipo ? Math.round((total * pct) / 100) : total;
+  const montoTxt = cobro ? money(cobro) : "tu pedido";
+  const concepto = isAnticipo ? `el anticipo de ${montoTxt}` : `el pago de ${montoTxt}`;
   if (o.paymentLink) {
-    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido${monto}, puedes realizar el anticipo aquí: ${o.paymentLink}`;
+    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido, puedes realizar ${concepto} aquí: ${o.paymentLink}`;
   }
-  return `Hola${n ? " " + n : ""} 😊 te recuerdo el anticipo${monto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+  return `Hola${n ? " " + n : ""} 😊 te recuerdo ${concepto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+}
+
+// Mensaje automático tras confirmar pago
+export function buildPaymentReceivedMessage(o: Order): string {
+  const n = firstName(o.cliente);
+  const fechaTxt = o.fechaEntrega
+    ? formatDateEs(o.fechaEntrega) + (o.horaEntrega ? ` a las ${o.horaEntrega}` : "")
+    : "la fecha acordada";
+  return `¡Pago recibido${n ? ", " + n : ""}! 🎉 Tu pedido está confirmado para ${fechaTxt}.`;
+}
+
+function formatDateEs(iso: string): string {
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+  if (iso === today) return "hoy";
+  if (iso === tomorrow) return "mañana";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "long" });
 }
 
 // Recordatorio "1 día antes"
