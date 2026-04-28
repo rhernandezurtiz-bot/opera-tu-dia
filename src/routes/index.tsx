@@ -133,12 +133,12 @@ function Landing() {
           </p>
         </div>
 
-        {/* Métricas */}
+        {/* Métricas cualitativas */}
         <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Metric value="−87%" label="Pedidos perdidos" />
-          <Metric value="3.2x" label="Mejora en tiempo de respuesta" />
-          <Metric value="+24%" label="Cobranza puntual" />
-          <Metric value="<2 min" label="Configuración inicial" />
+          <Metric value="Menos pérdidas" label="Cierra pedidos que hoy se caen sin seguimiento." />
+          <Metric value="Más velocidad" label="Respuestas estructuradas en lugar de improvisadas." />
+          <Metric value="Cobranza clara" label="Anticipos y pagos con trazabilidad por pedido." />
+          <Metric value="Listo en 1 día" label="Implementación guiada por nuestro equipo." />
         </div>
       </section>
 
