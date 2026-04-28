@@ -262,6 +262,7 @@ interface State {
   markPaymentPaid: (id: string) => void;
   markPaymentFailed: (id: string, motivo?: string) => void;
   sendPaymentReminder: (id: string) => void;
+  markLinkSent: (id: string, payload: { ok: boolean; at: number; provider: string; messageId?: string; error?: string }) => void;
   setPaymentRules: (rules: Partial<Pick<Negocio, "autoCobroEnabled" | "umbralAnticipo" | "porcentajeAnticipo" | "recordatorioMinutos" | "webhookSimMinutos">>) => void;
   setPaymentsConfig: (cfg: Partial<PaymentsConfig>) => void;
 }
