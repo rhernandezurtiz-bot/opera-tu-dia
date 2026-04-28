@@ -8,7 +8,6 @@ import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
 import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
-import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 
 const SAMPLE = `Hola! Soy Carolina, quisiera un pastel de chocolate para mañana a las 5pm. Te paso el anticipo hoy.`;
