@@ -30,6 +30,7 @@ import { Route as ApiSendFacebookRouteImport } from './routes/api/send-facebook'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 import { Route as ApiPublicWebhooksInstagramRouteImport } from './routes/api/public/webhooks/instagram'
+import { Route as ApiPublicWebhooksFacebookRouteImport } from './routes/api/public/webhooks/facebook'
 
 const RiesgosRoute = RiesgosRouteImport.update({
   id: '/riesgos',
@@ -138,6 +139,12 @@ const ApiPublicWebhooksInstagramRoute =
     path: '/api/public/webhooks/instagram',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWebhooksFacebookRoute =
+  ApiPublicWebhooksFacebookRouteImport.update({
+    id: '/api/public/webhooks/facebook',
+    path: '/api/public/webhooks/facebook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
+  '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
   '/pedidos': typeof PedidosIndexRoute
+  '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -205,6 +214,7 @@ export interface FileRoutesById {
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
+  '/api/public/webhooks/facebook': typeof ApiPublicWebhooksFacebookRoute
   '/api/public/webhooks/instagram': typeof ApiPublicWebhooksInstagramRoute
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
@@ -230,6 +240,7 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
+    | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/stripe'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/inbox'
     | '/pedidos'
+    | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/stripe'
@@ -276,6 +288,7 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
+    | '/api/public/webhooks/facebook'
     | '/api/public/webhooks/instagram'
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/stripe'
@@ -300,6 +313,7 @@ export interface RootRouteChildren {
   ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
+  ApiPublicWebhooksFacebookRoute: typeof ApiPublicWebhooksFacebookRoute
   ApiPublicWebhooksInstagramRoute: typeof ApiPublicWebhooksInstagramRoute
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
@@ -454,6 +468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksInstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/facebook': {
+      id: '/api/public/webhooks/facebook'
+      path: '/api/public/webhooks/facebook'
+      fullPath: '/api/public/webhooks/facebook'
+      preLoaderRoute: typeof ApiPublicWebhooksFacebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -476,6 +497,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,
+  ApiPublicWebhooksFacebookRoute: ApiPublicWebhooksFacebookRoute,
   ApiPublicWebhooksInstagramRoute: ApiPublicWebhooksInstagramRoute,
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
