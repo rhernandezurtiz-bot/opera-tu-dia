@@ -280,14 +280,24 @@ export function nextAction(o: Order): NextAction | null {
     };
   }
 
-  // 3) Confirmado pero sin anticipo → solicitar anticipo
-  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "anticipo_solicitado")) {
+  // 3) Confirmado pero sin pago → solicitar pago
+  if (o.estado === "confirmado" && (o.pago === "pendiente" || o.pago === "link_enviado" || o.pago === "fallido")) {
     return {
       kind: "solicitar_anticipo",
-      label: o.pago === "anticipo_solicitado" ? "Reenviar link de pago" : "Solicitar anticipo",
-      reason: o.pago === "anticipo_solicitado" ? "Link enviado, sin pago aún" : "Sin anticipo recibido",
+      label:
+        o.pago === "link_enviado"
+          ? "Reenviar link de pago"
+          : o.pago === "fallido"
+            ? "Reintentar cobro"
+            : "Generar link de pago",
+      reason:
+        o.pago === "link_enviado"
+          ? "Link enviado, sin pago aún"
+          : o.pago === "fallido"
+            ? "Pago anterior falló"
+            : "Sin pago registrado",
       message: buildPaymentReminder(o),
-      tone: "warning",
+      tone: o.pago === "fallido" ? "danger" : "warning",
     };
   }
 
