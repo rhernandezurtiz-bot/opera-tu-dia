@@ -33,6 +33,8 @@ export const Route = createFileRoute("/app")({
 });
 
 function Index() {
+  // Activa motor de cobro automático (genera links, simula webhooks, recordatorios)
+  usePaymentEngine();
   const orders = useOperia((s) => s.orders);
   const updateOrder = useOperia((s) => s.updateOrder);
   const openNew = useUI((s) => s.openNewOrder);
