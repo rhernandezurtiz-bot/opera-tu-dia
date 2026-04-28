@@ -249,6 +249,11 @@ function Detalle() {
               window.open(`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(t)}`, "_blank", "noopener,noreferrer");
             }}
             onAlternative={() => buildAlternativeOffer(catalog, order.tipo)}
+            onRecheck={() => {
+              if (validation.availability === "disponible") toast.success("Disponibilidad confirmada ✓");
+              else if (validation.availability === "no_disponible") toast.error("No disponible — revisa el checklist");
+              else toast.message("Requiere revisión manual");
+            }}
           />
 
           {/* Cobro del pedido */}
