@@ -117,6 +117,43 @@ function Landing() {
         </div>
       </section>
 
+      {/* El problema */}
+      <section
+        id="problema"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>El problema</SectionLabel>
+        <div className="mt-4 grid md:grid-cols-12 gap-10 md:gap-16 items-start">
+          <div className="md:col-span-5">
+            <h2 className="text-[30px] md:text-[40px] leading-[1.08] font-semibold tracking-tight">
+              WhatsApp no fue hecho para operar negocios.
+            </h2>
+            <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-md">
+              Es un canal de mensajería, no una plataforma operativa. A medida que el
+              volumen crece, la operación se fragmenta y el riesgo se acumula en silencio.
+            </p>
+          </div>
+          <div className="md:col-span-7 grid sm:grid-cols-2 gap-px bg-border rounded-2xl overflow-hidden border border-border">
+            <ProblemItem
+              title="Conversaciones perdidas"
+              detail="Mensajes que nunca se responden. Clientes que se van sin que el equipo lo note."
+            />
+            <ProblemItem
+              title="Pedidos sin seguimiento"
+              detail="Sin estado, sin responsable, sin trazabilidad. La operación depende de la memoria."
+            />
+            <ProblemItem
+              title="Equipos descoordinados"
+              detail="Cada agente con su propio teléfono y criterio. Cero visibilidad cruzada."
+            />
+            <ProblemItem
+              title="Falta de visibilidad"
+              detail="Sin métricas, sin alertas, sin control. No se puede gestionar lo que no se mide."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Plataforma */}
       <section
         id="plataforma"
