@@ -22,6 +22,7 @@ import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
 import { Route as ClientesKeyRouteImport } from './routes/clientes.$key'
+import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
 
@@ -90,6 +91,11 @@ const ClientesKeyRoute = ClientesKeyRouteImport.update({
   path: '/clientes/$key',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSendWhatsappRoute = ApiSendWhatsappRouteImport.update({
+  id: '/api/send-whatsapp',
+  path: '/api/send-whatsapp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   id: '/api/public/webhooks/stripe',
   path: '/api/public/webhooks/stripe',
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/produccion': typeof ProduccionRoute
   '/riesgos': typeof RiesgosRoute
+  '/api/send-whatsapp': typeof ApiSendWhatsappRoute
   '/clientes/$key': typeof ClientesKeyRoute
   '/inbox/$id': typeof InboxIdRoute
   '/pedidos/$id': typeof PedidosIdRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/produccion'
     | '/riesgos'
+    | '/api/send-whatsapp'
     | '/clientes/$key'
     | '/inbox/$id'
     | '/pedidos/$id'
@@ -216,6 +228,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   ProduccionRoute: typeof ProduccionRoute
   RiesgosRoute: typeof RiesgosRoute
+  ApiSendWhatsappRoute: typeof ApiSendWhatsappRoute
   ClientesKeyRoute: typeof ClientesKeyRoute
   InboxIdRoute: typeof InboxIdRoute
   PedidosIdRoute: typeof PedidosIdRoute
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesKeyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/send-whatsapp': {
+      id: '/api/send-whatsapp'
+      path: '/api/send-whatsapp'
+      fullPath: '/api/send-whatsapp'
+      preLoaderRoute: typeof ApiSendWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/stripe': {
       id: '/api/public/webhooks/stripe'
       path: '/api/public/webhooks/stripe'
@@ -344,6 +364,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   ProduccionRoute: ProduccionRoute,
   RiesgosRoute: RiesgosRoute,
+  ApiSendWhatsappRoute: ApiSendWhatsappRoute,
   ClientesKeyRoute: ClientesKeyRoute,
   InboxIdRoute: InboxIdRoute,
   PedidosIdRoute: PedidosIdRoute,
