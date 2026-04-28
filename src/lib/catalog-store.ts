@@ -4,6 +4,12 @@ import type { Order, OrderType } from "./operia-store";
 
 export type CatalogKind = "producto" | "servicio" | "cita";
 
+export type DayKey = "lun" | "mar" | "mie" | "jue" | "vie" | "sab" | "dom";
+export const DAY_LABELS: Record<DayKey, string> = {
+  lun: "Lun", mar: "Mar", mie: "Mié", jue: "Jue", vie: "Vie", sab: "Sáb", dom: "Dom",
+};
+export const ALL_DAYS: DayKey[] = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"];
+
 export interface CatalogItem {
   id: string;
   nombre: string;
@@ -16,6 +22,14 @@ export interface CatalogItem {
   anticipacionHoras: number;    // tiempo mínimo
   disponible: boolean;
   notas: string;
+  // Disponibilidad operativa
+  stockDisponible: number;      // 0 = no aplica / sin stock; >0 = unidades libres
+  capacidadDiaria: number;      // 0 = ilimitada; >0 = máx por día
+  horarioDesde: string;         // "HH:mm" o ""
+  horarioHasta: string;         // "HH:mm" o ""
+  diasDisponibles: DayKey[];    // [] = todos los días
+  prepMinutos: number;          // tiempo mínimo de preparación (minutos)
+  bloquearSinDisponibilidad: boolean; // si true, falla cierra cobro automático
   createdAt: number;
 }
 
@@ -39,6 +53,13 @@ const seed = (): CatalogItem[] => [
     anticipacionHoras: 24,
     disponible: true,
     notas: "Solo manejamos pasteles de aprox. 12 personas.",
+    stockDisponible: 0,
+    capacidadDiaria: 4,
+    horarioDesde: "10:00",
+    horarioHasta: "19:00",
+    diasDisponibles: ["mar", "mie", "jue", "vie", "sab"],
+    prepMinutos: 60,
+    bloquearSinDisponibilidad: true,
     createdAt: Date.now(),
   },
 ];
@@ -56,17 +77,39 @@ export const useCatalog = create<State>()(
         set((s) => ({ items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) })),
       removeItem: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
     }),
-    { name: "operia-catalog-v1", version: 1 }
+    {
+      name: "operia-catalog-v2",
+      version: 2,
+      migrate: (persisted: any, version) => {
+        if (!persisted) return persisted;
+        if (version < 2 && Array.isArray(persisted.items)) {
+          persisted.items = persisted.items.map((it: any) => ({
+            stockDisponible: 0,
+            capacidadDiaria: 0,
+            horarioDesde: "",
+            horarioHasta: "",
+            diasDisponibles: [],
+            prepMinutos: 0,
+            bloquearSinDisponibilidad: true,
+            ...it,
+          }));
+        }
+        return persisted;
+      },
+    }
   )
 );
 
 /* ============== Detección desde texto + validación ============== */
 
 export interface ParsedRequest {
-  productoTexto: string;          // primer sustantivo clave del mensaje
+  productoTexto: string;
   personas?: number;
+  cantidad?: number;
   sabor?: string;
+  variante?: string;
   fechaISO?: string;
+  hora?: string; // "HH:mm"
 }
 
 const PRODUCT_KEYWORDS = [
@@ -86,26 +129,57 @@ export function parseRequestFromText(text: string): ParsedRequest {
   const mPers = text.match(/(\d+)\s*personas?/i);
   if (mPers) personas = parseInt(mPers[1], 10);
 
+  let cantidad: number | undefined;
+  const mCant = text.match(/(\d+)\s*(piezas?|unidades?|productos?|cupcakes?|galletas?)/i);
+  if (mCant) cantidad = parseInt(mCant[1], 10);
+
   let sabor: string | undefined;
   const mSabor = text.match(/sabor(?:es)?\s+(?:de\s+)?([a-záéíóúñ ]{3,30})/i)
               || text.match(/de\s+(vainilla|chocolate|lotus|tres leches|fresa|nuez|zarzamora|red velvet|capuchino|moka|naranja|lim[oó]n|pistache)/i);
   if (mSabor) sabor = mSabor[1].trim().toLowerCase().replace(/\.$/, "");
 
-  return { productoTexto, personas, sabor };
+  return { productoTexto, personas, cantidad, sabor };
+}
+
+/* ============== Tipos de validación ============== */
+
+export type AvailabilityStatus =
+  | "pendiente"      // sin verificar todavía
+  | "disponible"     // todo OK
+  | "no_disponible"  // hay bloqueos duros
+  | "revision";      // requiere revisión manual (ambiguo / sin datos)
+
+export interface CheckResult {
+  key: string;
+  label: string;
+  status: "ok" | "fail" | "skip" | "warn";
+  detail?: string;
 }
 
 export interface CatalogValidation {
+  // Status legado para compatibilidad con UI previa
   status: "ok" | "fuera_catalogo" | "sin_match";
-  match?: CatalogItem;          // item del catálogo más parecido
-  alerts: string[];             // mensajes humanos por cada problema
+  // Nuevo estado de disponibilidad operativa
+  availability: AvailabilityStatus;
+  match?: CatalogItem;
+  alerts: string[];
   problems: {
     producto?: boolean;
+    variante?: boolean;
     capacidad?: boolean;
     opcion?: boolean;
     anticipacion?: boolean;
     disponible?: boolean;
+    stock?: boolean;
+    capacidadDiaria?: boolean;
+    horario?: boolean;
+    dia?: boolean;
+    prep?: boolean;
   };
+  checks: CheckResult[];
   parsed: ParsedRequest;
+  // ¿Se debe bloquear el cobro automático?
+  blockPayment: boolean;
 }
 
 function nameMatches(item: CatalogItem, productoTexto: string): boolean {
@@ -119,71 +193,229 @@ function parseCapacityNumber(s: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
+function dayKeyOf(iso: string): DayKey | null {
+  const d = new Date(iso + "T12:00:00");
+  if (isNaN(d.getTime())) return null;
+  const map: DayKey[] = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
+  return map[d.getDay()];
+}
+
+function timeInRange(hhmm: string, desde: string, hasta: string): boolean {
+  const toMin = (s: string) => {
+    const [h, m] = s.split(":").map(Number);
+    return h * 60 + (m || 0);
+  };
+  const t = toMin(hhmm);
+  return t >= toMin(desde) && t <= toMin(hasta);
+}
+
+/* ============== Validación principal ============== */
+
+export interface ValidateOpts {
+  ordersOnDate?: number;   // # de pedidos ya tomados ese día con el mismo item
+  cantidad?: number;       // cantidad solicitada (anula la inferida del texto)
+  hora?: string;           // "HH:mm" hora de entrega/cita
+  variante?: string;       // variante explícita del pedido
+}
+
 export function validateAgainstCatalog(
   text: string,
   catalog: CatalogItem[],
   fechaEntregaISO?: string,
+  opts: ValidateOpts = {},
 ): CatalogValidation {
   const parsed = parseRequestFromText(text);
   parsed.fechaISO = fechaEntregaISO;
+  if (opts.cantidad != null) parsed.cantidad = opts.cantidad;
+  if (opts.hora) parsed.hora = opts.hora;
+  if (opts.variante) parsed.variante = opts.variante;
+
   const alerts: string[] = [];
   const problems: CatalogValidation["problems"] = {};
+  const checks: CheckResult[] = [];
 
   if (catalog.length === 0) {
-    return { status: "sin_match", alerts: [], problems, parsed };
+    return {
+      status: "sin_match",
+      availability: "revision",
+      alerts: [],
+      problems,
+      checks: [{ key: "catalogo", label: "Catálogo cargado", status: "warn", detail: "Tu catálogo está vacío" }],
+      parsed,
+      blockPayment: false,
+    };
   }
 
-  // 1. Buscar match por nombre/keyword
+  // 1. Match por nombre
   const match = catalog.find((c) => nameMatches(c, parsed.productoTexto));
   if (!match) {
+    checks.push({ key: "producto", label: "Producto en catálogo", status: parsed.productoTexto ? "fail" : "warn",
+      detail: parsed.productoTexto ? `"${parsed.productoTexto}" no encontrado` : "No identificado en el mensaje" });
     if (parsed.productoTexto) {
       alerts.push(`Producto solicitado ("${parsed.productoTexto}") no está en tu catálogo.`);
       problems.producto = true;
-      return { status: "fuera_catalogo", alerts, problems, parsed };
+      return {
+        status: "fuera_catalogo",
+        availability: "no_disponible",
+        alerts, problems, checks, parsed,
+        blockPayment: true,
+      };
     }
-    return { status: "sin_match", alerts, problems, parsed };
+    return {
+      status: "sin_match",
+      availability: "revision",
+      alerts, problems, checks, parsed,
+      blockPayment: false,
+    };
   }
 
-  // 2. Disponibilidad
+  checks.push({ key: "producto", label: "Producto en catálogo", status: "ok", detail: match.nombre });
+
+  // 2. Disponible (toggle global)
   if (!match.disponible) {
     alerts.push(`"${match.nombre}" está marcado como no disponible.`);
     problems.disponible = true;
+    checks.push({ key: "disponible", label: "Disponible para venta", status: "fail" });
+  } else {
+    checks.push({ key: "disponible", label: "Disponible para venta", status: "ok" });
   }
 
-  // 3. Capacidad / personas
+  // 3. Variante
+  if (parsed.variante && match.variantes.length > 0) {
+    const ok = match.variantes.some((v) => v.toLowerCase() === parsed.variante!.toLowerCase());
+    if (!ok) {
+      alerts.push(`Variante "${parsed.variante}" no disponible. Opciones: ${match.variantes.join(", ")}.`);
+      problems.variante = true;
+      checks.push({ key: "variante", label: "Variante disponible", status: "fail" });
+    } else {
+      checks.push({ key: "variante", label: "Variante disponible", status: "ok", detail: parsed.variante });
+    }
+  }
+
+  // 4. Capacidad por persona/cantidad vs descripción del item
   if (parsed.personas != null) {
     const cap = parseCapacityNumber(match.capacidad);
     if (cap != null && parsed.personas > cap) {
       alerts.push(`Capacidad no disponible: solo manejas ${match.capacidad}.`);
       problems.capacidad = true;
+      checks.push({ key: "capacidad", label: "Capacidad del producto", status: "fail",
+        detail: `Pidió ${parsed.personas} · máx ${match.capacidad}` });
+    } else {
+      checks.push({ key: "capacidad", label: "Capacidad del producto", status: "ok",
+        detail: `${parsed.personas} personas` });
     }
   }
 
-  // 4. Opciones (sabores, colores, variantes)
+  // 5. Sabores / opciones
   if (parsed.sabor && match.opciones.length > 0) {
     const ok = match.opciones.some((o) => o.toLowerCase().includes(parsed.sabor!) || parsed.sabor!.includes(o.toLowerCase()));
     if (!ok) {
-      alerts.push(`Opción no disponible: solo ofreces ${match.opciones.join(", ")}.`);
+      alerts.push(`Sabor no disponible: solo ofreces ${match.opciones.join(", ")}.`);
       problems.opcion = true;
+      checks.push({ key: "opcion", label: "Sabor / opción disponible", status: "fail",
+        detail: `Pidió "${parsed.sabor}"` });
+    } else {
+      checks.push({ key: "opcion", label: "Sabor / opción disponible", status: "ok", detail: parsed.sabor });
     }
   }
 
-  // 5. Anticipación
-  if (fechaEntregaISO && match.anticipacionHoras > 0) {
-    const target = new Date(fechaEntregaISO + "T12:00:00").getTime();
-    const horas = (target - Date.now()) / (1000 * 60 * 60);
-    if (horas < match.anticipacionHoras) {
-      alerts.push(`Necesitas al menos ${match.anticipacionHoras}h de anticipación para "${match.nombre}".`);
-      problems.anticipacion = true;
+  // 6. Stock
+  if (match.stockDisponible > 0) {
+    const necesario = parsed.cantidad ?? 1;
+    if (necesario > match.stockDisponible) {
+      alerts.push(`Stock insuficiente: solo ${match.stockDisponible} disponibles (pidió ${necesario}).`);
+      problems.stock = true;
+      checks.push({ key: "stock", label: "Stock suficiente", status: "fail",
+        detail: `${match.stockDisponible} disponibles` });
+    } else {
+      checks.push({ key: "stock", label: "Stock suficiente", status: "ok",
+        detail: `${match.stockDisponible} en stock` });
     }
+  }
+
+  // 7. Capacidad diaria (cuántos pedidos ya tomados ese día)
+  if (match.capacidadDiaria > 0 && fechaEntregaISO) {
+    const usados = opts.ordersOnDate ?? 0;
+    if (usados >= match.capacidadDiaria) {
+      alerts.push(`Capacidad diaria llena: ${usados}/${match.capacidadDiaria} pedidos para esa fecha.`);
+      problems.capacidadDiaria = true;
+      checks.push({ key: "capacidad_diaria", label: "Capacidad diaria", status: "fail",
+        detail: `${usados}/${match.capacidadDiaria}` });
+    } else {
+      checks.push({ key: "capacidad_diaria", label: "Capacidad diaria", status: "ok",
+        detail: `${usados}/${match.capacidadDiaria}` });
+    }
+  }
+
+  // 8. Día de la semana
+  if (fechaEntregaISO && match.diasDisponibles.length > 0) {
+    const dk = dayKeyOf(fechaEntregaISO);
+    if (dk && !match.diasDisponibles.includes(dk)) {
+      alerts.push(`No trabajamos los ${DAY_LABELS[dk]}. Días: ${match.diasDisponibles.map((d) => DAY_LABELS[d]).join(", ")}.`);
+      problems.dia = true;
+      checks.push({ key: "dia", label: "Día disponible", status: "fail", detail: DAY_LABELS[dk] });
+    } else if (dk) {
+      checks.push({ key: "dia", label: "Día disponible", status: "ok", detail: DAY_LABELS[dk] });
+    }
+  }
+
+  // 9. Horario
+  if (parsed.hora && match.horarioDesde && match.horarioHasta) {
+    if (!timeInRange(parsed.hora, match.horarioDesde, match.horarioHasta)) {
+      alerts.push(`Fuera de horario: ${match.horarioDesde}–${match.horarioHasta}.`);
+      problems.horario = true;
+      checks.push({ key: "horario", label: "Horario disponible", status: "fail",
+        detail: `Pidió ${parsed.hora}` });
+    } else {
+      checks.push({ key: "horario", label: "Horario disponible", status: "ok", detail: parsed.hora });
+    }
+  }
+
+  // 10. Anticipación + tiempo mínimo de preparación
+  if (fechaEntregaISO && (match.anticipacionHoras > 0 || match.prepMinutos > 0)) {
+    const targetISO = parsed.hora
+      ? `${fechaEntregaISO}T${parsed.hora}:00`
+      : `${fechaEntregaISO}T12:00:00`;
+    const target = new Date(targetISO).getTime();
+    const horas = (target - Date.now()) / (1000 * 60 * 60);
+    const minHoras = match.anticipacionHoras + match.prepMinutos / 60;
+    if (horas < minHoras) {
+      alerts.push(`Necesitas al menos ${match.anticipacionHoras}h de anticipación${match.prepMinutos > 0 ? ` + ${match.prepMinutos}min de preparación` : ""}.`);
+      problems.anticipacion = true;
+      problems.prep = match.prepMinutos > 0 || undefined;
+      checks.push({ key: "anticipacion", label: "Tiempo de anticipación", status: "fail",
+        detail: `Faltan ${Math.max(0, Math.round((minHoras - horas) * 10) / 10)}h` });
+    } else {
+      checks.push({ key: "anticipacion", label: "Tiempo de anticipación", status: "ok" });
+    }
+  }
+
+  // Resolver estado
+  const hasFail = checks.some((c) => c.status === "fail");
+  const hasWarn = checks.some((c) => c.status === "warn");
+
+  let availability: AvailabilityStatus;
+  let blockPayment: boolean;
+  if (hasFail) {
+    availability = "no_disponible";
+    blockPayment = match.bloquearSinDisponibilidad !== false;
+  } else if (hasWarn) {
+    availability = "revision";
+    blockPayment = false;
+  } else {
+    availability = "disponible";
+    blockPayment = false;
   }
 
   return {
-    status: alerts.length > 0 ? "fuera_catalogo" : "ok",
+    status: hasFail ? "fuera_catalogo" : "ok",
+    availability,
     match,
     alerts,
     problems,
+    checks,
     parsed,
+    blockPayment,
   };
 }
 
@@ -193,17 +425,24 @@ export function buildOutOfCatalogMessage(v: CatalogValidation): string {
   const m = v.match;
   const partes: string[] = ["Hola 😊"];
 
-  if (m && (v.problems.capacidad || v.problems.opcion)) {
-    const frags: string[] = [];
-    frags.push(`sí manejamos ${m.nombre.toLowerCase()}`);
+  if (m && (v.problems.capacidadDiaria || v.problems.dia || v.problems.horario)) {
+    const detalles: string[] = [`sí manejamos ${m.nombre.toLowerCase()}`];
+    if (v.problems.capacidadDiaria) detalles.push("pero para esa fecha ya no tenemos disponibilidad");
+    if (v.problems.dia) detalles.push("pero ese día no trabajamos");
+    if (v.problems.horario) detalles.push(`pero nuestro horario es ${m.horarioDesde}–${m.horarioHasta}`);
+    partes.push(detalles.join(" ") + ".");
+    partes.push("Te puedo ofrecer otras opciones disponibles 🙌");
+  } else if (m && (v.problems.capacidad || v.problems.opcion || v.problems.variante)) {
+    const frags: string[] = [`sí manejamos ${m.nombre.toLowerCase()}`];
     if (v.problems.capacidad) frags.push(`pero por ahora solo tenemos tamaño para ${m.capacidad}`);
-    if (v.problems.opcion && m.opciones.length > 0) {
-      frags.push(`y nuestras opciones disponibles son ${m.opciones.join(", ")}`);
-    }
+    if (v.problems.opcion && m.opciones.length > 0) frags.push(`y nuestras opciones disponibles son ${m.opciones.join(", ")}`);
+    if (v.problems.variante && m.variantes.length > 0) frags.push(`y las variantes son ${m.variantes.join(", ")}`);
     partes.push(frags.join(" ") + ".");
+  } else if (v.problems.stock && m) {
+    partes.push(`tenemos limitado el stock de "${m.nombre}" en este momento.`);
   } else if (v.problems.producto) {
     partes.push("por ahora ese producto no está dentro de lo que ofrecemos, pero podemos revisarlo juntos.");
-  } else if (v.problems.anticipacion && m) {
+  } else if ((v.problems.anticipacion || v.problems.prep) && m) {
     partes.push(`necesitamos al menos ${m.anticipacionHoras}h de anticipación para preparar tu ${m.nombre.toLowerCase()}.`);
   } else if (v.problems.disponible && m) {
     partes.push(`por ahora "${m.nombre}" no está disponible.`);
@@ -227,8 +466,32 @@ export function buildAlternativeOffer(catalog: CatalogItem[], tipo?: OrderType):
 
 /* ============== Validación de un Order ============== */
 
-export function validateOrder(order: Order, catalog: CatalogItem[]): CatalogValidation {
-  // Combina mensaje original + descripción para mejor detección
+export function validateOrder(
+  order: Order,
+  catalog: CatalogItem[],
+  allOrders?: Order[],
+): CatalogValidation {
   const text = [order.mensajeOriginal, order.descripcion, order.detalles].filter(Boolean).join(" — ");
-  return validateAgainstCatalog(text, catalog, order.fechaEntrega);
+  const cantidad = order.cantidad ? parseInt(order.cantidad, 10) : undefined;
+
+  // Pre-cálculo de pedidos en la misma fecha (para capacidad diaria)
+  let ordersOnDate = 0;
+  if (allOrders && order.fechaEntrega) {
+    ordersOnDate = allOrders.filter(
+      (o) => o.id !== order.id && o.fechaEntrega === order.fechaEntrega && o.estado !== "cancelado",
+    ).length;
+  }
+
+  return validateAgainstCatalog(text, catalog, order.fechaEntrega, {
+    cantidad: Number.isFinite(cantidad) ? cantidad : undefined,
+    hora: order.horaEntrega || undefined,
+    ordersOnDate,
+  });
 }
+
+export const AVAILABILITY_LABEL: Record<AvailabilityStatus, string> = {
+  pendiente: "Pendiente de disponibilidad",
+  disponible: "Disponible",
+  no_disponible: "No disponible",
+  revision: "Requiere revisión manual",
+};
