@@ -301,19 +301,32 @@ function recompute(o: Order): Order {
     else if (o.direccion.split(/\s+/).length < 2 && !/\d/.test(o.direccion)) faltantes.push("Dirección completa");
   }
   // Pago
-  if (o.pago === "pendiente") faltantes.push("Pago");
+  if (o.pago !== "pagado" && o.pago !== "anticipo") faltantes.push("Pago");
   // Contacto
   if (!o.telefono) faltantes.push("Contacto");
+
+  // Auto-vencimiento: si hay fecha pasada y no está pagado/entregado/cancelado
+  let pago = o.pago;
+  const todayISO = new Date().toISOString().slice(0, 10);
+  if (
+    pago !== "pagado" &&
+    o.fechaEntrega &&
+    o.fechaEntrega < todayISO &&
+    o.estado !== "entregado" &&
+    o.estado !== "cancelado"
+  ) {
+    pago = "vencido";
+  }
 
   // Riesgo: >2 críticos => ALTO; 1–2 => MEDIO; 0 => BAJO
   const criticos = faltantes.filter((f) =>
     /Producto|Fecha|Hora|Dirección|Contacto/i.test(f)
   ).length;
   let riesgo: RiskLevel = "bajo";
-  if (criticos > 2 || o.ambiguo) riesgo = "alto";
+  if (criticos > 2 || o.ambiguo || pago === "vencido") riesgo = "alto";
   else if (faltantes.length >= 1) riesgo = "medio";
 
-  return { ...o, faltantes, riesgo };
+  return { ...o, pago, faltantes, riesgo };
 }
 
 // Keyword sets for type classification
