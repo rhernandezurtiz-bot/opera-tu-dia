@@ -122,10 +122,30 @@ export const useCatalog = create<State>()(
       updateItem: (id, patch) =>
         set((s) => ({ items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) })),
       removeItem: (id) => set((s) => ({ items: s.items.filter((it) => it.id !== id) })),
+      decrementStock: (id, qty = 1) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id && it.stockDisponible > 0
+              ? { ...it, stockDisponible: Math.max(0, it.stockDisponible - qty) }
+              : it,
+          ),
+        })),
+      incrementStock: (id, qty = 1) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id ? { ...it, stockDisponible: it.stockDisponible + qty } : it,
+          ),
+        })),
+      setStock: (id, qty) =>
+        set((s) => ({
+          items: s.items.map((it) =>
+            it.id === id ? { ...it, stockDisponible: Math.max(0, qty) } : it,
+          ),
+        })),
     }),
     {
-      name: "operia-catalog-v2",
-      version: 2,
+      name: "operia-catalog-v3",
+      version: 3,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 2 && Array.isArray(persisted.items)) {
@@ -137,6 +157,18 @@ export const useCatalog = create<State>()(
             diasDisponibles: [],
             prepMinutos: 0,
             bloquearSinDisponibilidad: true,
+            ...it,
+          }));
+        }
+        if (version < 3 && Array.isArray(persisted.items)) {
+          persisted.items = persisted.items.map((it: any) => ({
+            categoria: "General",
+            tipoInventario:
+              it.tipo === "servicio" ? "servicio"
+                : it.capacidadDiaria > 0 ? "capacidad_diaria"
+                : "producto_terminado",
+            stockMinimo: 0,
+            unidad: it.tipo === "servicio" || it.tipo === "cita" ? "espacios" : "piezas",
             ...it,
           }));
         }
