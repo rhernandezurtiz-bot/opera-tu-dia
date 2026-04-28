@@ -1,5 +1,5 @@
 import { Link, useLocation, Navigate } from "@tanstack/react-router";
-import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package } from "lucide-react";
+import { Home, ListOrdered, ChefHat, AlertTriangle, Settings, Plus, MessageCircle, Users, LogOut, Package, Boxes } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useUI, urgency } from "@/lib/ui-store";
