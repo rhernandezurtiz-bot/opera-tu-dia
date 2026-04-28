@@ -119,10 +119,8 @@ function Landing() {
             Evita pérdidas, mejora tiempos de respuesta y escala sin caos.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="h-12 px-6 text-[14px]">
-              <a href="#contacto">
-                Solicitar demo <ArrowRight className="h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-12 px-6 text-[14px]" onClick={openDemo}>
+              Solicitar demo <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               asChild
