@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { DemoRequestModal } from "@/components/DemoRequestModal";
 import { Card } from "@/components/ui/card";
 import {
   ArrowRight,
@@ -63,8 +65,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const openDemo = () => setDemoOpen(true);
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
+      <DemoRequestModal open={demoOpen} onOpenChange={setDemoOpen} />
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
@@ -88,8 +93,8 @@ function Landing() {
             <Button asChild variant="ghost" size="sm" className="h-9">
               <Link to="/login">Entrar</Link>
             </Button>
-            <Button asChild size="sm" className="h-9">
-              <a href="#contacto">Solicitar demo</a>
+            <Button size="sm" className="h-9" onClick={openDemo}>
+              Solicitar demo
             </Button>
           </div>
         </div>
@@ -114,10 +119,8 @@ function Landing() {
             Evita pérdidas, mejora tiempos de respuesta y escala sin caos.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="h-12 px-6 text-[14px]">
-              <a href="#contacto">
-                Solicitar demo <ArrowRight className="h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-12 px-6 text-[14px]" onClick={openDemo}>
+              Solicitar demo <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               asChild
@@ -451,8 +454,8 @@ function Landing() {
               ingresos.
             </div>
           </div>
-          <Button asChild variant="secondary" className="h-10 shrink-0">
-            <a href="#contacto">Solicitar demo</a>
+          <Button variant="secondary" className="h-10 shrink-0" onClick={openDemo}>
+            Solicitar demo
           </Button>
         </Card>
       </section>
@@ -756,7 +759,7 @@ function Landing() {
               "Soporte prioritario",
             ]}
             ctaLabel="Solicitar demo"
-            ctaHref="#contacto"
+            onCta={openDemo}
             enterprise
           />
         </div>
@@ -805,10 +808,8 @@ function Landing() {
             tu operación.
           </p>
           <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-            <Button asChild size="lg" className="h-12 px-6">
-              <a href="mailto:hola@operia.app?subject=Solicitar%20demo%20Operia">
-                Solicitar demo <ArrowRight className="h-4 w-4" />
-              </a>
+            <Button size="lg" className="h-12 px-6" onClick={openDemo}>
+              Solicitar demo <ArrowRight className="h-4 w-4" />
             </Button>
             <Button asChild size="lg" variant="ghost" className="h-12 px-5">
               <Link to="/login">Ver demo de plataforma</Link>
@@ -1099,6 +1100,7 @@ function Plan({
   enterprise,
   ctaLabel,
   ctaHref,
+  onCta,
 }: {
   name: string;
   price: string;
@@ -1108,6 +1110,7 @@ function Plan({
   enterprise?: boolean;
   ctaLabel?: string;
   ctaHref?: string;
+  onCta?: () => void;
 }) {
   const dark = highlighted;
   return (
@@ -1158,7 +1161,11 @@ function Plan({
           </li>
         ))}
       </ul>
-      {ctaHref ? (
+      {onCta ? (
+        <Button onClick={onCta} className="h-10 w-full">
+          {ctaLabel ?? "Comenzar"}
+        </Button>
+      ) : ctaHref ? (
         <Button asChild className="h-10 w-full">
           <a href={ctaHref}>{ctaLabel ?? "Comenzar"}</a>
         </Button>
