@@ -28,8 +28,13 @@ import {
   validateAgainstCatalog,
   validateOrder,
   buildAlternativeOffer,
+  selectBestOption,
+  suggestVariantCombo,
+  remainingCapacity,
   type CatalogItem,
   type CatalogValidation,
+  type ScoredOption,
+  type ComboSuggestion,
 } from "./catalog-store";
 import { adaptMessageForChannel } from "./ui-store";
 
