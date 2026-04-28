@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2, Wallet, MessageCircle } from "lucide-react";
 import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
+import { useCatalog } from "@/lib/catalog-store";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
 import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
 import { toast } from "sonner";
