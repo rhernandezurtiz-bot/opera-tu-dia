@@ -230,17 +230,17 @@ function Detalle() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-5">
-          {/* Pago */}
+          {/* Cobro del pedido */}
           <Card className="p-5 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Wallet className="h-4 w-4 text-muted-foreground" />
-              <h3 className="font-display text-lg">Pago</h3>
-              <PaymentBadge status={order.pago} />
+              <h3 className="font-display text-lg">Cobro del pedido</h3>
+              <CobroBadge status={order.pago} />
             </div>
 
             <div className="grid sm:grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="text-[11.5px] text-muted-foreground font-medium">Monto</label>
+                <label className="text-[11.5px] text-muted-foreground font-medium">Monto del pedido ({paymentsCfg.moneda})</label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     type="number"
@@ -261,23 +261,20 @@ function Detalle() {
                   </Button>
                 </div>
               </div>
-              <div className="flex items-end gap-2 flex-wrap">
-                <Button
-                  size="sm"
-                  variant={order.pago === "pagado" ? "default" : "secondary"}
-                  className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "pagado", paymentPaidAt: Date.now(), checklist: { ...order.checklist, pago: true } }); toast.success("Pago marcado como recibido"); }}
+              <div>
+                <label className="text-[11.5px] text-muted-foreground font-medium">Proveedor</label>
+                <Select
+                  value={order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago")}
+                  onValueChange={(v) => updateOrder(order.id, { paymentProvider: v as PaymentProvider })}
                 >
-                  Marcar como pagado
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="rounded-full"
-                  onClick={() => { updateOrder(order.id, { pago: "no_requerido" }); toast.success("Cobro marcado como no requerido"); }}
-                >
-                  Sin cobro
-                </Button>
+                  <SelectTrigger className="rounded-lg h-9 mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mercadopago">Mercado Pago</SelectItem>
+                    <SelectItem value="stripe">Stripe</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -293,102 +290,90 @@ function Detalle() {
               </div>
             )}
 
-            {order.pago !== "pagado" && (
+            {order.pago === "pagado" ? (
+              <div className="p-3 rounded-2xl bg-success/10 border border-success/30 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                <div className="text-sm">
+                  <span className="font-medium text-success">Pago recibido</span>
+                  {order.precio > 0 && <> · {money(order.precio)} sumados a ingresos del día</>}
+                </div>
+              </div>
+            ) : (
               <div className="p-3 rounded-2xl bg-secondary/40 border border-border space-y-3">
-                {/* Selector de proveedor: solo cuando hay "ambos" disponible */}
-                {paymentsCfg.proveedorPrincipal === "ambos" && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[11.5px] text-muted-foreground">Cobrar con:</span>
-                    {(["mercadopago", "stripe"] as PaymentProvider[]).map((p) => {
-                      const active = (order.paymentProvider ?? "mercadopago") === p;
-                      return (
-                        <Button
-                          key={p}
-                          size="sm"
-                          variant={active ? "default" : "ghost"}
-                          className="rounded-full h-7 px-3 text-[11.5px]"
-                          onClick={() => {
-                            const link = generatePaymentLink(order.id, p);
-                            toast.success(`Link generado con ${p === "mercadopago" ? "Mercado Pago" : "Stripe"}`);
-                            copiar(link, "Link copiado");
-                          }}
-                        >
-                          {p === "mercadopago" ? "Mercado Pago" : "Stripe"}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div>
-                  <div className="text-[12.5px] text-muted-foreground mb-1.5 flex items-center gap-2">
-                    Link de pago
-                    {order.paymentProvider && (
-                      <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-background border border-border">
-                        {order.paymentProvider === "mercadopago" ? "Mercado Pago" : "Stripe"}
-                      </span>
-                    )}
-                    {paymentsCfg.modo === "simulacion" && (
-                      <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-warning/15 text-foreground/70 border border-warning/30">
-                        Simulación
-                      </span>
-                    )}
-                  </div>
-                  {order.paymentLink ? (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <code className="text-[12px] px-2 py-1 rounded bg-background border border-border break-all flex-1 min-w-0">
-                        {order.paymentLink}
-                      </code>
-                      <Button size="sm" variant="ghost" className="rounded-full h-8" onClick={() => copiar(order.paymentLink!)}>
-                        <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="rounded-full h-8"
-                        onClick={() => {
-                          const link = generatePaymentLink(order.id, order.paymentProvider);
-                          toast.success("Link regenerado");
-                          copiar(link);
-                        }}
-                      >
-                        Regenerar
-                      </Button>
-                    </div>
-                  ) : (
+                {/* Acciones principales */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => {
+                      const provider = order.paymentProvider ?? (paymentsCfg.proveedorPrincipal === "stripe" ? "stripe" : "mercadopago");
+                      generatePaymentLink(order.id, provider);
+                      toast.success("Link de pago generado");
+                    }}
+                  >
+                    <Wallet className="h-3.5 w-3.5 mr-1" />
+                    {order.paymentLink ? "Regenerar link de pago" : "Generar link de pago"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="rounded-full"
+                    onClick={() => { markPaymentPaid(order.id); toast.success("Pago marcado como recibido"); }}
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1" /> Marcar como pagado (simulación)
+                  </Button>
+                  {order.paymentLink && paymentsCfg.modo === "simulacion" && (
                     <Button
                       size="sm"
-                      className="rounded-full"
-                      onClick={() => {
-                        generatePaymentLink(order.id);
-                        toast.success("Link de pago generado");
-                      }}
+                      variant="ghost"
+                      className="rounded-full text-danger hover:text-danger"
+                      onClick={() => { markPaymentFailed(order.id, "Rechazado en simulación"); toast.error("Pago fallido (simulado)"); }}
                     >
-                      <Wallet className="h-3.5 w-3.5 mr-1" /> Generar link de pago
+                      Simular pago fallido
                     </Button>
                   )}
                 </div>
 
-                {/* Simular webhook (Fase 1: cobro automático sin backend real) */}
-                {order.paymentLink && paymentsCfg.modo === "simulacion" && (
-                  <div className="flex items-center gap-2 flex-wrap pt-1">
-                    <span className="text-[11.5px] text-muted-foreground">Simular respuesta del proveedor:</span>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="rounded-full h-7 px-3 text-[11.5px]"
-                      onClick={() => { markPaymentPaid(order.id); toast.success("Pago recibido (simulado)"); }}
-                    >
-                      ✓ Pago recibido
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="rounded-full h-7 px-3 text-[11.5px] text-danger hover:text-danger"
-                      onClick={() => { markPaymentFailed(order.id, "Rechazado en simulación"); toast.error("Pago fallido (simulado)"); }}
-                    >
-                      ✗ Pago fallido
-                    </Button>
+                {/* Link generado */}
+                {order.paymentLink && (
+                  <div>
+                    <div className="text-[12.5px] text-muted-foreground mb-1.5 flex items-center gap-2 flex-wrap">
+                      Link de pago
+                      {order.paymentProvider && (
+                        <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-background border border-border">
+                          {order.paymentProvider === "mercadopago" ? "Mercado Pago" : "Stripe"}
+                        </span>
+                      )}
+                      {paymentsCfg.modo === "simulacion" && (
+                        <span className="text-[10.5px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-warning/15 text-foreground/70 border border-warning/30">
+                          Simulación
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-[12px] px-2 py-1 rounded bg-background border border-border break-all flex-1 min-w-0">
+                        {order.paymentLink}
+                      </code>
+                      <Button size="sm" variant="ghost" className="rounded-full h-8" onClick={() => copiar(order.paymentLink!, "Link copiado")}>
+                        <Copy className="h-3.5 w-3.5 mr-1" /> Copiar link
+                      </Button>
+                      {order.telefono && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="rounded-full h-8"
+                          asChild
+                        >
+                          <a
+                            href={`https://wa.me/${order.telefono.replace(/\D/g, "")}?text=${encodeURIComponent(buildPaymentReminder(order))}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Send className="h-3.5 w-3.5 mr-1" /> Enviar por WhatsApp
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -397,7 +382,7 @@ function Detalle() {
                   <p className="text-sm text-foreground/90 whitespace-pre-wrap mb-2">
                     {buildPaymentReminder(order)}
                   </p>
-                  <Button size="sm" className="rounded-full" onClick={() => copiar(buildPaymentReminder(order))}>
+                  <Button size="sm" variant="ghost" className="rounded-full" onClick={() => copiar(buildPaymentReminder(order))}>
                     <Copy className="h-3.5 w-3.5 mr-1" /> Copiar mensaje
                   </Button>
                 </div>
