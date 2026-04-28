@@ -17,6 +17,8 @@ import {
   Wallet,
   Sparkles,
   Send,
+  CreditCard,
+  Percent,
 } from "lucide-react";
 import { toast } from "sonner";
 
