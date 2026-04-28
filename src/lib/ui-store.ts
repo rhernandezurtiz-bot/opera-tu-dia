@@ -467,15 +467,15 @@ export function nextAction(o: Order): NextAction | null {
   return null;
 }
 
-// Recordatorio "2 horas antes"
+// Recordatorio "horas antes" — cálido y breve
 export function buildHoursBeforeReminder(o: Order): string {
   const n = firstName(o.cliente);
   const cuando = o.horaEntrega ? `a las ${o.horaEntrega}` : "hoy";
   if (o.tipo === "cita") {
-    return `Hola${n ? " " + n : ""} 😊 te esperamos ${cuando}. ¿Me confirmas la dirección y que llegas a tiempo?`;
+    return `Hola${n ? " " + n : ""} 😊\n\nTe esperamos ${cuando} 📅\n\n¿Llegas sin problema?`;
   }
   if (o.tipo === "servicio") {
-    return `Hola${n ? " " + n : ""} 😊 te confirmo nuestra visita ${cuando}. ¿Me confirmas la dirección exacta?`;
+    return `Hola${n ? " " + n : ""} 😊\n\nVamos en camino ${cuando} ✨\n\n¿Me confirmas que estás en la dirección?`;
   }
-  return `Hola${n ? " " + n : ""} 😊 vamos en camino con tu pedido ${cuando}. ¿Confirmas la dirección de entrega?`;
+  return `Hola${n ? " " + n : ""} 😊\n\nTu pedido sale ${cuando} 🙌\n\n¿Sigue todo bien con la entrega?`;
 }
