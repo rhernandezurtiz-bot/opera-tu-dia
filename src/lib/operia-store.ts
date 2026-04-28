@@ -556,8 +556,8 @@ export const useOperia = create<State>()(
       setPaymentsConfig: (cfg) => set((s) => ({ negocio: { ...s.negocio, payments: { ...s.negocio.payments, ...cfg } } })),
     }),
     {
-      name: "operia-store-v7",
-      version: 7,
+      name: "operia-store-v8",
+      version: 8,
       migrate: (persisted: any, version) => {
         if (!persisted) return persisted;
         if (version < 7) {
@@ -575,6 +575,15 @@ export const useOperia = create<State>()(
             };
           }
           if (!persisted.channelMode) persisted.channelMode = "demo";
+        }
+        if (version < 8) {
+          if (!persisted.facebook) {
+            persisted.facebook = {
+              pageId: "", accessToken: "", verifyToken: "", appSecret: "",
+              webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook",
+              conectado: false,
+            };
+          }
         }
         return persisted;
       },
