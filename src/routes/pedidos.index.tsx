@@ -90,7 +90,7 @@ function Pedidos() {
                     <div className="text-[14.5px] font-semibold tabular-nums mt-1">
                       ${(o.precio || 0).toLocaleString("es-MX")}
                     </div>
-                    <div className="text-[11px] text-muted-foreground capitalize">Pago: {o.pago}</div>
+                    <PayPill status={o.pago} />
                   </div>
                 </div>
               </Card>
