@@ -277,19 +277,27 @@ export function buildReadyMessage(o: Order): string {
   return `¡Hola${n ? " " + n : ""}! 🎉\n\n${noun.charAt(0).toUpperCase() + noun.slice(1)} ya está listo. ¿Te queda bien pasar a la hora acordada?`;
 }
 
-// Recordatorio de pago / cobro automático
+// Recordatorio de pago / cobro automático — tono cálido, pago como siguiente paso natural
 export function buildPaymentReminder(o: Order, opts?: { porcentajeAnticipo?: number }): string {
   const n = firstName(o.cliente);
   const pct = opts?.porcentajeAnticipo ?? 50;
   const total = o.precio || 0;
   const isAnticipo = o.paymentMode === "anticipo";
   const cobro = isAnticipo ? Math.round((total * pct) / 100) : total;
-  const montoTxt = cobro ? money(cobro) : "tu pedido";
-  const concepto = isAnticipo ? `el anticipo de ${montoTxt}` : `el pago de ${montoTxt}`;
+  const montoTxt = cobro ? ` (${money(cobro)})` : "";
+  const noun = itemNoun(o);
+  const cuando = whenPhrase(o);
+
   if (o.paymentLink) {
-    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido, puedes realizar ${concepto} aquí: ${o.paymentLink}`;
+    const intro = cuando
+      ? `¡Listo para apartar ${noun} ${cuando}! 🙌`
+      : `¡Listo para apartar ${noun}! 🙌`;
+    const accion = isAnticipo
+      ? `Te dejo el link para el anticipo${montoTxt}:`
+      : `Te dejo el link de pago${montoTxt}:`;
+    return `Hola${n ? " " + n : ""} 😊\n\n${intro}\n\n${accion}\n${o.paymentLink}`;
   }
-  return `Hola${n ? " " + n : ""} 😊 te recuerdo ${concepto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
+  return `Hola${n ? " " + n : ""} 😊\n\nQuería confirmar que tengo todo listo de mi lado para ${noun}${cuando ? " " + cuando : ""} 🙌\n\nEn un momento te paso el link para apartarlo.`;
 }
 
 // Mensaje automático tras confirmar pago
@@ -298,7 +306,7 @@ export function buildPaymentReceivedMessage(o: Order): string {
   const fechaTxt = o.fechaEntrega
     ? formatDateEs(o.fechaEntrega) + (o.horaEntrega ? ` a las ${o.horaEntrega}` : "")
     : "la fecha acordada";
-  return `¡Pago recibido${n ? ", " + n : ""}! 🎉 Tu pedido está confirmado para ${fechaTxt}.`;
+  return `¡Pago recibido${n ? ", " + n : ""}! 🎉\n\nTu lugar queda apartado para ${fechaTxt}. Cualquier detalle, me avisas 🙌`;
 }
 
 function formatDateEs(iso: string): string {
@@ -310,15 +318,15 @@ function formatDateEs(iso: string): string {
   return d.toLocaleDateString("es-MX", { day: "numeric", month: "long" });
 }
 
-// Recordatorio "1 día antes"
+// Recordatorio "1 día antes" — cálido, sin sonar administrativo
 export function buildDayBeforeReminder(o: Order): string {
   const n = firstName(o.cliente);
-  const desc = o.descripcion?.split(" — ")[0] || "tu pedido";
+  const noun = itemNoun(o);
   const cuando = o.horaEntrega ? `mañana a las ${o.horaEntrega}` : "mañana";
   if (o.tipo === "cita") {
-    return `Hola${n ? " " + n : ""} 😊 te recuerdo tu cita ${cuando}. ¿Confirmas que sigue en pie?`;
+    return `Hola${n ? " " + n : ""} 😊\n\nTe esperamos ${cuando} 📅\n\n¿Todo sigue en pie de tu lado?`;
   }
-  return `Hola${n ? " " + n : ""} 😊 te confirmo ${desc} para ${cuando}. ¿Todo sigue en orden?`;
+  return `Hola${n ? " " + n : ""} 😊\n\n${noun.charAt(0).toUpperCase() + noun.slice(1)} va listo ${cuando} 🙌\n\n¿Te queda bien la hora?`;
 }
 
 /* ---------- Next best action ---------- */
