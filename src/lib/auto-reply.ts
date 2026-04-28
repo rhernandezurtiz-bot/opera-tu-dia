@@ -262,20 +262,62 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
   if (faltantesMinimos.length > 0) {
     const lista = listFormat(faltantesMinimos);
     const resumen = m ? buildOrderSummary(m, validation, order) : "tu pedido";
+    const escasez = scarcityHint(m, orders, order.fechaEntrega);
     return finalize(intent, "faltan_datos", canal,
-      `¡Hola! 👋 Sí podemos hacer ${resumen}.\n\nPara apartarlo solo necesito ${lista} y te paso el link de pago 🙌`,
+      `¡Sí podemos! 🙌 ${capitalize(resumen)}.${escasez ? `\n\n${escasez}` : ""}\n\nPásame ${lista} y te mando el link de pago al instante.`,
       { validation, draftOrder });
   }
 
-  // --- A. TODO disponible → cerrar venta directo con link de pago ---
+  // --- A. TODO disponible → cerrar venta con urgencia ligera + escasez + anticipo ---
   const resumen = m ? buildOrderSummary(m, validation, order) : "tu pedido";
   const fecha = order.fechaEntrega ? prettyDate(order.fechaEntrega) : "la fecha que necesitas";
   const hora = order.horaEntrega ? ` a las ${order.horaEntrega}` : "";
-  const precio = m?.precioBase ? `\n\nTotal: $${m.precioBase.toLocaleString("es-MX")}` : "";
+  const cobro = paymentHint(m, order);
+  const escasez = scarcityHint(m, orders, order.fechaEntrega);
 
   return finalize(intent, "venta_posible", canal,
-    `¡Hola! 👋 Sí podemos hacer ${resumen} para ${fecha}${hora}.${precio}\n\nEn cuanto confirmes, te paso el link de pago para apartarlo 🙌`,
+    `¡Sí, va! 🙌 Te aparto ${resumen} para ${fecha}${hora}.${cobro ? `\n\n${cobro}` : ""}${escasez ? `\n${escasez}` : ""}\n\nConfirma y te mando el link de pago para asegurarlo ✨`,
     { validation, draftOrder });
+}
+
+function capitalize(s: string): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+/**
+ * Mensaje de escasez basado en stock o capacidad diaria restante.
+ * Devuelve "" si no aplica.
+ */
+function scarcityHint(item: CatalogItem | undefined, orders: Order[], fechaISO?: string): string {
+  if (!item) return "";
+  if (item.stockDisponible > 0 && item.stockDisponible <= 3) {
+    return `⚡ Solo quedan ${item.stockDisponible} disponibles.`;
+  }
+  if (item.capacidadDiaria > 0 && fechaISO) {
+    const usados = orders.filter(
+      (o) => o.fechaEntrega === fechaISO && o.estado !== "cancelado",
+    ).length;
+    const libres = item.capacidadDiaria - usados;
+    if (libres > 0 && libres <= 2) {
+      return `⚡ Solo quedan ${libres} cupo${libres === 1 ? "" : "s"} para esa fecha.`;
+    }
+  }
+  return "";
+}
+
+/**
+ * Sugerencia de cobro: anticipo si supera umbral, total si no.
+ */
+function paymentHint(item: CatalogItem | undefined, order: Order): string {
+  const total = order.precio || item?.precioBase || 0;
+  if (!total) return "";
+  const UMBRAL = 1500;
+  const PCT = 50;
+  if (total >= UMBRAL) {
+    const anticipo = Math.round((total * PCT) / 100);
+    return `Total: $${total.toLocaleString("es-MX")} · Apartas con $${anticipo.toLocaleString("es-MX")} de anticipo (${PCT}%).`;
+  }
+  return `Total: $${total.toLocaleString("es-MX")}.`;
 }
 
 /* ----------------------------- Helpers UI / texto ------------------------- */
