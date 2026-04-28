@@ -3,7 +3,27 @@ import { persist } from "zustand/middleware";
 
 export type RiskLevel = "bajo" | "medio" | "alto";
 export type OrderStatus = "nuevo" | "confirmado" | "en_proceso" | "listo" | "entregado" | "cancelado";
-export type PaymentStatus = "pendiente" | "anticipo_solicitado" | "anticipo" | "pagado" | "vencido";
+export type PaymentStatus =
+  | "no_requerido"
+  | "pendiente"
+  | "link_enviado"
+  | "pagado"
+  | "fallido"
+  | "vencido";
+
+export type PaymentEventKind =
+  | "link_generado"
+  | "mensaje_enviado"
+  | "recordatorio_enviado"
+  | "pago_recibido"
+  | "pago_fallido"
+  | "vencido";
+
+export interface PaymentEvent {
+  kind: PaymentEventKind;
+  at: number;
+  detail?: string;
+}
 export type OrderType = "producto" | "servicio" | "cita" | "personalizado";
 
 export const typeLabels: Record<OrderType, string> = {
