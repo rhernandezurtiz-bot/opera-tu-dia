@@ -6,8 +6,11 @@ import {
   buildAutoPaymentMessage,
   buildAutoPaymentReminder,
   isReadyForAutoPayment,
+  adaptMessageForChannel,
 } from "./ui-store";
 import { sendWhatsAppMessage } from "./whatsapp";
+import { sendInstagramDM } from "./instagram";
+import { sendFacebookMessage } from "./facebook";
 import { useCatalog, validateOrder } from "./catalog-store";
 
 /**
