@@ -316,13 +316,9 @@ export function isReadyForAutoPayment(o: Order): boolean {
   return fechaOk && direccionOk && montoOk && cobrable;
 }
 
-// Mensaje automático tras confirmar pago
-export function buildPaymentReceivedMessage(o: Order): string {
-  const n = firstName(o.cliente);
-  const fechaTxt = o.fechaEntrega
-    ? formatDateEs(o.fechaEntrega) + (o.horaEntrega ? ` a las ${o.horaEntrega}` : "")
-    : "la fecha acordada";
-  return `¡Pago recibido${n ? ", " + n : ""}! 🎉\n\nTu lugar queda apartado para ${fechaTxt}. Cualquier detalle, me avisas 🙌`;
+// Mensaje automático tras confirmar pago (webhook)
+export function buildPaymentReceivedMessage(_o: Order): string {
+  return `¡Listo! 🙌\n\nTu pago ha sido confirmado.\nTu pedido queda apartado para la fecha acordada.`;
 }
 
 function formatDateEs(iso: string): string {
