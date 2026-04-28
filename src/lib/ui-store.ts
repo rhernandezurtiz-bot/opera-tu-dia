@@ -168,6 +168,9 @@ export function buildReadyMessage(o: Order): string {
 export function buildPaymentReminder(o: Order): string {
   const n = firstName(o.cliente);
   const monto = o.precio ? ` (${money(o.precio)})` : "";
+  if (o.paymentLink) {
+    return `Hola${n ? " " + n : ""} 😊 para confirmar tu pedido${monto}, puedes realizar el anticipo aquí: ${o.paymentLink}`;
+  }
   return `Hola${n ? " " + n : ""} 😊 te recuerdo el anticipo${monto} para poder confirmar tu pedido. ¿Me ayudas con eso?`;
 }
 
