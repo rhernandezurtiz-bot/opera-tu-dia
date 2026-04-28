@@ -389,6 +389,7 @@ export const useOperia = create<State>()(
       messages: seedMessages(),
       whatsapp: { phoneNumberId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/whatsapp", conectado: false },
       instagram: { igBusinessAccountId: "", pageId: "", accessToken: "", verifyToken: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/instagram", conectado: false },
+      facebook: { pageId: "", accessToken: "", verifyToken: "", appSecret: "", webhookUrl: "https://tu-dominio.com/api/public/webhooks/facebook", conectado: false },
       channelMode: "demo" as ChannelMode,
       clientNotes: {
         "+525512345678": "Cliente VIP — siempre paga puntual. Le encanta el chocolate.",
