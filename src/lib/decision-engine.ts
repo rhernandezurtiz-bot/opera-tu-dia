@@ -55,6 +55,7 @@ export interface DecisionAlternative {
 
 export interface OrderDecision {
   decisionType: DecisionType;
+  closingAction: ClosingAction;
   canCharge: boolean;
   riskLevel: RiskLevelDec;
   missingFields: MissingField[];
