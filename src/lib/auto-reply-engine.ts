@@ -56,6 +56,11 @@ export function useAutoReplyEngine() {
             enviado: false,
             modo: "sugerido",
             resultado: "pendiente",
+            productoDetectado: result.productoDetectado,
+            productoId: result.productoId,
+            varianteId: result.varianteId,
+            precioEstimado: result.precioEstimado,
+            outcome: "pendiente",
           });
           handled.add(m.id);
           continue;
@@ -76,6 +81,11 @@ export function useAutoReplyEngine() {
             enviado: false,
             modo: "automatico",
             resultado: "pendiente",
+            productoDetectado: result.productoDetectado,
+            productoId: result.productoId,
+            varianteId: result.varianteId,
+            precioEstimado: result.precioEstimado,
+            outcome: "pendiente",
           });
           handled.add(m.id);
           continue;
@@ -93,6 +103,11 @@ export function useAutoReplyEngine() {
           enviado: false,
           modo: "automatico",
           resultado: "pendiente",
+          productoDetectado: result.productoDetectado,
+          productoId: result.productoId,
+          varianteId: result.varianteId,
+          precioEstimado: result.precioEstimado,
+          outcome: "pendiente",
         });
         handled.add(m.id);
 

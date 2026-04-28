@@ -16,9 +16,15 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useEffect, useMemo } from "react";
 import { useOperia, type AutoReplyLogEntry, type Order } from "./operia-store";
-import { useCatalog } from "./catalog-store";
+import { setProductBoostResolver } from "./catalog-store";
 
 const REMINDER_GRACE_MS = 30 * 60 * 1000; // 30 min
+
+// Registra el resolver de boost para que selectBestOption use pesos aprendidos
+setProductBoostResolver((id) => {
+  const w = useProductInsights.getState().weights[id];
+  return typeof w === "number" && Number.isFinite(w) ? w : 1;
+});
 
 /* ============== Cosecha de outcomes ============== */
 
