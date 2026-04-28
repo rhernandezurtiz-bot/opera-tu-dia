@@ -764,6 +764,31 @@ function SolutionItem({
   );
 }
 
+function CompareRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "muted" | "danger" | "positive";
+}) {
+  const valueClass =
+    tone === "danger"
+      ? "text-danger"
+      : tone === "positive"
+        ? "text-foreground"
+        : "text-foreground/80";
+  return (
+    <li className="flex items-baseline justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0">
+      <span className="text-[13.5px] text-muted-foreground">{label}</span>
+      <span className={`text-[18px] font-semibold tracking-tight tabular-nums ${valueClass}`}>
+        {value}
+      </span>
+    </li>
+  );
+}
+
 function PillarItem({
   icon: Icon,
   title,
