@@ -376,6 +376,8 @@ export const useOperia = create<State>()(
         messages: s.messages.map((m) => (m.id === id ? { ...m, ordenId, estado: "convertido" } : m)),
       })),
       setWhatsapp: (c) => set((s) => ({ whatsapp: { ...s.whatsapp, ...c } })),
+      setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
+      setChannelMode: (m) => set(() => ({ channelMode: m })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
         orders: s.orders.map((o) => (o.id === id ? recompute({ ...o, ...patch }) : o)),
