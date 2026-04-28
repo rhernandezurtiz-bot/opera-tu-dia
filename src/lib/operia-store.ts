@@ -637,7 +637,8 @@ export function parseWhatsapp(text: string): Order {
   // Pago
   let pago: PaymentStatus = "pendiente";
   if (/pagad|pagué|liquidad/i.test(text)) pago = "pagado";
-  else if (/anticipo|adelanto|se[ñn]a|dep[oó]sito/i.test(text)) pago = "anticipo";
+  // (Detección de "anticipo" mencionado en el mensaje no implica pago aún:
+  // queda en "pendiente" hasta que se envíe el link y/o se reciba el pago.)
 
   // Dirección / ubicación limpia
   const direccion = extractLocation(text);
