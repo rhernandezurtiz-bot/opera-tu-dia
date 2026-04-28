@@ -377,6 +377,59 @@ function Landing() {
         </div>
       </section>
 
+      {/* Infraestructura y seguridad */}
+      <section
+        id="infraestructura"
+        className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-24 border-t border-border"
+      >
+        <SectionLabel>Infraestructura y seguridad</SectionLabel>
+        <h2 className="text-[30px] md:text-[42px] leading-[1.06] font-semibold tracking-tight max-w-3xl">
+          Diseñada para operar con estándar empresarial.
+        </h2>
+        <p className="mt-5 text-[15px] md:text-[16px] text-muted-foreground leading-relaxed max-w-2xl">
+          Una base técnica abierta y auditable. Conecta con tu stack, opera bajo
+          control y cumple con los requisitos de seguridad de tu organización.
+        </p>
+
+        <div className="mt-12 grid md:grid-cols-2 gap-4">
+          <Card className="p-6 md:p-7 rounded-2xl">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="h-8 w-8 rounded-lg border border-border grid place-items-center">
+                <Network className="h-4 w-4" />
+              </div>
+              <div className="text-[15px] font-semibold tracking-tight">
+                Infraestructura empresarial
+              </div>
+            </div>
+            <ul className="divide-y divide-border">
+              <PillarItem icon={Plug} title="API-first architecture" body="Cada capacidad de la plataforma expuesta como API documentada." />
+              <PillarItem icon={MessagesSquare} title="Integración con WhatsApp Cloud API" body="Conexión nativa y oficial, sin intermediarios ni dependencias frágiles." />
+              <PillarItem icon={Webhook} title="Webhooks en tiempo real" body="Eventos de pedidos, mensajes y estados emitidos al instante." />
+              <PillarItem icon={Database} title="Exportación de datos" body="Acceso completo vía CSV o API. Tus datos siempre portables." />
+              <PillarItem icon={Layers} title="Integraciones empresariales" body="Conecta con ERP, CRM y plataformas de pagos del ecosistema." />
+            </ul>
+          </Card>
+
+          <Card className="p-6 md:p-7 rounded-2xl">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="h-8 w-8 rounded-lg border border-border grid place-items-center">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="text-[15px] font-semibold tracking-tight">
+                Seguridad y control
+              </div>
+            </div>
+            <ul className="divide-y divide-border">
+              <PillarItem icon={KeyRound} title="Control de roles y permisos" body="Acceso granular por función, equipo y nivel de responsabilidad." />
+              <PillarItem icon={ScrollText} title="Auditoría completa por usuario" body="Cada acción registrada, atribuible y consultable en cualquier momento." />
+              <PillarItem icon={History} title="Historial inmutable de acciones" body="Registro append-only. Sin ediciones silenciosas ni zonas opacas." />
+              <PillarItem icon={Lock} title="Datos encriptados" body="Cifrado en tránsito y en reposo bajo estándares de la industria." />
+              <PillarItem icon={FileLock2} title="Cumplimiento de privacidad" body="Aislamiento por organización y prácticas alineadas a normativa vigente." />
+            </ul>
+          </Card>
+        </div>
+      </section>
+
       {/* Decide contigo */}
       <section className="px-5 md:px-8 max-w-6xl mx-auto py-16 md:py-20 border-t border-border">
         <SectionLabel>Inteligencia operativa</SectionLabel>
