@@ -55,8 +55,8 @@ function InboxPage() {
   return (
     <AppShell>
       <PageHeader
-        title="WhatsApp Inbox"
-        subtitle="Mensajes entrantes que esperan ser convertidos en órdenes."
+        title="Inbox multicanal"
+        subtitle="Mensajes de WhatsApp, Instagram y Facebook listos para convertir en órdenes."
       />
 
       {!whatsapp.conectado && (
@@ -67,12 +67,32 @@ function InboxPage() {
           <div>
             <span className="font-medium text-foreground">Modo simulación.</span>{" "}
             <span className="text-muted-foreground">
-              Estás viendo mensajes de prueba. Para activar la integración real, conecta WhatsApp Business Cloud API en{" "}
+              Estás viendo mensajes de prueba. Para activar canales reales, conecta WhatsApp, Instagram o Facebook en{" "}
               <Link to="/configuracion" className="underline text-foreground">Ajustes</Link>.
             </span>
           </div>
         </div>
       )}
+
+      {/* Filtro por canal */}
+      <div className="flex gap-1 overflow-x-auto -mx-1 px-1 mb-3">
+        {(["todos", "whatsapp", "instagram", "facebook", "manual"] as const).map((c) => {
+          const count = c === "todos" ? messages.length : (countsByCanal[c] ?? 0);
+          return (
+            <button
+              key={c}
+              onClick={() => setCanalFilter(c)}
+              className={`px-3 h-9 rounded-lg text-[12px] font-medium whitespace-nowrap border transition-colors ${
+                canalFilter === c
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {c === "todos" ? "Todos" : CHANNEL_LABELS[c as Channel]} <span className="opacity-60">· {count}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-2 mb-5">
         <div className="relative flex-1">
