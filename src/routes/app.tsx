@@ -6,6 +6,8 @@ import { useCatalog } from "@/lib/catalog-store";
 import { getInventoryMetrics, useInventoryEngine } from "@/lib/inventory-engine";
 import { useAutoReplyEngine } from "@/lib/auto-reply-engine";
 import { useLearningEngine } from "@/lib/learning-engine";
+import { useUsageLimits } from "@/lib/usage-limits";
+import { useSubscription, trialDaysLeft } from "@/lib/subscription-store";
 import { AppShell, PageHeader, RiskBadge, UrgencyChip, Eyebrow, SectionHeading } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,8 @@ import {
   Percent,
   Boxes,
   PackageX,
+  Zap,
+  ArrowUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +92,10 @@ function Index() {
           </Button>
         }
       />
+
+      <PlanBanner />
+
+      <RoiBlock orders={orders} />
 
       {/* Money */}
       <section className="mb-10">
