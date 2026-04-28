@@ -68,6 +68,7 @@ export interface Order {
   fechaTextoOriginal?: string; // texto exacto: "viernes", "mañana"
   ocasion?: string; // "cumpleaños", "boda", "aniversario", etc.
   ambiguo?: boolean; // el mensaje contiene marcadores de incertidumbre
+  paymentLink?: string; // link de pago generado (simulado)
 }
 
 export interface Miembro { id: string; nombre: string; rol: string; }
