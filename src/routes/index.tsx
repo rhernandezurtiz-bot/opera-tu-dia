@@ -65,8 +65,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const openDemo = () => setDemoOpen(true);
   return (
     <div className="min-h-screen bg-background text-foreground antialiased">
+      <DemoRequestModal open={demoOpen} onOpenChange={setDemoOpen} />
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
