@@ -7,7 +7,7 @@ import { Sparkles, Save, Copy, Pencil, AlertTriangle, CheckCircle2, Wallet, Mess
 import { useUI, buildMissingMessage } from "@/lib/ui-store";
 import { parseWhatsapp, useOperia, typeLabels, type Order } from "@/lib/operia-store";
 import { useCatalog } from "@/lib/catalog-store";
-import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, type OrderDecision } from "@/lib/decision-engine";
+import { evaluateOrderDecision, DECISION_LABEL, DECISION_TONE, CLOSING_LABEL, type OrderDecision } from "@/lib/decision-engine";
 import { useUsageLimits } from "@/lib/usage-limits";
 import { RiskBadge } from "./AppShell";
 import { toast } from "sonner";
