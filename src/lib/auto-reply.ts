@@ -71,6 +71,11 @@ export interface AutoReplyResult {
   needsReview: boolean;
   validation?: CatalogValidation;
   draftOrder?: Order;
+  // Aprendizaje
+  productoDetectado?: string;
+  productoId?: string;
+  varianteId?: string;
+  precioEstimado?: number;
 }
 
 /* --------------------- Helpers de catálogo / alternativas ----------------- */
@@ -285,9 +290,16 @@ export function decideAutoReply(input: DecideInput): AutoReplyResult {
   const cobro = paymentHint(m, order);
   const escasez = scarcityHint(m, orders, order.fechaEntrega);
 
+  const bestForLog = selectBestOption(catalog, { personas, sabor, fechaISO, tipo: draftOrder?.tipo }, orders);
   return finalize(intent, "venta_posible", canal,
     `¡Sí, va! 🙌 Te aparto ${resumen} para ${fecha}${hora}.${cobro ? `\n\n${cobro}` : ""}${escasez ? `\n${escasez}` : ""}\n\nConfirma y te mando el link de pago para asegurarlo ✨`,
-    { validation, draftOrder });
+    {
+      validation, draftOrder,
+      productoDetectado: m?.nombre,
+      productoId: m?.id,
+      varianteId: bestForLog?.variant.id,
+      precioEstimado: bestForLog?.variant.precio ?? m?.precioBase,
+    });
 }
 
 function capitalize(s: string): string {
