@@ -182,6 +182,123 @@ export function buildDayBeforeReminder(o: Order): string {
   return `Hola${n ? " " + n : ""} 😊 te confirmo ${desc} para ${cuando}. ¿Todo sigue en orden?`;
 }
 
+/* ---------- Next best action ---------- */
+
+export type ActionKind =
+  | "completar_datos"
+  | "confirmar_pedido"
+  | "solicitar_anticipo"
+  | "recordar_pago"
+  | "recordar_cliente"
+  | "marcar_listo"
+  | "avisar_listo"
+  | "marcar_entregado"
+  | "seguimiento";
+
+export interface NextAction {
+  kind: ActionKind;
+  label: string;       // CTA button label
+  reason: string;      // why this action now (one short line)
+  message: string;     // ready-to-send message
+  tone: "primary" | "warning" | "danger" | "success";
+}
+
+export function nextAction(o: Order): NextAction | null {
+  if (o.estado === "entregado" || o.estado === "cancelado") return null;
+
+  // 1) Faltan datos críticos → pedirlos
+  if ((o.faltantes || []).length > 0) {
+    return {
+      kind: "completar_datos",
+      label: "Pedir datos faltantes",
+      reason: `Faltan: ${o.faltantes.join(", ")}`,
+      message: buildSmartReply(o),
+      tone: "warning",
+    };
+  }
+
+  // 2) Nuevo y sin confirmar → confirmar pedido
+  if (o.estado === "nuevo") {
+    return {
+      kind: "confirmar_pedido",
+      label: "Confirmar pedido",
+      reason: "Pedido nuevo sin confirmar con el cliente",
+      message: buildConfirmMessage(o),
+      tone: "primary",
+    };
+  }
+
+  // 3) Confirmado pero sin anticipo → solicitar anticipo
+  if (o.estado === "confirmado" && o.pago === "pendiente") {
+    return {
+      kind: "solicitar_anticipo",
+      label: "Solicitar anticipo",
+      reason: "Sin anticipo recibido",
+      message: buildPaymentReminder(o),
+      tone: "warning",
+    };
+  }
+
+  // 4) Fecha cercana → recordar al cliente
+  const u = urgency(o.fechaEntrega, o.horaEntrega);
+  const today = todayStr();
+  const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); })();
+
+  if (o.fechaEntrega === today && u.minutes !== null && u.minutes >= 0 && u.minutes <= 180) {
+    return {
+      kind: "recordar_cliente",
+      label: "Recordar al cliente",
+      reason: "Entrega/cita en menos de 3 horas",
+      message: buildHoursBeforeReminder(o),
+      tone: "danger",
+    };
+  }
+  if (o.fechaEntrega === tomorrow) {
+    return {
+      kind: "recordar_cliente",
+      label: "Recordar al cliente",
+      reason: "Entrega/cita es mañana",
+      message: buildDayBeforeReminder(o),
+      tone: "primary",
+    };
+  }
+
+  // 5) En proceso y vence hoy → avisar cuando esté listo
+  if (o.estado === "en_proceso" && o.fechaEntrega === today) {
+    return {
+      kind: "marcar_listo",
+      label: "Avisar que está listo",
+      reason: "En proceso con entrega hoy",
+      message: buildReadyMessage(o),
+      tone: "primary",
+    };
+  }
+
+  // 6) Listo → avisar al cliente
+  if (o.estado === "listo") {
+    return {
+      kind: "avisar_listo",
+      label: "Avisar al cliente",
+      reason: "Pedido listo para entregar",
+      message: buildReadyMessage(o),
+      tone: "success",
+    };
+  }
+
+  // 7) Pago pendiente sin urgencia → recordar pago
+  if (o.pago === "pendiente") {
+    return {
+      kind: "recordar_pago",
+      label: "Recordar pago",
+      reason: "Pago aún pendiente",
+      message: buildPaymentReminder(o),
+      tone: "warning",
+    };
+  }
+
+  return null;
+}
+
 // Recordatorio "2 horas antes"
 export function buildHoursBeforeReminder(o: Order): string {
   const n = firstName(o.cliente);

@@ -23,6 +23,7 @@ import {
   buildDayBeforeReminder,
   buildHoursBeforeReminder,
   money,
+  nextAction,
 } from "@/lib/ui-store";
 import {
   ArrowLeft,
@@ -39,6 +40,8 @@ import {
   Save,
   ArrowRight,
   History,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -125,6 +128,9 @@ function Detalle() {
           </div>
         }
       />
+
+      {/* Próxima acción sugerida */}
+      <NextActionPanel order={order} onCopy={copiar} onAdvance={(estado) => { updateOrder(order.id, { estado }); toast.success("Estado actualizado"); }} />
 
       {/* Pipeline 1-clic */}
       <Card className="p-3 rounded-2xl mb-5 flex flex-wrap gap-2 items-center">
@@ -479,5 +485,78 @@ function Info({ label, value }: { label: string; value: string }) {
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-sm text-right">{value || <em className="text-muted-foreground">— pendiente —</em>}</span>
     </div>
+  );
+}
+
+function NextActionPanel({
+  order,
+  onCopy,
+  onAdvance,
+}: {
+  order: import("@/lib/operia-store").Order;
+  onCopy: (text: string, label?: string) => void;
+  onAdvance: (estado: OrderStatus) => void;
+}) {
+  const action = nextAction(order);
+  if (!action) return null;
+
+  const toneCls: Record<typeof action.tone, string> = {
+    primary: "border-primary/30 bg-primary/5",
+    warning: "border-warning/40 bg-warning/10",
+    danger: "border-danger/40 bg-danger/8",
+    success: "border-success/30 bg-success/8",
+  };
+
+  // Acción secundaria: avanzar estado al copiar (cuando aplica)
+  const advanceAfter: Partial<Record<typeof action.kind, OrderStatus>> = {
+    confirmar_pedido: "confirmado",
+    avisar_listo: "entregado",
+    marcar_listo: "listo",
+  };
+  const nextStatus = advanceAfter[action.kind];
+
+  return (
+    <Card className={`p-4 rounded-2xl mb-5 border ${toneCls[action.tone]}`}>
+      <div className="flex items-start gap-3 flex-wrap">
+        <div className="h-9 w-9 rounded-lg bg-foreground/10 grid place-items-center shrink-0">
+          <Sparkles className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">
+            Próxima acción
+          </div>
+          <div className="text-sm font-medium mt-0.5">{action.label}</div>
+          <div className="text-[12.5px] text-muted-foreground">{action.reason}</div>
+
+          <div className="mt-3 p-3 rounded-xl bg-card border border-border">
+            <div className="text-[11px] text-muted-foreground mb-1">Mensaje listo para enviar:</div>
+            <p className="text-[13.5px] text-foreground/90 whitespace-pre-wrap">{action.message}</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button
+              size="sm"
+              className="rounded-full"
+              onClick={() => {
+                onCopy(action.message, "Mensaje copiado · listo para enviar");
+                if (nextStatus) onAdvance(nextStatus);
+              }}
+            >
+              <Send className="h-3.5 w-3.5 mr-1" /> Copiar y enviar
+            </Button>
+            {nextStatus && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="rounded-full"
+                onClick={() => onAdvance(nextStatus)}
+              >
+                Marcar como {nextStatus.replace("_", " ")}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 }
