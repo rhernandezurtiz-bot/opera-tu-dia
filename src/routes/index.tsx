@@ -93,8 +93,8 @@ function Landing() {
             <Button asChild variant="ghost" size="sm" className="h-9">
               <Link to="/login">Entrar</Link>
             </Button>
-            <Button asChild size="sm" className="h-9">
-              <a href="#contacto">Solicitar demo</a>
+            <Button size="sm" className="h-9" onClick={openDemo}>
+              Solicitar demo
             </Button>
           </div>
         </div>
