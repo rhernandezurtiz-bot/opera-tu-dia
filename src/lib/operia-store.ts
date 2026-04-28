@@ -404,6 +404,7 @@ export const useOperia = create<State>()(
       })),
       setWhatsapp: (c) => set((s) => ({ whatsapp: { ...s.whatsapp, ...c } })),
       setInstagram: (c) => set((s) => ({ instagram: { ...s.instagram, ...c } })),
+      setFacebook: (c) => set((s) => ({ facebook: { ...s.facebook, ...c } })),
       setChannelMode: (m) => set(() => ({ channelMode: m })),
       addOrder: (o) => set((s) => ({ orders: [recompute(o), ...s.orders] })),
       updateOrder: (id, patch) => set((s) => ({
