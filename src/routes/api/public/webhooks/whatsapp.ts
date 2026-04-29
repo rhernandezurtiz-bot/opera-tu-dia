@@ -64,9 +64,11 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
             channel: "whatsapp",
             direction: "inbound",
             ok: true,
-            info: { source: "whatsapp_webhook", payload },
-          });
+            info: { source: "whatsapp_webhook", payload } as any,
+          } as any);
         } catch {
+          // no bloquear
+        }
           // no bloquear
         }
 

@@ -33,6 +33,7 @@ import { Route as ApiSendWhatsappRouteImport } from './routes/api/send-whatsapp'
 import { Route as ApiSendMessageRouteImport } from './routes/api/send-message'
 import { Route as ApiSendInstagramRouteImport } from './routes/api/send-instagram'
 import { Route as ApiSendFacebookRouteImport } from './routes/api/send-facebook'
+import { Route as ApiPublicWebhooksWhatsappRouteImport } from './routes/api/public/webhooks/whatsapp'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicWebhooksMercadopagoRouteImport } from './routes/api/public/webhooks/mercadopago'
@@ -159,6 +160,12 @@ const ApiSendFacebookRoute = ApiSendFacebookRouteImport.update({
   path: '/api/send-facebook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksWhatsappRoute =
+  ApiPublicWebhooksWhatsappRouteImport.update({
+    id: '/api/public/webhooks/whatsapp',
+    path: '/api/public/webhooks/whatsapp',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   id: '/api/public/webhooks/stripe',
   path: '/api/public/webhooks/stripe',
@@ -218,6 +225,7 @@ export interface FileRoutesByFullPath {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -249,6 +257,7 @@ export interface FileRoutesByTo {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -281,6 +290,7 @@ export interface FileRoutesById {
   '/api/public/webhooks/mercadopago': typeof ApiPublicWebhooksMercadopagoRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
+  '/api/public/webhooks/whatsapp': typeof ApiPublicWebhooksWhatsappRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/whatsapp'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/whatsapp'
   id:
     | '__root__'
     | '/'
@@ -376,6 +388,7 @@ export interface FileRouteTypes {
     | '/api/public/webhooks/mercadopago'
     | '/api/public/webhooks/meta'
     | '/api/public/webhooks/stripe'
+    | '/api/public/webhooks/whatsapp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -408,6 +421,7 @@ export interface RootRouteChildren {
   ApiPublicWebhooksMercadopagoRoute: typeof ApiPublicWebhooksMercadopagoRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
+  ApiPublicWebhooksWhatsappRoute: typeof ApiPublicWebhooksWhatsappRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -580,6 +594,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSendFacebookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/whatsapp': {
+      id: '/api/public/webhooks/whatsapp'
+      path: '/api/public/webhooks/whatsapp'
+      fullPath: '/api/public/webhooks/whatsapp'
+      preLoaderRoute: typeof ApiPublicWebhooksWhatsappRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/stripe': {
       id: '/api/public/webhooks/stripe'
       path: '/api/public/webhooks/stripe'
@@ -648,6 +669,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicWebhooksMercadopagoRoute: ApiPublicWebhooksMercadopagoRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
+  ApiPublicWebhooksWhatsappRoute: ApiPublicWebhooksWhatsappRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
