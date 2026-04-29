@@ -49,8 +49,9 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
             },
           });
         }
-        return new Response("forbidden", {
-          status: 403,
+        // Meta requiere 200 siempre — devolvemos body vacío si no coincide
+        return new Response("", {
+          status: 200,
           headers: { "Content-Type": "text/plain; charset=utf-8", ...CORS_HEADERS },
         });
       },
