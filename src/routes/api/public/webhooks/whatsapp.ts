@@ -5,9 +5,6 @@
  *   POST /api/public/webhooks/whatsapp  → eventos entrantes (mensajes)
  *
  * Verify token: "operia123" (también acepta META_VERIFY_TOKEN si está configurado).
- *
- * URL pública para pegar en Meta:
- *   https://project--6e1e1fec-976e-41f3-a2b1-84f636c87b57.lovable.app/api/public/webhooks/whatsapp
  */
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -67,12 +64,10 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
             info: { source: "whatsapp_webhook", payload } as any,
           } as any);
         } catch {
-          // no bloquear
-        }
-          // no bloquear
+          // no bloquear si falla el log
         }
 
-        // Normalizar y procesar mensajes
+        // Normalizar y procesar mensajes de WhatsApp
         const messages = normalizeMetaPayload(payload).filter(
           (m) => m.channel === "whatsapp",
         );
@@ -81,14 +76,13 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
           try {
             await persistAndMaybeReply(m);
           } catch (err: any) {
-            // eslint-disable-next-line no-console
             console.error("[whatsapp-webhook] persist error", err);
             await supabaseAdmin.from("meta_message_logs").insert({
               channel: "whatsapp",
               direction: "inbound",
               ok: false,
-              info: { reason: "exception", error: String(err?.message ?? err) },
-            });
+              info: { reason: "exception", error: String(err?.message ?? err) } as any,
+            } as any);
           }
         }
 
