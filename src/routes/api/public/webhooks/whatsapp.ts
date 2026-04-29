@@ -1,10 +1,10 @@
 /**
  * Webhook real para WhatsApp Cloud API (Meta).
  *
- *   GET  /api/public/webhooks/whatsapp  → handshake de verificación de Meta
- *   POST /api/public/webhooks/whatsapp  → eventos entrantes (mensajes)
+ *   GET  /api/public/webhooks/whatsapp  → handshake (devuelve hub.challenge en texto plano)
+ *   POST /api/public/webhooks/whatsapp  → eventos entrantes
  *
- * Verify token: "operia123" (también acepta META_VERIFY_TOKEN si está configurado).
+ * Verify token: "operia123"
  */
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -14,17 +14,9 @@ import { persistAndMaybeReply } from "./meta";
 
 const VERIFY_TOKEN = "operia123";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, X-Hub-Signature, X-Hub-Signature-256",
-};
-
 export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
-
       // Handshake de verificación de Meta
       GET: async ({ request }) => {
         const url = new URL(request.url);
@@ -32,15 +24,14 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
         const token = url.searchParams.get("hub.verify_token");
         const challenge = url.searchParams.get("hub.challenge");
 
-        const expected = process.env.META_VERIFY_TOKEN || VERIFY_TOKEN;
-
-        if (mode === "subscribe" && token === expected && challenge) {
+        if (mode === "subscribe" && token === VERIFY_TOKEN && challenge) {
+          // Texto puro, sin JSON, sin envoltura
           return new Response(challenge, {
             status: 200,
-            headers: { ...CORS, "Content-Type": "text/plain" },
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
           });
         }
-        return new Response("Forbidden", { status: 403, headers: CORS });
+        return new Response(null, { status: 403 });
       },
 
       // Eventos entrantes de WhatsApp
@@ -49,25 +40,21 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
         try {
           payload = await request.json();
         } catch {
-          return Response.json(
-            { ok: false, error: "invalid_json" },
-            { status: 400, headers: CORS },
-          );
+          return new Response("invalid_json", { status: 400 });
         }
 
-        // Log raw payload siempre
+        // Log raw payload
         try {
-          await supabaseAdmin.from("meta_message_logs").insert({
+          await (supabaseAdmin.from("meta_message_logs") as any).insert({
             channel: "whatsapp",
             direction: "inbound",
             ok: true,
-            info: { source: "whatsapp_webhook", payload } as any,
-          } as any);
+            info: { source: "whatsapp_webhook", payload },
+          });
         } catch {
           // no bloquear si falla el log
         }
 
-        // Normalizar y procesar mensajes de WhatsApp
         const messages = normalizeMetaPayload(payload).filter(
           (m) => m.channel === "whatsapp",
         );
@@ -77,20 +64,21 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
             await persistAndMaybeReply(m);
           } catch (err: any) {
             console.error("[whatsapp-webhook] persist error", err);
-            await supabaseAdmin.from("meta_message_logs").insert({
-              channel: "whatsapp",
-              direction: "inbound",
-              ok: false,
-              info: { reason: "exception", error: String(err?.message ?? err) } as any,
-            } as any);
+            try {
+              await (supabaseAdmin.from("meta_message_logs") as any).insert({
+                channel: "whatsapp",
+                direction: "inbound",
+                ok: false,
+                info: { reason: "exception", error: String(err?.message ?? err) },
+              });
+            } catch {
+              // ignore
+            }
           }
         }
 
         // Meta exige 200 rápido
-        return Response.json(
-          { ok: true, processed: messages.length },
-          { status: 200, headers: CORS },
-        );
+        return new Response("ok", { status: 200 });
       },
     },
   },
