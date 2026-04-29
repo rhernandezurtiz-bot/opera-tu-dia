@@ -24,7 +24,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, X-Hub-Signature, X-Hub-Signature-256",
 };
 
-async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<string | null> {
+export async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<string | null> {
   // 1) match por external_account_id
   if (msg.externalAccountId) {
     const { data } = await supabaseAdmin
@@ -49,7 +49,7 @@ async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<string | 
   return any2?.owner_id ?? null;
 }
 
-async function persistAndMaybeReply(msg: NormalizedMessage) {
+export async function persistAndMaybeReply(msg: NormalizedMessage) {
   const ownerId = await resolveOwnerForMessage(msg);
   if (!ownerId) {
     await supabaseAdmin.from("meta_message_logs").insert({
