@@ -97,8 +97,16 @@ export function MetaChannelsPanel() {
       setRows((res.channels ?? []) as ChannelRow[]);
     } catch (err: any) {
       // Sin sesión Supabase real → mostramos panel vacío sin reventar la página.
-      const msg = err?.message ?? String(err ?? "");
-      if (!/Unauthorized|401/i.test(msg)) {
+      let status: number | undefined;
+      let msg = "";
+      if (err instanceof Response) {
+        status = err.status;
+        try { msg = await err.text(); } catch { /* noop */ }
+      } else {
+        msg = err?.message ?? String(err ?? "");
+      }
+      const isAuth = status === 401 || /Unauthorized|401|No authorization/i.test(msg);
+      if (!isAuth) {
         toast.error(msg || "No se pudieron cargar los canales");
       }
       setRows([]);
