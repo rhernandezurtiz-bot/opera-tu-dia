@@ -27,9 +27,9 @@ const CORS_HEADERS = {
 export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
   server: {
     handlers: {
-      // Preflight CORS (por si algún cliente lo dispara)
+      // Preflight CORS — público, sin auth
       OPTIONS: async () => {
-        return new Response(null, { status: 204, headers: { ...CORS_HEADERS } });
+        return new Response(null, { status: 200, headers: { ...CORS_HEADERS } });
       },
 
       // Handshake de verificación de Meta
