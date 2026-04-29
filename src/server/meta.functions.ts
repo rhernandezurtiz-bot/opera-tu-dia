@@ -5,20 +5,44 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sendViaMeta } from "@/lib/meta-send";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Database } from "@/integrations/supabase/types";
 
 const ChannelEnum = z.enum(["whatsapp", "instagram", "facebook"]);
 const ReplyModeEnum = z.enum(["manual", "suggested", "auto"]);
 const StatusEnum = z.enum(["no_conectado", "pendiente", "conectado", "error"]);
 
+async function getOptionalUserScopedSupabase() {
+  const authHeader = getRequest()?.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+
+  const token = authHeader.replace("Bearer ", "").trim();
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!token || !SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) return null;
+
+  const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data, error } = await supabase.auth.getClaims(token);
+  const userId = data?.claims?.sub;
+  if (error || !userId) return null;
+  return { supabase, userId };
+}
+
 // ── Listar canales del usuario (asegura que existan las 3 filas) ──────────
 export const listMetaChannels = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
+  .handler(async () => {
+    const auth = await getOptionalUserScopedSupabase();
+    if (!auth) return { channels: [] };
+    const { supabase, userId } = auth;
 
     // Asegurar fila para cada canal (idempotente)
     for (const channel of ["whatsapp", "instagram", "facebook"] as const) {
