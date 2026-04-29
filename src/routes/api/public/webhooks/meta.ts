@@ -24,7 +24,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, X-Hub-Signature, X-Hub-Signature-256",
 };
 
-async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<string | null> {
+export async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<string | null> {
   // 1) match por external_account_id
   if (msg.externalAccountId) {
     const { data } = await supabaseAdmin
