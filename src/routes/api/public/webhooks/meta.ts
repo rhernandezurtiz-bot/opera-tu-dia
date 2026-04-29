@@ -49,7 +49,7 @@ export async function resolveOwnerForMessage(msg: NormalizedMessage): Promise<st
   return any2?.owner_id ?? null;
 }
 
-async function persistAndMaybeReply(msg: NormalizedMessage) {
+export async function persistAndMaybeReply(msg: NormalizedMessage) {
   const ownerId = await resolveOwnerForMessage(msg);
   if (!ownerId) {
     await supabaseAdmin.from("meta_message_logs").insert({
