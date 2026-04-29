@@ -1,10 +1,13 @@
 /**
- * Webhook real para WhatsApp Cloud API (Meta).
+ * Webhook PÚBLICO para WhatsApp Cloud API (Meta).
  *
  *   GET  /api/public/webhooks/whatsapp  → handshake (devuelve hub.challenge en texto plano)
- *   POST /api/public/webhooks/whatsapp  → eventos entrantes
+ *   POST /api/public/webhooks/whatsapp  → eventos entrantes (siempre 200)
  *
  * Verify token: "operia123"
+ *
+ * IMPORTANTE: este endpoint es totalmente público. NO requiere sesión,
+ * cookies ni headers de autenticación. Meta nunca envía credenciales.
  */
 
 import { createFileRoute } from "@tanstack/react-router";
@@ -14,9 +17,21 @@ import { persistAndMaybeReply } from "./meta";
 
 const VERIFY_TOKEN = "operia123";
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Hub-Signature, X-Hub-Signature-256",
+  "Access-Control-Max-Age": "86400",
+} as const;
+
 export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
   server: {
     handlers: {
+      // Preflight CORS (por si algún cliente lo dispara)
+      OPTIONS: async () => {
+        return new Response(null, { status: 204, headers: { ...CORS_HEADERS } });
+      },
+
       // Handshake de verificación de Meta
       GET: async ({ request }) => {
         const url = new URL(request.url);
@@ -28,22 +43,32 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
           // Texto puro, sin JSON, sin envoltura
           return new Response(challenge, {
             status: 200,
-            headers: { "Content-Type": "text/plain; charset=utf-8" },
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8",
+              ...CORS_HEADERS,
+            },
           });
         }
-        return new Response(null, { status: 403 });
+        return new Response("forbidden", {
+          status: 403,
+          headers: { "Content-Type": "text/plain; charset=utf-8", ...CORS_HEADERS },
+        });
       },
 
-      // Eventos entrantes de WhatsApp
+      // Eventos entrantes de WhatsApp — siempre devolvemos 200 OK
       POST: async ({ request }) => {
-        let payload: unknown;
+        let payload: unknown = null;
         try {
           payload = await request.json();
         } catch {
-          return new Response("invalid_json", { status: 400 });
+          // Meta espera 200 rápido aunque el body sea inválido
+          return new Response("ok", {
+            status: 200,
+            headers: { "Content-Type": "text/plain; charset=utf-8", ...CORS_HEADERS },
+          });
         }
 
-        // Log raw payload
+        // Log raw payload (best-effort)
         try {
           await (supabaseAdmin.from("meta_message_logs") as any).insert({
             channel: "whatsapp",
@@ -55,30 +80,36 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
           // no bloquear si falla el log
         }
 
-        const messages = normalizeMetaPayload(payload).filter(
-          (m) => m.channel === "whatsapp",
-        );
-
-        for (const m of messages) {
-          try {
-            await persistAndMaybeReply(m);
-          } catch (err: any) {
-            console.error("[whatsapp-webhook] persist error", err);
+        try {
+          const messages = normalizeMetaPayload(payload).filter(
+            (m) => m.channel === "whatsapp",
+          );
+          for (const m of messages) {
             try {
-              await (supabaseAdmin.from("meta_message_logs") as any).insert({
-                channel: "whatsapp",
-                direction: "inbound",
-                ok: false,
-                info: { reason: "exception", error: String(err?.message ?? err) },
-              });
-            } catch {
-              // ignore
+              await persistAndMaybeReply(m);
+            } catch (err: any) {
+              console.error("[whatsapp-webhook] persist error", err);
+              try {
+                await (supabaseAdmin.from("meta_message_logs") as any).insert({
+                  channel: "whatsapp",
+                  direction: "inbound",
+                  ok: false,
+                  info: { reason: "exception", error: String(err?.message ?? err) },
+                });
+              } catch {
+                // ignore
+              }
             }
           }
+        } catch (err) {
+          console.error("[whatsapp-webhook] normalize error", err);
         }
 
-        // Meta exige 200 rápido
-        return new Response("ok", { status: 200 });
+        // Meta exige 200 rápido siempre
+        return new Response("ok", {
+          status: 200,
+          headers: { "Content-Type": "text/plain; charset=utf-8", ...CORS_HEADERS },
+        });
       },
     },
   },
