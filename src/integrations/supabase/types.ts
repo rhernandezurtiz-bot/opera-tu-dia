@@ -77,6 +77,7 @@ export type Database = {
           owner_id: string | null
           phone: string | null
           sender_name: string | null
+          tags: string[]
           unread_count: number
           updated_at: string
         }
@@ -91,6 +92,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           sender_name?: string | null
+          tags?: string[]
           unread_count?: number
           updated_at?: string
         }
@@ -105,6 +107,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           sender_name?: string | null
+          tags?: string[]
           unread_count?: number
           updated_at?: string
         }
@@ -192,6 +195,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orders: {
+        Row: {
+          channel: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          owner_id: string | null
+          phone: string
+          source_message_text: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+          phone: string
+          source_message_text: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string | null
+          phone?: string
+          source_message_text?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

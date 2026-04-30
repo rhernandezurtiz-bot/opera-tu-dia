@@ -125,6 +125,47 @@ async function saveMessage(from: string, body: string, waId: string | null, raw:
     created_at: inserted?.created_at,
     conversationId,
   });
+
+  // 4) Detección automática de "pedido"
+  if (/\bpedido(s)?\b/i.test(body)) {
+    console.log("[whatsapp-webhook] 🛒 palabra 'pedido' detectada → creando pedido + etiqueta");
+
+    // 4a) Crear pedido
+    const { data: order, error: orderErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        conversation_id: conversationId,
+        phone: from,
+        channel: "whatsapp",
+        source_message_text: body,
+        status: "nuevo",
+      })
+      .select("id")
+      .single();
+
+    if (orderErr) {
+      console.error("[whatsapp-webhook] ❌ error creando pedido:", orderErr);
+    } else {
+      console.log("PEDIDO CREADO", { id: order?.id, phone: from, conversationId });
+    }
+
+    // 4b) Etiquetar conversación (añadir 'pedido_detectado' sin duplicar)
+    const { data: convTags } = await supabaseAdmin
+      .from("meta_conversations")
+      .select("tags")
+      .eq("id", conversationId)
+      .single();
+
+    const currentTags: string[] = Array.isArray(convTags?.tags) ? convTags!.tags : [];
+    if (!currentTags.includes("pedido_detectado")) {
+      const { error: tagErr } = await supabaseAdmin
+        .from("meta_conversations")
+        .update({ tags: [...currentTags, "pedido_detectado"] })
+        .eq("id", conversationId);
+      if (tagErr) console.error("[whatsapp-webhook] ❌ error etiquetando conversación:", tagErr);
+      else console.log("[whatsapp-webhook] 🏷️ conversación etiquetada 'pedido_detectado'");
+    }
+  }
 }
 
 export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
