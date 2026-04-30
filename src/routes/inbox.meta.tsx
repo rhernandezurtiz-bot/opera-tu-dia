@@ -394,6 +394,52 @@ function InboxMetaPage() {
                 })}
               </div>
 
+              {(() => {
+                const mode = channelModes[selected.channel] ?? "manual";
+                const lastInbound = [...messages].reverse().find((m) => m.direction === "inbound");
+                if ((mode !== "auto" && mode !== "suggested") || !lastInbound) return null;
+                return (
+                  <div className="px-3 pt-3">
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                          Respuesta automática que enviaría Operia
+                        </span>
+                        <Badge variant="outline" className="text-[10px]">
+                          {mode === "auto" ? "Modo automático" : "Modo sugerido"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {AUTO_REPLY_PREVIEW}
+                      </p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          className="rounded-full"
+                          disabled={sending}
+                          onClick={() => void sendAutoReply()}
+                        >
+                          {sending ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <Send className="h-3 w-3 mr-1" />
+                          )}
+                          Enviar ahora
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => setDraft(AUTO_REPLY_PREVIEW)}
+                        >
+                          Editar antes de enviar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="p-3 border-t space-y-2">
                 <Textarea
                   value={draft}
@@ -406,7 +452,9 @@ function InboxMetaPage() {
                   <span className="text-xs text-muted-foreground">
                     {channelModes[selected.channel] === "auto"
                       ? "Operia responde automáticamente. Puedes intervenir en cualquier momento."
-                      : "Modo manual: nada se envía sin tu aprobación."}
+                      : channelModes[selected.channel] === "suggested"
+                        ? "Modo sugerido: revisa y envía la respuesta propuesta."
+                        : "Modo manual: nada se envía sin tu aprobación."}
                   </span>
                   <Button
                     size="sm"
