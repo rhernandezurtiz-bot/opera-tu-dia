@@ -158,14 +158,71 @@ function extractAddress(text: string): string | null {
   return null;
 }
 
+// Catálogo de productos frecuentes (pastelería/repostería). Se puede ampliar.
+const PRODUCT_CATALOG: Array<{ rx: RegExp; label: string }> = [
+  { rx: /\bpastel(?:ito)?\s+de\s+([a-záéíóúñ ]{3,40}?)(?=\s+(?:para|por|el|la|los|las|de\s+\d|\d|hoy|mañana|el\s+\w+)|[\.,;\n\?!]|$)/i, label: "pastel de $1" },
+  { rx: /\bpastel(?:ito)?\b/i, label: "pastel" },
+  { rx: /\btorta\s+de\s+([a-záéíóúñ ]{3,40}?)(?=\s+(?:para|por|el|la|los|las)|[\.,;\n\?!]|$)/i, label: "torta de $1" },
+  { rx: /\btorta\b/i, label: "torta" },
+  { rx: /\bcupcakes?\b/i, label: "cupcakes" },
+  { rx: /\bgalletas?\b/i, label: "galletas" },
+  { rx: /\bpanqu[eé]s?\b/i, label: "panqué" },
+  { rx: /\bdonas?\b/i, label: "donas" },
+  { rx: /\bbrownies?\b/i, label: "brownies" },
+  { rx: /\bpizza\b/i, label: "pizza" },
+];
+
 function extractProduct(text: string, intent: OrderIntent): string | null {
   if (intent !== "pedido_nuevo" && intent !== "cotizacion" && intent !== "pregunta_precio") return null;
-  // "quiero/pedir/me das X" → captura tras el verbo
+
+  // 1) Catálogo conocido
+  for (const { rx, label } of PRODUCT_CATALOG) {
+    const m = text.match(rx);
+    if (m) {
+      if (label.includes("$1") && m[1]) {
+        const sabor = m[1].trim().replace(/\s+$/, "");
+        return label.replace("$1", sabor);
+      }
+      return label;
+    }
+  }
+
+  // 2) "quiero/pedir/me das X" → captura tras el verbo
   const m = text.match(
     /\b(?:quiero|pedir|ordenar|encargar|me das|me apartas|me reservas|necesito|me mandas|me env[ií]as)\s+([^\.\n,;\?\!]{3,80})/i,
   );
   if (m) return m[1].trim().replace(/\s+(para|por|el|la|los|las)\s+(hoy|mañana|el|la).*/i, "").trim();
   return null;
+}
+
+/**
+ * parseOrder — API simple solicitada por la app.
+ * Devuelve los campos clave + qué falta (en español).
+ */
+export function parseOrder(message_text: string): {
+  product: string | null;
+  date: string | null;
+  time: string | null;
+  delivery_type: "recoger" | "domicilio" | null;
+  quantity: number | null;
+  missing_fields: string[];
+} {
+  const intent = detectIntentHeuristic(message_text);
+  const product = extractProduct(message_text, intent === "ambiguo" ? "pedido_nuevo" : intent);
+  const date = extractDate(message_text);
+  const time = extractTime(message_text);
+  const mode = extractDeliveryMode(message_text);
+  const delivery_type: "recoger" | "domicilio" | null =
+    mode === "recoger" ? "recoger" : mode === "entrega" ? "domicilio" : null;
+  const quantity = extractQuantity(message_text) ?? extractQuantityWord(message_text);
+
+  const missing_fields: string[] = [];
+  if (!product) missing_fields.push("producto");
+  if (!date) missing_fields.push("fecha");
+  if (!time) missing_fields.push("hora");
+  if (!delivery_type) missing_fields.push("tipo_entrega");
+
+  return { product, date, time, delivery_type, quantity, missing_fields };
 }
 
 function detectRiskLevel(intent: OrderIntent, text: string, missing: string[]): "bajo" | "medio" | "alto" {
