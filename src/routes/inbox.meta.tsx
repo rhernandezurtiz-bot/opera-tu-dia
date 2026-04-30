@@ -171,6 +171,13 @@ function InboxMetaPage() {
     })();
   }, [selected?.id]);
 
+  // Auto-scroll al final cuando llegan mensajes nuevos
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages.length, selected?.id]);
+
   const send = async () => {
     if (!selected || !draft.trim()) return;
     setSending(true);
