@@ -202,7 +202,13 @@ function InboxMetaPage() {
     const current = channelModes[selected.channel] ?? "manual";
     const next = current === "auto" ? "manual" : "auto";
     try {
-      await upsertMetaChannel({ data: { channel: selected.channel, reply_mode: next } });
+      const res = await upsertMetaChannel({
+        data: { channel: selected.channel, reply_mode: next },
+      });
+      if (!res?.ok) {
+        toast.error("Inicia sesión para cambiar el modo del canal");
+        return;
+      }
       setChannelModes((m) => ({ ...m, [selected.channel]: next }));
       toast.success(next === "auto" ? "Modo automático activado" : "Modo manual activado");
     } catch (err: any) {
