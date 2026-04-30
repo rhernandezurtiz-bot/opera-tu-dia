@@ -276,8 +276,7 @@ export function computeMissingFields(order: {
   if (!order.product_requested) missing.push("producto");
   if (!order.requested_date) missing.push("fecha");
   if (!order.requested_time) missing.push("hora");
-  if (!order.phone) missing.push("teléfono");
-  if (!order.delivery_address && !order.delivery_mode) missing.push("entrega o recoger");
+  if (!order.delivery_mode && !order.delivery_address) missing.push("tipo_entrega");
   return missing;
 }
 
