@@ -183,19 +183,20 @@ export const testMetaConnection = createServerFn({ method: "POST" })
   });
 
 // ── Listar conversaciones ────────────────────────────────────────────────
-export const listMetaConversations = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabase, userId } = context;
-    const { data, error } = await supabase
-      .from("meta_conversations")
-      .select("*")
-      .eq("owner_id", userId)
-      .order("last_message_at", { ascending: false })
-      .limit(100);
-    if (error) throw new Error(error.message);
-    return { conversations: data ?? [] };
-  });
+export const listMetaConversations = createServerFn({ method: "GET" }).handler(async () => {
+  const auth = await getOptionalUserScopedSupabase();
+  if (!auth) return { conversations: [] };
+
+  const { supabase, userId } = auth;
+  const { data, error } = await supabase
+    .from("meta_conversations")
+    .select("*")
+    .eq("owner_id", userId)
+    .order("last_message_at", { ascending: false })
+    .limit(100);
+  if (error) return { conversations: [] };
+  return { conversations: data ?? [] };
+});
 
 // ── Listar mensajes de una conversación ──────────────────────────────────
 export const listMetaMessages = createServerFn({ method: "POST" })
