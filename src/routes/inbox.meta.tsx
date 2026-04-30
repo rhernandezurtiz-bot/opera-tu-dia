@@ -206,7 +206,7 @@ function InboxMetaPage() {
         data: { channel: selected.channel, reply_mode: next },
       });
       if (!res?.ok) {
-        toast.error("Inicia sesión para cambiar el modo del canal");
+        toast.error("No se pudo cambiar el modo del canal");
         return;
       }
       setChannelModes((m) => ({ ...m, [selected.channel]: next }));
