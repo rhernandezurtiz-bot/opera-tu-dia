@@ -21,6 +21,7 @@ import {
 } from "@/server/meta.functions";
 import { Loader2, Send, RefreshCw, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/inbox/meta")({
   head: () => ({
@@ -96,8 +97,46 @@ function InboxMetaPage() {
   useEffect(() => {
     void refreshConvs();
     const t = setInterval(() => void refreshConvs(), 10000);
-    return () => clearInterval(t);
-  }, []);
+
+    // Realtime: refrescar conversaciones cuando cambien o llegue un mensaje nuevo
+    const channel = supabase
+      .channel("inbox-meta-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "meta_conversations" },
+        () => void refreshConvs(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "meta_messages" },
+        (payload: any) => {
+          void refreshConvs();
+          const newMsg = payload?.new;
+          if (newMsg && selected && newMsg.conversation_id === selected.id) {
+            setMessages((prev) =>
+              prev.some((m) => m.id === newMsg.id)
+                ? prev
+                : [
+                    ...prev,
+                    {
+                      id: newMsg.id,
+                      direction: newMsg.direction,
+                      text: newMsg.text,
+                      status: newMsg.status,
+                      created_at: newMsg.created_at,
+                    } as MsgRow,
+                  ],
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(t);
+      void supabase.removeChannel(channel);
+    };
+  }, [selected?.id]);
 
   useEffect(() => {
     if (!selected) return;
