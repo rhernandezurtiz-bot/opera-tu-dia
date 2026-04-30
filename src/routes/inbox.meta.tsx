@@ -61,20 +61,27 @@ function InboxMetaPage() {
 
   const refreshConvs = async () => {
     try {
-      const [{ conversations }, { channels }] = await Promise.all([
+      const [conversationResult, channelResult] = await Promise.all([
         listMetaConversations(),
         listMetaChannels(),
       ]);
-      setConvs(conversations as ConvRow[]);
+      const conversations = Array.isArray(conversationResult?.conversations)
+        ? (conversationResult.conversations as ConvRow[])
+        : [];
+      const channels = Array.isArray(channelResult?.channels) ? channelResult.channels : [];
+
+      setConvs(conversations);
       const modes: Record<string, any> = {};
       for (const c of channels as any[]) modes[c.channel] = c.reply_mode;
       setChannelModes(modes);
       // Mantener seleccionada si sigue existiendo
       if (selected) {
-        const still = (conversations as ConvRow[]).find((c) => c.id === selected.id);
+        const still = conversations.find((c) => c.id === selected.id);
         if (still) setSelected(still);
       }
     } catch (err: any) {
+      setConvs([]);
+      setChannelModes({});
       toast.error(err?.message ?? "Error al cargar conversaciones");
     } finally {
       setLoading(false);
@@ -132,7 +139,8 @@ function InboxMetaPage() {
     }
   };
 
-  const totalUnread = useMemo(() => convs.reduce((s, c) => s + (c.unread_count ?? 0), 0), [convs]);
+  const safeConvs = Array.isArray(convs) ? convs : [];
+  const totalUnread = useMemo(() => safeConvs.reduce((s, c) => s + (c.unread_count ?? 0), 0), [safeConvs]);
 
   return (
     <AppShell>
@@ -153,7 +161,7 @@ function InboxMetaPage() {
         {/* Lista */}
         <Card className="rounded-xl overflow-hidden">
           <div className="p-3 border-b text-xs uppercase tracking-wide text-muted-foreground">
-            Conversaciones ({convs.length})
+            Conversaciones ({safeConvs.length})
           </div>
           <div className="max-h-[70vh] overflow-y-auto divide-y">
             {loading && (
@@ -161,13 +169,13 @@ function InboxMetaPage() {
                 <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando...
               </div>
             )}
-            {!loading && convs.length === 0 && (
+            {!loading && safeConvs.length === 0 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-40" />
                 Aún no hay mensajes. Conecta un canal en Configuración y envíate un mensaje de prueba.
               </div>
             )}
-            {convs.map((c) => (
+            {safeConvs.map((c) => (
               <button
                 key={c.id}
                 onClick={() => setSelected(c)}
