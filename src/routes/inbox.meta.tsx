@@ -26,7 +26,10 @@ export const Route = createFileRoute("/inbox/meta")({
   head: () => ({
     meta: [
       { title: "Inbox Meta — Operia" },
-      { name: "description", content: "Mensajes reales de WhatsApp, Instagram y Facebook recibidos por webhook." },
+      {
+        name: "description",
+        content: "Mensajes reales de WhatsApp, Instagram y Facebook recibidos por webhook.",
+      },
     ],
   }),
   component: InboxMetaPage,
@@ -57,7 +60,9 @@ function InboxMetaPage() {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
-  const [channelModes, setChannelModes] = useState<Record<string, "manual" | "suggested" | "auto">>({});
+  const [channelModes, setChannelModes] = useState<Record<string, "manual" | "suggested" | "auto">>(
+    {},
+  );
 
   const refreshConvs = async () => {
     try {
@@ -98,7 +103,9 @@ function InboxMetaPage() {
     if (!selected) return;
     void (async () => {
       try {
-        const { messages: rows } = await listMetaMessages({ data: { conversationId: selected.id } });
+        const { messages: rows } = await listMetaMessages({
+          data: { conversationId: selected.id },
+        });
         setMessages(rows as MsgRow[]);
         if (selected.unread_count > 0) {
           await markConversationRead({ data: { conversationId: selected.id } });
@@ -113,7 +120,9 @@ function InboxMetaPage() {
     if (!selected || !draft.trim()) return;
     setSending(true);
     try {
-      const res = await sendMetaMessage({ data: { conversationId: selected.id, text: draft.trim() } });
+      const res = await sendMetaMessage({
+        data: { conversationId: selected.id, text: draft.trim() },
+      });
       setDraft("");
       toast.success(res.mode === "live" ? "Mensaje enviado" : "Mensaje guardado (modo simulación)");
       // refrescar mensajes
@@ -140,7 +149,10 @@ function InboxMetaPage() {
   };
 
   const safeConvs = Array.isArray(convs) ? convs : [];
-  const totalUnread = useMemo(() => safeConvs.reduce((s, c) => s + (c.unread_count ?? 0), 0), [safeConvs]);
+  const totalUnread = useMemo(
+    () => safeConvs.reduce((s, c) => s + (c.unread_count ?? 0), 0),
+    [safeConvs],
+  );
 
   return (
     <AppShell>
@@ -150,7 +162,12 @@ function InboxMetaPage() {
         actions={
           <div className="flex items-center gap-2">
             {totalUnread > 0 && <Badge>{totalUnread} sin leer</Badge>}
-            <Button variant="outline" size="sm" className="rounded-full" onClick={() => void refreshConvs()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={() => void refreshConvs()}
+            >
               <RefreshCw className="h-3 w-3 mr-1" /> Actualizar
             </Button>
           </div>
@@ -172,7 +189,8 @@ function InboxMetaPage() {
             {!loading && safeConvs.length === 0 && (
               <div className="p-6 text-center text-sm text-muted-foreground">
                 <MessageCircle className="h-6 w-6 mx-auto mb-2 opacity-40" />
-                Aún no hay mensajes. Conecta un canal en Configuración y envíate un mensaje de prueba.
+                Aún no hay mensajes. Conecta un canal en Configuración y envíate un mensaje de
+                prueba.
               </div>
             )}
             {safeConvs.map((c) => (
@@ -182,14 +200,22 @@ function InboxMetaPage() {
                 className={`w-full text-left p-3 hover:bg-secondary/50 transition ${selected?.id === c.id ? "bg-secondary/70" : ""}`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-medium text-sm truncate">{c.sender_name ?? c.external_sender_id}</span>
+                  <span className="font-medium text-sm truncate">
+                    {c.sender_name ?? c.external_sender_id}
+                  </span>
                   <ChannelBadge canal={c.channel} />
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground truncate">{c.last_message_preview ?? "—"}</span>
-                  {c.unread_count > 0 && <Badge className="h-5 min-w-5 px-1.5 text-xs">{c.unread_count}</Badge>}
+                  <span className="text-xs text-muted-foreground truncate">
+                    {c.last_message_preview ?? "—"}
+                  </span>
+                  {c.unread_count > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 text-xs">{c.unread_count}</Badge>
+                  )}
                 </div>
-                <div className="text-[10px] text-muted-foreground mt-1">{new Date(c.last_message_at).toLocaleString()}</div>
+                <div className="text-[10px] text-muted-foreground mt-1">
+                  {new Date(c.last_message_at).toLocaleString()}
+                </div>
               </button>
             ))}
           </div>
@@ -207,29 +233,45 @@ function InboxMetaPage() {
               <div className="p-4 border-b flex items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-display text-base">{selected.sender_name ?? selected.external_sender_id}</span>
+                    <span className="font-display text-base">
+                      {selected.sender_name ?? selected.external_sender_id}
+                    </span>
                     <ChannelBadge canal={selected.channel} />
                   </div>
-                  <div className="text-xs text-muted-foreground font-mono">{selected.external_sender_id}</div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {selected.external_sender_id}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     Modo: {channelModes[selected.channel] ?? "manual"}
                   </Badge>
-                  <Button size="sm" variant={channelModes[selected.channel] === "auto" ? "default" : "outline"} className="rounded-full" onClick={() => void toggleAuto()}>
-                    {channelModes[selected.channel] === "auto" ? "Desactivar auto" : "Activar automático"}
+                  <Button
+                    size="sm"
+                    variant={channelModes[selected.channel] === "auto" ? "default" : "outline"}
+                    className="rounded-full"
+                    onClick={() => void toggleAuto()}
+                  >
+                    {channelModes[selected.channel] === "auto"
+                      ? "Desactivar auto"
+                      : "Activar automático"}
                   </Button>
                 </div>
               </div>
 
               <div className="flex-1 p-4 overflow-y-auto space-y-2">
                 {messages.map((m) => (
-                  <div key={m.id} className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                      m.direction === "outbound"
-                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                        : "bg-secondary text-foreground rounded-bl-sm"
-                    }`}>
+                  <div
+                    key={m.id}
+                    className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                        m.direction === "outbound"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-secondary text-foreground rounded-bl-sm"
+                      }`}
+                    >
                       <div className="whitespace-pre-wrap">{m.text}</div>
                       <div className={`text-[10px] mt-1 opacity-70`}>
                         {new Date(m.created_at).toLocaleTimeString()} · {m.status}
@@ -238,7 +280,9 @@ function InboxMetaPage() {
                   </div>
                 ))}
                 {messages.length === 0 && (
-                  <div className="text-center text-sm text-muted-foreground py-12">Sin mensajes todavía.</div>
+                  <div className="text-center text-sm text-muted-foreground py-12">
+                    Sin mensajes todavía.
+                  </div>
                 )}
               </div>
 
@@ -256,8 +300,17 @@ function InboxMetaPage() {
                       ? "Operia responde automáticamente. Puedes intervenir en cualquier momento."
                       : "Modo manual: nada se envía sin tu aprobación."}
                   </span>
-                  <Button size="sm" className="rounded-full" disabled={sending || !draft.trim()} onClick={() => void send()}>
-                    {sending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="h-3 w-3 mr-1" />}
+                  <Button
+                    size="sm"
+                    className="rounded-full"
+                    disabled={sending || !draft.trim()}
+                    onClick={() => void send()}
+                  >
+                    {sending ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <Send className="h-3 w-3 mr-1" />
+                    )}
                     Enviar
                   </Button>
                 </div>
