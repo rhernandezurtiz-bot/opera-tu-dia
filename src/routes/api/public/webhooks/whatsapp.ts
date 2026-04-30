@@ -49,11 +49,11 @@ function extractMessages(payload: any): Array<{ from: string; body: string; waId
   return out;
 }
 
-async function saveMessage(from: string, body: string, waId: string | null, raw: any) {
+async function saveMessage(from: string, body: string, waId: string | null, profileName: string | null, raw: any) {
   // 1) ¿Existe conversación para este número?
   const { data: existing, error: findErr } = await supabaseAdmin
     .from("meta_conversations")
-    .select("id, unread_count")
+    .select("id, unread_count, sender_name")
     .eq("channel", "whatsapp")
     .eq("phone", from)
     .limit(1)
