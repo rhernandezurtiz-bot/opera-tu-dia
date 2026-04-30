@@ -69,7 +69,12 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
   if (existing?.id) {
     conversationId = existing.id;
     customerName = profileName ?? existing.sender_name ?? null;
-    const update: Record<string, unknown> = {
+    const update: {
+      last_message_at: string;
+      last_message_preview: string;
+      unread_count: number;
+      sender_name?: string;
+    } = {
       last_message_at: new Date().toISOString(),
       last_message_preview: body.slice(0, 140),
       unread_count: (existing.unread_count ?? 0) + 1,
