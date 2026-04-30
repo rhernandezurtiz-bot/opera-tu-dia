@@ -56,6 +56,13 @@ interface MsgRow {
   text: string | null;
   status: string;
   created_at: string;
+  raw_payload?: Record<string, unknown> | null;
+}
+
+function isAutoReply(m: MsgRow): boolean {
+  const raw = m.raw_payload;
+  if (!raw || typeof raw !== "object") return false;
+  return (raw as { kind?: string }).kind === "auto_reply";
 }
 
 function formatDateSeparator(iso: string): string {
@@ -382,12 +389,33 @@ function InboxMetaPage() {
                         className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"} ${sameSenderAsPrev ? "mt-0.5" : "mt-2"}`}
                       >
                         <div
-                          className={`max-w-[78%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm relative ${
+                          className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm relative border ${
                             m.direction === "outbound"
-                              ? "bg-[hsl(140_50%_85%)] dark:bg-[hsl(140_30%_25%)] text-foreground rounded-br-sm"
-                              : "bg-background text-foreground rounded-bl-sm"
+                              ? "bg-[hsl(140_55%_88%)] dark:bg-[hsl(140_30%_22%)] text-foreground rounded-br-sm border-[hsl(140_40%_70%)]/40"
+                              : "bg-background text-foreground rounded-bl-sm border-border"
                           }`}
                         >
+                          {!sameSenderAsPrev && (
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span
+                                className={`text-[10px] font-semibold uppercase tracking-wide ${
+                                  m.direction === "outbound"
+                                    ? "text-[hsl(140_50%_30%)] dark:text-[hsl(140_50%_70%)]"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {m.direction === "outbound" ? "Operia" : "Cliente"}
+                              </span>
+                              {isAutoReply(m) && (
+                                <Badge
+                                  variant="secondary"
+                                  className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wider"
+                                >
+                                  Auto
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                           <div className="whitespace-pre-wrap break-words pr-12">
                             {m.text}
                           </div>
@@ -416,8 +444,17 @@ function InboxMetaPage() {
 
               {(() => {
                 const mode = channelModes[selected.channel] ?? "manual";
+                // Solo en manual o suggested
+                if (mode !== "manual" && mode !== "suggested") return null;
                 const lastInbound = [...messages].reverse().find((m) => m.direction === "inbound");
-                if ((mode !== "auto" && mode !== "suggested") || !lastInbound) return null;
+                if (!lastInbound) return null;
+                // Si ya hay un outbound posterior al último entrante, no mostrar la caja
+                const alreadyAnswered = messages.some(
+                  (m) => m.direction === "outbound" && m.created_at > lastInbound.created_at,
+                );
+                if (alreadyAnswered) return null;
+                // En manual solo mostrar si el usuario lo pide explícitamente — aquí
+                // mostramos la sugerencia siempre que no haya respuesta aún.
                 return (
                   <div className="px-3 pt-3">
                     <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
@@ -426,7 +463,7 @@ function InboxMetaPage() {
                           Respuesta automática que enviaría Operia
                         </span>
                         <Badge variant="outline" className="text-[10px]">
-                          {mode === "auto" ? "Modo automático" : "Modo sugerido"}
+                          {mode === "suggested" ? "Modo sugerido" : "Modo manual"}
                         </Badge>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed">
