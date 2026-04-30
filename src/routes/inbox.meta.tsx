@@ -19,9 +19,10 @@ import {
   upsertMetaChannel,
   listMetaChannels,
 } from "@/server/meta.functions";
-import { Loader2, Send, RefreshCw, MessageCircle } from "lucide-react";
+import { Loader2, Send, RefreshCw, MessageCircle, Check, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/inbox/meta")({
   head: () => ({
@@ -54,6 +55,20 @@ interface MsgRow {
   created_at: string;
 }
 
+function formatDateSeparator(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+  if (sameDay(d, today)) return "Hoy";
+  if (sameDay(d, yesterday)) return "Ayer";
+  return d.toLocaleDateString([], { day: "2-digit", month: "long", year: "numeric" });
+}
+
 function InboxMetaPage() {
   const [convs, setConvs] = useState<ConvRow[]>([]);
   const [selected, setSelected] = useState<ConvRow | null>(null);
@@ -61,6 +76,7 @@ function InboxMetaPage() {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [channelModes, setChannelModes] = useState<Record<string, "manual" | "suggested" | "auto">>(
     {},
   );
@@ -154,6 +170,13 @@ function InboxMetaPage() {
       }
     })();
   }, [selected?.id]);
+
+  // Auto-scroll al final cuando llegan mensajes nuevos
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages.length, selected?.id]);
 
   const send = async () => {
     if (!selected || !draft.trim()) return;
@@ -298,31 +321,71 @@ function InboxMetaPage() {
                 </div>
               </div>
 
-              <div className="flex-1 p-4 overflow-y-auto space-y-2">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                        m.direction === "outbound"
-                          ? "bg-primary text-primary-foreground rounded-br-sm"
-                          : "bg-secondary text-foreground rounded-bl-sm"
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap">{m.text}</div>
-                      <div className={`text-[10px] mt-1 opacity-70`}>
-                        {new Date(m.created_at).toLocaleTimeString()} · {m.status}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto px-4 py-6 space-y-1"
+                style={{
+                  backgroundColor: "hsl(var(--muted) / 0.4)",
+                  backgroundImage:
+                    "radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.04) 1px, transparent 0)",
+                  backgroundSize: "20px 20px",
+                }}
+              >
                 {messages.length === 0 && (
                   <div className="text-center text-sm text-muted-foreground py-12">
                     Sin mensajes todavía.
                   </div>
                 )}
+                {messages.map((m, i) => {
+                  const prev = messages[i - 1];
+                  const dateLabel = formatDateSeparator(m.created_at);
+                  const showSeparator =
+                    !prev || formatDateSeparator(prev.created_at) !== dateLabel;
+                  const sameSenderAsPrev =
+                    prev && prev.direction === m.direction && !showSeparator;
+                  return (
+                    <div key={m.id}>
+                      {showSeparator && (
+                        <div className="flex justify-center my-3">
+                          <span className="text-[11px] bg-background/80 backdrop-blur px-3 py-1 rounded-full text-muted-foreground shadow-sm">
+                            {dateLabel}
+                          </span>
+                        </div>
+                      )}
+                      <div
+                        className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"} ${sameSenderAsPrev ? "mt-0.5" : "mt-2"}`}
+                      >
+                        <div
+                          className={`max-w-[78%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm relative ${
+                            m.direction === "outbound"
+                              ? "bg-[hsl(140_50%_85%)] dark:bg-[hsl(140_30%_25%)] text-foreground rounded-br-sm"
+                              : "bg-background text-foreground rounded-bl-sm"
+                          }`}
+                        >
+                          <div className="whitespace-pre-wrap break-words pr-12">
+                            {m.text}
+                          </div>
+                          <div className="float-right inline-flex items-center gap-1 text-[10px] text-muted-foreground -mt-1 ml-2">
+                            <span>
+                              {new Date(m.created_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            {m.direction === "outbound" &&
+                              (m.status === "sent" || m.status === "delivered" ? (
+                                <Check className="h-3 w-3" />
+                              ) : m.status === "read" ? (
+                                <CheckCheck className="h-3 w-3 text-blue-500" />
+                              ) : m.status === "failed" ? (
+                                <span className="text-destructive">!</span>
+                              ) : null)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="p-3 border-t space-y-2">
