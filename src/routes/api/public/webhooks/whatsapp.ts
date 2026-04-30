@@ -149,116 +149,215 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
     conversationId,
   });
 
-  // 4) Detección automática de "pedido"
-  if (/\bpedido(s)?\b/i.test(body)) {
-    console.log("[whatsapp-webhook] 🛒 palabra 'pedido' detectada → creando pedido + etiqueta");
+  // 4) Análisis de intención + extracción de campos
+  const analysis = analyzeMessage(body);
+  console.log("[whatsapp-webhook] 🧠 análisis:", analysis);
 
-    // 4a) Crear pedido
-    const { data: order, error: orderErr } = await supabaseAdmin
+  // 5) Buscar canal (para reply_mode + owner)
+  const { data: chan } = await supabaseAdmin
+    .from("meta_channels")
+    .select("reply_mode, owner_id")
+    .eq("channel", "whatsapp")
+    .order("owner_id", { ascending: true, nullsFirst: false })
+    .limit(1)
+    .maybeSingle();
+
+  const replyMode = chan?.reply_mode ?? "manual";
+  const ownerId = chan?.owner_id ?? null;
+
+  // 6) Si la intención es de pedido/cotización → upsert en orders
+  let orderRow: { id: string; status: string } | null = null;
+
+  if (analysis.intent === "pedido_nuevo" || analysis.intent === "cotizacion") {
+    // Buscar pedido abierto reciente para esta conversación (último 24h)
+    const { data: existingOrder } = await supabaseAdmin
       .from("orders")
-      .insert({
-        conversation_id: conversationId,
-        customer_name: customerName,
-        phone: from,
-        channel: "whatsapp",
-        source_message_text: body,
-        status: "nuevo",
-      })
-      .select("id, customer_name")
-      .single();
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .not("status", "in", "(entregado,cancelado)")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (orderErr) {
-      console.error("[whatsapp-webhook] ❌ error creando pedido:", orderErr);
+    const merged = {
+      product_requested: analysis.product_requested ?? existingOrder?.product_requested ?? null,
+      quantity: analysis.quantity ?? existingOrder?.quantity ?? null,
+      requested_date: analysis.requested_date ?? existingOrder?.requested_date ?? null,
+      requested_time: analysis.requested_time ?? existingOrder?.requested_time ?? null,
+      delivery_address: analysis.delivery_address ?? existingOrder?.delivery_address ?? null,
+      delivery_mode: analysis.delivery_mode ?? existingOrder?.delivery_mode ?? null,
+    };
+
+    const missing = computeMissingFields({
+      ...merged,
+      phone: from,
+    });
+
+    const status = missing.length === 0 ? "por_confirmar" : "faltan_datos";
+    const risk = detectRiskLevel(analysis.intent, body, missing);
+
+    const orderPayload = {
+      conversation_id: conversationId,
+      customer_name: customerName,
+      phone: from,
+      channel: "whatsapp",
+      original_message: existingOrder?.original_message
+        ? `${existingOrder.original_message}\n— ${body}`
+        : body,
+      intent: analysis.intent,
+      product_requested: merged.product_requested,
+      quantity: merged.quantity,
+      requested_date: merged.requested_date,
+      requested_time: merged.requested_time,
+      delivery_address: merged.delivery_address,
+      delivery_mode: merged.delivery_mode,
+      missing_fields: missing,
+      risk_level: risk,
+      status,
+      owner_id: ownerId,
+    };
+
+    if (existingOrder?.id) {
+      const { data: updated, error: updErr } = await supabaseAdmin
+        .from("orders")
+        .update(orderPayload)
+        .eq("id", existingOrder.id)
+        .select("id, status")
+        .single();
+      if (updErr) console.error("[whatsapp-webhook] ❌ error actualizando pedido:", updErr);
+      else {
+        orderRow = updated;
+        console.log("PEDIDO ACTUALIZADO", { id: updated?.id, status: updated?.status, missing });
+      }
     } else {
-      console.log("PEDIDO CREADO", {
-        id: order?.id,
-        customer_name: order?.customer_name,
-        phone: from,
-        message: body,
-        status: "nuevo",
-        conversationId,
-      });
+      const { data: created, error: insErr } = await supabaseAdmin
+        .from("orders")
+        .insert(orderPayload)
+        .select("id, status")
+        .single();
+      if (insErr) console.error("[whatsapp-webhook] ❌ error creando pedido:", insErr);
+      else {
+        orderRow = created;
+        console.log("PEDIDO CREADO", { id: created?.id, status: created?.status, missing });
+      }
     }
 
-    // 4b) Etiquetar conversación (añadir 'pedido_detectado' sin duplicar)
+    // Etiqueta en conversación
     const { data: convTags } = await supabaseAdmin
       .from("meta_conversations")
       .select("tags")
       .eq("id", conversationId)
       .single();
-
     const currentTags: string[] = Array.isArray(convTags?.tags) ? convTags!.tags : [];
     if (!currentTags.includes("pedido_detectado")) {
-      const { error: tagErr } = await supabaseAdmin
+      await supabaseAdmin
         .from("meta_conversations")
         .update({ tags: [...currentTags, "pedido_detectado"] })
         .eq("id", conversationId);
-      if (tagErr) console.error("[whatsapp-webhook] ❌ error etiquetando conversación:", tagErr);
-      else console.log("[whatsapp-webhook] 🏷️ conversación etiquetada 'pedido_detectado'");
     }
   }
 
-  // 5) Auto-respuesta si el canal WhatsApp está en modo "auto"
+  // 7) Generar respuesta y, si aplica, enviarla automáticamente
   try {
-    const { data: chan } = await supabaseAdmin
-      .from("meta_channels")
-      .select("reply_mode, owner_id")
-      .eq("channel", "whatsapp")
-      .order("owner_id", { ascending: true, nullsFirst: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (chan?.reply_mode === "auto") {
-      console.log("[whatsapp-webhook] 🤖 canal en modo auto → enviando respuesta real");
-      const sendRes = await sendViaMeta({ channel: "whatsapp", to: from, message: AUTO_REPLY_TEXT });
-
-      if (!sendRes.ok) {
-        console.error("[whatsapp-webhook] ❌ envío Meta falló:", sendRes);
-      }
-
-      const { error: outErr } = await supabaseAdmin.from("meta_messages").insert({
-        owner_id: chan.owner_id,
-        conversation_id: conversationId,
-        channel: "whatsapp",
-        direction: "outbound",
-        text: AUTO_REPLY_TEXT,
-        phone: from,
-        status: sendRes.ok ? "sent" : "failed",
-        external_message_id: sendRes.messageId,
-        raw_payload: { kind: "auto_reply", ...sendRes } as any,
-      });
-      if (outErr) console.error("[whatsapp-webhook] ❌ error guardando auto-respuesta:", outErr);
-
-      await supabaseAdmin
-        .from("meta_conversations")
-        .update({
-          last_message_at: new Date().toISOString(),
-          last_message_preview: AUTO_REPLY_TEXT.slice(0, 140),
-        })
-        .eq("id", conversationId);
-
-      // Log de auditoría
-      const { error: logErr } = await supabaseAdmin.from("meta_message_logs").insert({
-        owner_id: chan.owner_id,
-        channel: "whatsapp",
-        direction: "outbound",
-        ok: sendRes.ok,
-        info: {
-          kind: "auto_reply",
-          mode: sendRes.mode,
-          provider: sendRes.provider,
-          messageId: sendRes.messageId,
-          status: sendRes.status,
-          error: sendRes.error,
-          to: from,
-        } as any,
-      });
-      if (logErr) console.error("[whatsapp-webhook] ❌ error escribiendo log:", logErr);
-
-      console.log("AUTO-RESPUESTA", { mode: sendRes.mode, ok: sendRes.ok, error: sendRes.error });
+    // Calcular missing real (para texto contextual)
+    let missingForReply: string[] = [];
+    if (orderRow) {
+      const { data: o } = await supabaseAdmin
+        .from("orders")
+        .select("missing_fields")
+        .eq("id", orderRow.id)
+        .single();
+      missingForReply = (o?.missing_fields as string[] | null) ?? [];
     }
+
+    const reply = buildReplyForIntent({
+      intent: analysis.intent,
+      customerName,
+      missing: missingForReply,
+    });
+
+    // Política de envío:
+    // - manual: nunca enviar (la UI propone)
+    // - suggested: nunca enviar; la UI muestra propuesta
+    // - auto: enviar SOLO si reply.safeToAutoSend
+    const shouldAutoSend = replyMode === "auto" && reply.safeToAutoSend;
+
+    if (!shouldAutoSend) {
+      console.log("[whatsapp-webhook] ⏸️ no se auto-envía", {
+        replyMode,
+        intent: analysis.intent,
+        safe: reply.safeToAutoSend,
+      });
+
+      // Si es ambiguo/queja en modo auto → marcar revisión humana
+      if (replyMode === "auto" && !reply.safeToAutoSend && orderRow) {
+        await supabaseAdmin
+          .from("orders")
+          .update({ status: "requiere_revision", risk_level: "alto" })
+          .eq("id", orderRow.id);
+      } else if (replyMode === "auto" && !reply.safeToAutoSend && !orderRow) {
+        // Crear pedido marcador para revisión humana en queja/cancelación/ambiguo
+        if (analysis.intent === "queja" || analysis.intent === "cancelacion" || analysis.intent === "ambiguo") {
+          await supabaseAdmin.from("orders").insert({
+            conversation_id: conversationId,
+            customer_name: customerName,
+            phone: from,
+            channel: "whatsapp",
+            original_message: body,
+            intent: analysis.intent,
+            status: "requiere_revision",
+            risk_level: "alto",
+            owner_id: ownerId,
+          });
+        }
+      }
+      return;
+    }
+
+    console.log("[whatsapp-webhook] 🤖 enviando respuesta automática real");
+    const sendRes = await sendViaMeta({ channel: "whatsapp", to: from, message: reply.text });
+    if (!sendRes.ok) console.error("[whatsapp-webhook] ❌ envío Meta falló:", sendRes);
+
+    await supabaseAdmin.from("meta_messages").insert({
+      owner_id: ownerId,
+      conversation_id: conversationId,
+      channel: "whatsapp",
+      direction: "outbound",
+      text: reply.text,
+      phone: from,
+      status: sendRes.ok ? "sent" : "failed",
+      external_message_id: sendRes.messageId,
+      raw_payload: { kind: "auto_reply", intent: analysis.intent, ...sendRes } as any,
+    });
+
+    await supabaseAdmin
+      .from("meta_conversations")
+      .update({
+        last_message_at: new Date().toISOString(),
+        last_message_preview: reply.text.slice(0, 140),
+      })
+      .eq("id", conversationId);
+
+    await supabaseAdmin.from("meta_message_logs").insert({
+      owner_id: ownerId,
+      channel: "whatsapp",
+      direction: "outbound",
+      ok: sendRes.ok,
+      info: {
+        kind: "auto_reply",
+        intent: analysis.intent,
+        mode: sendRes.mode,
+        provider: sendRes.provider,
+        messageId: sendRes.messageId,
+        status: sendRes.status,
+        error: sendRes.error,
+        to: from,
+      } as any,
+    });
+
+    console.log("AUTO-RESPUESTA", { intent: analysis.intent, ok: sendRes.ok, mode: sendRes.mode });
   } catch (err) {
-    console.error("[whatsapp-webhook] ❌ excepción en auto-respuesta:", err);
+    console.error("[whatsapp-webhook] ❌ excepción en respuesta:", err);
   }
 }
 
