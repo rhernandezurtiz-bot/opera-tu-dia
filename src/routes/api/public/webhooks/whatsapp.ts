@@ -9,6 +9,10 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendViaMeta } from "@/lib/meta-send";
+
+const AUTO_REPLY_TEXT =
+  "¡Hola! Gracias por escribir a Operia. Ya recibimos tu mensaje y en breve te ayudamos 🙌";
 
 const VERIFY_TOKEN = "operia123";
 
