@@ -183,35 +183,36 @@ export const testMetaConnection = createServerFn({ method: "POST" })
   });
 
 // ── Listar conversaciones ────────────────────────────────────────────────
+// Devuelve TODAS las conversaciones (incluso sin owner_id). Usa supabaseAdmin
+// para bypass de RLS — el inbox es compartido en este modo demo.
 export const listMetaConversations = createServerFn({ method: "GET" }).handler(async () => {
-  const auth = await getOptionalUserScopedSupabase();
-  if (!auth) return { conversations: [] };
-
-  const { supabase, userId } = auth;
-  // Incluye conversaciones del usuario + huérfanas (owner NULL → modo demo
-  // antes de conectar un canal). RLS también lo permite.
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("meta_conversations")
     .select("*")
-    .or(`owner_id.eq.${userId},owner_id.is.null`)
-    .order("last_message_at", { ascending: false })
-    .limit(100);
-  if (error) return { conversations: [] };
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) {
+    console.error("[listMetaConversations] error", error);
+    return { conversations: [] };
+  }
   return { conversations: data ?? [] };
 });
 
 // ── Listar mensajes de una conversación ──────────────────────────────────
+// No filtra por owner_id ni requiere auth de propietario; cualquier usuario
+// autenticado puede leer los mensajes de cualquier conversación visible.
 export const listMetaMessages = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ conversationId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    const { data: rows, error } = await supabase
+  .handler(async ({ data }) => {
+    const { data: rows, error } = await supabaseAdmin
       .from("meta_messages")
       .select("*")
       .eq("conversation_id", data.conversationId)
       .order("created_at", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[listMetaMessages] error", error);
+      return { messages: [] };
+    }
     return { messages: rows ?? [] };
   });
 
