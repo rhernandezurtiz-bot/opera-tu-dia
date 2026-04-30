@@ -74,7 +74,8 @@ export type Database = {
           id: string
           last_message_at: string
           last_message_preview: string | null
-          owner_id: string
+          owner_id: string | null
+          phone: string | null
           sender_name: string | null
           unread_count: number
           updated_at: string
@@ -87,7 +88,8 @@ export type Database = {
           id?: string
           last_message_at?: string
           last_message_preview?: string | null
-          owner_id: string
+          owner_id?: string | null
+          phone?: string | null
           sender_name?: string | null
           unread_count?: number
           updated_at?: string
@@ -100,7 +102,8 @@ export type Database = {
           id?: string
           last_message_at?: string
           last_message_preview?: string | null
-          owner_id?: string
+          owner_id?: string | null
+          phone?: string | null
           sender_name?: string | null
           unread_count?: number
           updated_at?: string
@@ -146,7 +149,8 @@ export type Database = {
           direction: Database["public"]["Enums"]["meta_message_direction"]
           external_message_id: string | null
           id: string
-          owner_id: string
+          owner_id: string | null
+          phone: string | null
           raw_payload: Json | null
           status: Database["public"]["Enums"]["meta_message_status"]
           text: string | null
@@ -159,7 +163,8 @@ export type Database = {
           direction: Database["public"]["Enums"]["meta_message_direction"]
           external_message_id?: string | null
           id?: string
-          owner_id: string
+          owner_id?: string | null
+          phone?: string | null
           raw_payload?: Json | null
           status?: Database["public"]["Enums"]["meta_message_status"]
           text?: string | null
@@ -172,7 +177,8 @@ export type Database = {
           direction?: Database["public"]["Enums"]["meta_message_direction"]
           external_message_id?: string | null
           id?: string
-          owner_id?: string
+          owner_id?: string | null
+          phone?: string | null
           raw_payload?: Json | null
           status?: Database["public"]["Enums"]["meta_message_status"]
           text?: string | null
