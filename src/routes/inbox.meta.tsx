@@ -389,12 +389,33 @@ function InboxMetaPage() {
                         className={`flex ${m.direction === "outbound" ? "justify-end" : "justify-start"} ${sameSenderAsPrev ? "mt-0.5" : "mt-2"}`}
                       >
                         <div
-                          className={`max-w-[78%] rounded-lg px-2.5 py-1.5 text-sm shadow-sm relative ${
+                          className={`max-w-[78%] rounded-2xl px-3 py-2 text-sm shadow-sm relative border ${
                             m.direction === "outbound"
-                              ? "bg-[hsl(140_50%_85%)] dark:bg-[hsl(140_30%_25%)] text-foreground rounded-br-sm"
-                              : "bg-background text-foreground rounded-bl-sm"
+                              ? "bg-[hsl(140_55%_88%)] dark:bg-[hsl(140_30%_22%)] text-foreground rounded-br-sm border-[hsl(140_40%_70%)]/40"
+                              : "bg-background text-foreground rounded-bl-sm border-border"
                           }`}
                         >
+                          {!sameSenderAsPrev && (
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span
+                                className={`text-[10px] font-semibold uppercase tracking-wide ${
+                                  m.direction === "outbound"
+                                    ? "text-[hsl(140_50%_30%)] dark:text-[hsl(140_50%_70%)]"
+                                    : "text-muted-foreground"
+                                }`}
+                              >
+                                {m.direction === "outbound" ? "Operia" : "Cliente"}
+                              </span>
+                              {isAutoReply(m) && (
+                                <Badge
+                                  variant="secondary"
+                                  className="h-4 px-1.5 text-[9px] font-semibold uppercase tracking-wider"
+                                >
+                                  Auto
+                                </Badge>
+                              )}
+                            </div>
+                          )}
                           <div className="whitespace-pre-wrap break-words pr-12">
                             {m.text}
                           </div>
