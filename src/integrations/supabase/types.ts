@@ -25,7 +25,7 @@ export type Database = {
           id: string
           last_message_at: string | null
           last_outbound_at: string | null
-          owner_id: string
+          owner_id: string | null
           reply_mode: Database["public"]["Enums"]["meta_reply_mode"]
           status: Database["public"]["Enums"]["meta_channel_status"]
           updated_at: string
@@ -41,7 +41,7 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           last_outbound_at?: string | null
-          owner_id: string
+          owner_id?: string | null
           reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
           status?: Database["public"]["Enums"]["meta_channel_status"]
           updated_at?: string
@@ -57,7 +57,7 @@ export type Database = {
           id?: string
           last_message_at?: string | null
           last_outbound_at?: string | null
-          owner_id?: string
+          owner_id?: string | null
           reply_mode?: Database["public"]["Enums"]["meta_reply_mode"]
           status?: Database["public"]["Enums"]["meta_channel_status"]
           updated_at?: string

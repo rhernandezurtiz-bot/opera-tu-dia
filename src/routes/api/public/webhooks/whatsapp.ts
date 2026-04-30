@@ -9,6 +9,10 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendViaMeta } from "@/lib/meta-send";
+
+const AUTO_REPLY_TEXT =
+  "¡Hola! Gracias por escribir a Operia. Ya recibimos tu mensaje y en breve te ayudamos 🙌";
 
 const VERIFY_TOKEN = "operia123";
 
@@ -189,6 +193,47 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
       if (tagErr) console.error("[whatsapp-webhook] ❌ error etiquetando conversación:", tagErr);
       else console.log("[whatsapp-webhook] 🏷️ conversación etiquetada 'pedido_detectado'");
     }
+  }
+
+  // 5) Auto-respuesta si el canal WhatsApp está en modo "auto"
+  try {
+    const { data: chan } = await supabaseAdmin
+      .from("meta_channels")
+      .select("reply_mode, owner_id")
+      .eq("channel", "whatsapp")
+      .order("owner_id", { ascending: true, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (chan?.reply_mode === "auto") {
+      console.log("[whatsapp-webhook] 🤖 canal en modo auto → enviando respuesta");
+      const sendRes = await sendViaMeta({ channel: "whatsapp", to: from, message: AUTO_REPLY_TEXT });
+
+      const { error: outErr } = await supabaseAdmin.from("meta_messages").insert({
+        owner_id: chan.owner_id,
+        conversation_id: conversationId,
+        channel: "whatsapp",
+        direction: "outbound",
+        text: AUTO_REPLY_TEXT,
+        phone: from,
+        status: sendRes.ok ? "sent" : "failed",
+        external_message_id: sendRes.messageId,
+        raw_payload: { kind: "auto_reply", ...sendRes } as any,
+      });
+      if (outErr) console.error("[whatsapp-webhook] ❌ error guardando auto-respuesta:", outErr);
+
+      await supabaseAdmin
+        .from("meta_conversations")
+        .update({
+          last_message_at: new Date().toISOString(),
+          last_message_preview: AUTO_REPLY_TEXT.slice(0, 140),
+        })
+        .eq("id", conversationId);
+
+      console.log("AUTO-RESPUESTA ENVIADA", { mode: sendRes.mode, ok: sendRes.ok });
+    }
+  } catch (err) {
+    console.error("[whatsapp-webhook] ❌ excepción en auto-respuesta:", err);
   }
 }
 
