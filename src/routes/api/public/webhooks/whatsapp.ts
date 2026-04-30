@@ -64,16 +64,22 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
   }
 
   let conversationId: string;
+  let customerName: string | null = profileName ?? null;
 
   if (existing?.id) {
     conversationId = existing.id;
+    customerName = profileName ?? existing.sender_name ?? null;
+    const update: Record<string, unknown> = {
+      last_message_at: new Date().toISOString(),
+      last_message_preview: body.slice(0, 140),
+      unread_count: (existing.unread_count ?? 0) + 1,
+    };
+    if (profileName && profileName !== existing.sender_name) {
+      update.sender_name = profileName;
+    }
     const { error: updErr } = await supabaseAdmin
       .from("meta_conversations")
-      .update({
-        last_message_at: new Date().toISOString(),
-        last_message_preview: body.slice(0, 140),
-        unread_count: (existing.unread_count ?? 0) + 1,
-      })
+      .update(update)
       .eq("id", existing.id);
     if (updErr) console.error("[whatsapp-webhook] ❌ error actualizando conversación:", updErr);
     console.log("[whatsapp-webhook] ✓ conversación existente reutilizada:", conversationId);
@@ -86,6 +92,7 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
         phone: from,
         external_conversation_id: from,
         external_sender_id: from,
+        sender_name: profileName,
         last_message_at: new Date().toISOString(),
         last_message_preview: body.slice(0, 140),
         unread_count: 1,
