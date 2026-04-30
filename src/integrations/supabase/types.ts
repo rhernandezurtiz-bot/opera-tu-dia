@@ -201,6 +201,7 @@ export type Database = {
           channel: string
           conversation_id: string | null
           created_at: string
+          customer_name: string | null
           id: string
           owner_id: string | null
           phone: string
@@ -212,6 +213,7 @@ export type Database = {
           channel?: string
           conversation_id?: string | null
           created_at?: string
+          customer_name?: string | null
           id?: string
           owner_id?: string | null
           phone: string
@@ -223,6 +225,7 @@ export type Database = {
           channel?: string
           conversation_id?: string | null
           created_at?: string
+          customer_name?: string | null
           id?: string
           owner_id?: string | null
           phone?: string
