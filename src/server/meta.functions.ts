@@ -284,6 +284,13 @@ export const listChannelLogs = createServerFn({ method: "POST" })
   });
 
 // ── Enviar mensaje ───────────────────────────────────────────────────────
+//
+// Estrategia robusta:
+//   1) Inserta el mensaje en meta_messages con status="pending" (UI muestra "enviando").
+//   2) Llama a Meta. Sólo se considera enviado si HTTP OK + messages[0].id.
+//   3) Actualiza el mensaje a "sent" (con external_message_id) o "failed".
+//   4) Si falla, registra el error completo en meta_message_logs:
+//      status HTTP, response body, phone destino, phone_number_id usado.
 export const sendMetaMessage = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
@@ -304,15 +311,8 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
       throw new Error("Conversación no encontrada");
     }
 
-    const sendRes = await sendViaMeta({
-      channel: conv.channel,
-      to: conv.external_sender_id,
-      message: data.text,
-    });
-
-    console.log("[sendMetaMessage] resultado envío:", sendRes);
-
-    const { data: msg, error: msgErr } = await supabaseAdmin
+    // 1) Crear el mensaje como "pending" (estado UI = enviando)
+    const { data: pendingMsg, error: pendErr } = await supabaseAdmin
       .from("meta_messages")
       .insert({
         owner_id: conv.owner_id,
@@ -321,32 +321,156 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
         direction: "outbound",
         text: data.text,
         phone: conv.phone ?? conv.external_sender_id,
-        status: sendRes.ok ? "sent" : "failed",
-        external_message_id: sendRes.messageId,
-        raw_payload: sendRes as any,
+        status: "pending",
+        raw_payload: { kind: "manual_send", queued_at: new Date().toISOString() } as any,
       })
       .select("*")
       .single();
-    if (msgErr) {
-      console.error("[sendMetaMessage] error insertando mensaje saliente:", msgErr);
-      throw new Error(msgErr.message);
+    if (pendErr || !pendingMsg) {
+      console.error("[sendMetaMessage] error insertando mensaje pending:", pendErr);
+      throw new Error(pendErr?.message ?? "No se pudo encolar el mensaje");
     }
 
+    // 2) Llamar a Meta
+    const sendRes = await sendViaMeta({
+      channel: conv.channel,
+      to: conv.external_sender_id,
+      message: data.text,
+    });
+    console.log("[sendMetaMessage] resultado envío:", { ok: sendRes.ok, status: sendRes.status, mode: sendRes.mode });
+
+    // 3) Actualizar status del mensaje según resultado real
+    const newStatus: "sent" | "failed" = sendRes.ok && sendRes.messageId ? "sent" : "failed";
     await supabaseAdmin
-      .from("meta_conversations")
+      .from("meta_messages")
       .update({
-        last_message_at: new Date().toISOString(),
-        last_message_preview: data.text.slice(0, 140),
+        status: newStatus,
+        external_message_id: sendRes.messageId ?? null,
+        raw_payload: {
+          kind: "manual_send",
+          ok: sendRes.ok,
+          mode: sendRes.mode,
+          provider: sendRes.provider,
+          status: sendRes.status,
+          messageId: sendRes.messageId,
+          error: sendRes.error,
+          userError: sendRes.userError,
+          responseBody: sendRes.responseBody,
+          phoneNumberId: sendRes.phoneNumberId,
+          to: sendRes.to,
+        } as any,
       })
-      .eq("id", conv.id);
+      .eq("id", pendingMsg.id);
 
-    if (conv.owner_id) {
+    // 4) Logs detallados (siempre, éxito y error)
+    await supabaseAdmin.from("meta_message_logs").insert({
+      owner_id: conv.owner_id,
+      channel: conv.channel,
+      direction: "outbound",
+      ok: sendRes.ok,
+      info: {
+        kind: "manual_send",
+        message_id_internal: pendingMsg.id,
+        status_http: sendRes.status,
+        response_body: sendRes.responseBody,
+        destination_phone: sendRes.to,
+        phone_number_id: sendRes.phoneNumberId,
+        mode: sendRes.mode,
+        provider: sendRes.provider,
+        error: sendRes.error,
+        user_error: sendRes.userError,
+        external_message_id: sendRes.messageId,
+        preview: data.text.slice(0, 80),
+      } as any,
+    });
+
+    if (newStatus === "sent") {
       await supabaseAdmin
-        .from("meta_channels")
-        .update({ last_outbound_at: new Date().toISOString() })
-        .eq("owner_id", conv.owner_id)
-        .eq("channel", conv.channel);
+        .from("meta_conversations")
+        .update({
+          last_message_at: new Date().toISOString(),
+          last_message_preview: data.text.slice(0, 140),
+        })
+        .eq("id", conv.id);
+
+      if (conv.owner_id) {
+        await supabaseAdmin
+          .from("meta_channels")
+          .update({ last_outbound_at: new Date().toISOString() })
+          .eq("owner_id", conv.owner_id)
+          .eq("channel", conv.channel);
+      }
     }
+
+    if (newStatus === "failed") {
+      // No tirar excepción: la UI lee el status y muestra "fallido" + botón Reintentar.
+      console.warn("[sendMetaMessage] envío FALLÓ:", sendRes.userError ?? sendRes.error);
+      return {
+        ok: false,
+        mode: sendRes.mode,
+        message: { ...pendingMsg, status: "failed" },
+        error: sendRes.userError ?? sendRes.error ?? "No se pudo enviar el mensaje",
+      };
+    }
+
+    return {
+      ok: true,
+      mode: sendRes.mode,
+      message: { ...pendingMsg, status: "sent", external_message_id: sendRes.messageId ?? null },
+    };
+  });
+
+// ── Reintentar envío de un mensaje fallido ───────────────────────────────
+export const retrySendMessage = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ messageId: z.string().uuid() }).parse(input))
+  .handler(async ({ data }) => {
+    const { data: msg, error: msgErr } = await supabaseAdmin
+      .from("meta_messages")
+      .select("*")
+      .eq("id", data.messageId)
+      .single();
+    if (msgErr || !msg) throw new Error("Mensaje no encontrado");
+    if (msg.direction !== "outbound") throw new Error("Sólo se pueden reintentar mensajes salientes");
+    if (!msg.text) throw new Error("Mensaje sin texto");
+
+    const { data: conv } = await supabaseAdmin
+      .from("meta_conversations")
+      .select("*")
+      .eq("id", msg.conversation_id)
+      .single();
+    if (!conv) throw new Error("Conversación no encontrada");
+
+    // Marcar como pending mientras se reintenta
+    await supabaseAdmin
+      .from("meta_messages")
+      .update({ status: "pending" })
+      .eq("id", msg.id);
+
+    const sendRes = await sendViaMeta({
+      channel: conv.channel,
+      to: conv.external_sender_id,
+      message: msg.text,
+    });
+
+    const newStatus: "sent" | "failed" = sendRes.ok && sendRes.messageId ? "sent" : "failed";
+    await supabaseAdmin
+      .from("meta_messages")
+      .update({
+        status: newStatus,
+        external_message_id: sendRes.messageId ?? msg.external_message_id,
+        raw_payload: {
+          kind: "manual_retry",
+          ok: sendRes.ok,
+          status: sendRes.status,
+          messageId: sendRes.messageId,
+          error: sendRes.error,
+          userError: sendRes.userError,
+          responseBody: sendRes.responseBody,
+          phoneNumberId: sendRes.phoneNumberId,
+          to: sendRes.to,
+        } as any,
+      })
+      .eq("id", msg.id);
 
     await supabaseAdmin.from("meta_message_logs").insert({
       owner_id: conv.owner_id,
@@ -354,18 +478,33 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
       direction: "outbound",
       ok: sendRes.ok,
       info: {
-        mode: sendRes.mode,
-        provider: sendRes.provider,
+        kind: "manual_retry",
+        message_id_internal: msg.id,
+        status_http: sendRes.status,
+        response_body: sendRes.responseBody,
+        destination_phone: sendRes.to,
+        phone_number_id: sendRes.phoneNumberId,
         error: sendRes.error,
-        preview: data.text.slice(0, 80),
-      },
+        user_error: sendRes.userError,
+        external_message_id: sendRes.messageId,
+      } as any,
     });
 
-    if (!sendRes.ok && sendRes.mode === "live") {
-      throw new Error(sendRes.error ?? "No se pudo enviar el mensaje");
+    if (newStatus === "sent") {
+      await supabaseAdmin
+        .from("meta_conversations")
+        .update({
+          last_message_at: new Date().toISOString(),
+          last_message_preview: (msg.text ?? "").slice(0, 140),
+        })
+        .eq("id", conv.id);
     }
 
-    return { ok: sendRes.ok, mode: sendRes.mode, message: msg };
+    return {
+      ok: newStatus === "sent",
+      status: newStatus,
+      error: newStatus === "failed" ? (sendRes.userError ?? sendRes.error ?? "Reintento falló") : null,
+    };
   });
 
 // ── Marcar conversación como leída ───────────────────────────────────────

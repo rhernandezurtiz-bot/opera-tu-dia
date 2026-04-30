@@ -15,11 +15,12 @@ import {
   listMetaConversations,
   listMetaMessages,
   sendMetaMessage,
+  retrySendMessage,
   markConversationRead,
   upsertMetaChannel,
   listMetaChannels,
 } from "@/server/meta.functions";
-import { Loader2, Send, RefreshCw, MessageCircle, Check, CheckCheck } from "lucide-react";
+import { Loader2, Send, RefreshCw, MessageCircle, Check, CheckCheck, RotateCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRef } from "react";
@@ -63,6 +64,13 @@ function isAutoReply(m: MsgRow): boolean {
   const raw = m.raw_payload;
   if (!raw || typeof raw !== "object") return false;
   return (raw as { kind?: string }).kind === "auto_reply";
+}
+
+function getSendError(m: MsgRow): string | null {
+  const raw = m.raw_payload;
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as { userError?: string; error?: string };
+  return r.userError ?? r.error ?? null;
 }
 
 function formatDateSeparator(iso: string): string {
@@ -427,14 +435,55 @@ function InboxMetaPage() {
                               })}
                             </span>
                             {m.direction === "outbound" &&
-                              (m.status === "sent" || m.status === "delivered" ? (
-                                <Check className="h-3 w-3" />
+                              (m.status === "pending" ? (
+                                <span className="inline-flex items-center gap-0.5 italic text-muted-foreground">
+                                  <Loader2 className="h-3 w-3 animate-spin" /> enviando
+                                </span>
+                              ) : m.status === "sent" || m.status === "delivered" ? (
+                                <span className="inline-flex items-center gap-0.5">
+                                  <Check className="h-3 w-3" /> enviado
+                                </span>
                               ) : m.status === "read" ? (
                                 <CheckCheck className="h-3 w-3 text-blue-500" />
                               ) : m.status === "failed" ? (
-                                <span className="text-destructive">!</span>
+                                <span className="inline-flex items-center gap-0.5 text-destructive font-medium">
+                                  <AlertCircle className="h-3 w-3" /> fallido
+                                </span>
                               ) : null)}
                           </div>
+                          {m.direction === "outbound" && m.status === "failed" && (
+                            <div className="clear-both mt-1.5 pt-1.5 border-t border-destructive/30">
+                              <div className="text-[10px] text-destructive mb-1">
+                                {getSendError(m) ?? "No se pudo entregar el mensaje"}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[10px] px-2"
+                                onClick={async () => {
+                                  try {
+                                    setMessages((prev) =>
+                                      prev.map((x) => (x.id === m.id ? { ...x, status: "pending" } : x)),
+                                    );
+                                    const res = await retrySendMessage({ data: { messageId: m.id } });
+                                    if (res?.ok) {
+                                      toast.success("Mensaje reenviado");
+                                    } else {
+                                      toast.error(res?.error ?? "Reintento falló");
+                                    }
+                                    if (selected) {
+                                      const r = await listMetaMessages({ data: { conversationId: selected.id } });
+                                      setMessages((r?.messages ?? []) as unknown as MsgRow[]);
+                                    }
+                                  } catch (err: any) {
+                                    toast.error(err?.message ?? "Error al reintentar");
+                                  }
+                                }}
+                              >
+                                <RotateCw className="h-3 w-3 mr-1" /> Reintentar envío
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
