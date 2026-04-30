@@ -37,32 +37,56 @@ async function getOptionalUserScopedSupabase() {
   return { supabase, userId };
 }
 
-// ── Listar canales del usuario (asegura que existan las 3 filas) ──────────
+// ── Listar canales (incluye fila demo sin owner para modo sin sesión) ────
 export const listMetaChannels = createServerFn({ method: "GET" }).handler(async () => {
   const auth = await getOptionalUserScopedSupabase();
-  if (!auth) return { channels: [] };
-  const { supabase, userId } = auth;
 
-  // Asegurar fila para cada canal (idempotente)
-  for (const channel of ["whatsapp", "instagram", "facebook"] as const) {
-    await supabase
+  if (auth) {
+    const { supabase, userId } = auth;
+    for (const channel of ["whatsapp", "instagram", "facebook"] as const) {
+      await supabase
+        .from("meta_channels")
+        .upsert(
+          { owner_id: userId, channel, status: "no_conectado", reply_mode: "manual" },
+          { onConflict: "owner_id,channel", ignoreDuplicates: true },
+        );
+    }
+    const { data, error } = await supabase
       .from("meta_channels")
-      .upsert(
-        { owner_id: userId, channel, status: "no_conectado", reply_mode: "manual" },
-        { onConflict: "owner_id,channel", ignoreDuplicates: true },
-      );
+      .select("*")
+      .eq("owner_id", userId)
+      .order("channel", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { channels: data ?? [] };
   }
 
-  const { data, error } = await supabase
+  // Modo demo (sin sesión): asegurar filas con owner_id = NULL
+  // Nota: el constraint onConflict requiere owner_id NOT NULL en algunas
+  // configuraciones. Aquí hacemos un select-then-insert manual.
+  const { data: existing } = await supabaseAdmin
     .from("meta_channels")
     .select("*")
-    .eq("owner_id", userId)
-    .order("channel", { ascending: true });
-  if (error) throw new Error(error.message);
-  return { channels: data ?? [] };
+    .is("owner_id", null);
+
+  const byChannel = new Map((existing ?? []).map((c) => [c.channel, c]));
+  for (const channel of ["whatsapp", "instagram", "facebook"] as const) {
+    if (!byChannel.has(channel)) {
+      const { data: created } = await supabaseAdmin
+        .from("meta_channels")
+        .insert({ channel, status: "no_conectado", reply_mode: "manual", owner_id: null as any })
+        .select("*")
+        .single();
+      if (created) byChannel.set(channel, created);
+    }
+  }
+
+  return {
+    channels: Array.from(byChannel.values()).sort((a, b) => a.channel.localeCompare(b.channel)),
+  };
 });
 
 // ── Upsert configuración de canal ────────────────────────────────────────
+// En modo demo (sin sesión) escribe sobre la fila con owner_id IS NULL.
 export const upsertMetaChannel = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
@@ -78,25 +102,18 @@ export const upsertMetaChannel = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    // Modo demo: si no hay usuario autenticado, devolvemos una respuesta
-    // amigable en lugar de lanzar (evita el error [object Response]).
     const auth = await getOptionalUserScopedSupabase();
-    if (!auth) {
-      console.warn("[upsertMetaChannel] sin sesión: no se puede modificar canal");
-      return { channel: null, ok: false, reason: "not_authenticated" as const };
-    }
+    const ownerId = auth?.userId ?? null;
 
-    const { supabase, userId } = auth;
-
-    const { data: cur } = await supabase
+    let query = supabaseAdmin
       .from("meta_channels")
       .select("*")
-      .eq("owner_id", userId)
-      .eq("channel", data.channel)
-      .maybeSingle();
+      .eq("channel", data.channel);
+    query = ownerId ? query.eq("owner_id", ownerId) : query.is("owner_id", null);
+    const { data: cur } = await query.maybeSingle();
 
     const next = {
-      owner_id: userId,
+      owner_id: ownerId as any,
       channel: data.channel,
       connected: data.connected ?? cur?.connected ?? false,
       status: data.status ?? cur?.status ?? "no_conectado",
@@ -111,15 +128,37 @@ export const upsertMetaChannel = createServerFn({ method: "POST" })
         data.error_message !== undefined ? data.error_message : (cur?.error_message ?? null),
     };
 
-    const { data: row, error } = await supabase
-      .from("meta_channels")
-      .upsert(next, { onConflict: "owner_id,channel" })
-      .select("*")
-      .single();
-    if (error) {
-      console.error("[upsertMetaChannel] error:", error);
-      return { channel: null, ok: false, reason: "db_error" as const };
+    let row;
+    if (cur?.id) {
+      const { data: updated, error } = await supabaseAdmin
+        .from("meta_channels")
+        .update(next)
+        .eq("id", cur.id)
+        .select("*")
+        .single();
+      if (error) {
+        console.error("[upsertMetaChannel] error update:", error);
+        return { channel: null, ok: false, reason: "db_error" as const };
+      }
+      row = updated;
+    } else {
+      const { data: inserted, error } = await supabaseAdmin
+        .from("meta_channels")
+        .insert(next)
+        .select("*")
+        .single();
+      if (error) {
+        console.error("[upsertMetaChannel] error insert:", error);
+        return { channel: null, ok: false, reason: "db_error" as const };
+      }
+      row = inserted;
     }
+
+    console.log("[upsertMetaChannel] ✓ canal actualizado:", {
+      channel: row.channel,
+      reply_mode: row.reply_mode,
+      owner_id: row.owner_id,
+    });
     return { channel: row, ok: true as const };
   });
 
