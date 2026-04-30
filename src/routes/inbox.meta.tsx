@@ -55,6 +55,20 @@ interface MsgRow {
   created_at: string;
 }
 
+function formatDateSeparator(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+  if (sameDay(d, today)) return "Hoy";
+  if (sameDay(d, yesterday)) return "Ayer";
+  return d.toLocaleDateString([], { day: "2-digit", month: "long", year: "numeric" });
+}
+
 function InboxMetaPage() {
   const [convs, setConvs] = useState<ConvRow[]>([]);
   const [selected, setSelected] = useState<ConvRow | null>(null);
@@ -62,6 +76,7 @@ function InboxMetaPage() {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [channelModes, setChannelModes] = useState<Record<string, "manual" | "suggested" | "auto">>(
     {},
   );
