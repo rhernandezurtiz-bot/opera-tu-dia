@@ -259,21 +259,36 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
 
   // 7) Generar respuesta y, si aplica, enviarla automáticamente
   try {
-    // Calcular missing real (para texto contextual)
+    // Calcular missing real + datos del pedido (para texto contextual)
     let missingForReply: string[] = [];
+    let orderForReply: {
+      product_requested: string | null;
+      requested_date: string | null;
+      requested_time: string | null;
+      delivery_mode: string | null;
+    } | undefined;
     if (orderRow) {
       const { data: o } = await supabaseAdmin
         .from("orders")
-        .select("missing_fields")
+        .select("missing_fields, product_requested, requested_date, requested_time, delivery_mode")
         .eq("id", orderRow.id)
         .single();
       missingForReply = (o?.missing_fields as string[] | null) ?? [];
+      if (o) {
+        orderForReply = {
+          product_requested: o.product_requested ?? null,
+          requested_date: o.requested_date ?? null,
+          requested_time: o.requested_time ?? null,
+          delivery_mode: o.delivery_mode ?? null,
+        };
+      }
     }
 
     const reply = buildReplyForIntent({
       intent: analysis.intent,
       customerName,
       missing: missingForReply,
+      order: orderForReply,
     });
 
     // Política de envío:
