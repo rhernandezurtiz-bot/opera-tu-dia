@@ -66,6 +66,13 @@ function isAutoReply(m: MsgRow): boolean {
   return (raw as { kind?: string }).kind === "auto_reply";
 }
 
+function getSendError(m: MsgRow): string | null {
+  const raw = m.raw_payload;
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as { userError?: string; error?: string };
+  return r.userError ?? r.error ?? null;
+}
+
 function formatDateSeparator(iso: string): string {
   const d = new Date(iso);
   const today = new Date();
