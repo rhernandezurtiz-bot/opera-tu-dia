@@ -15,11 +15,12 @@ import {
   listMetaConversations,
   listMetaMessages,
   sendMetaMessage,
+  retrySendMessage,
   markConversationRead,
   upsertMetaChannel,
   listMetaChannels,
 } from "@/server/meta.functions";
-import { Loader2, Send, RefreshCw, MessageCircle, Check, CheckCheck } from "lucide-react";
+import { Loader2, Send, RefreshCw, MessageCircle, Check, CheckCheck, RotateCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRef } from "react";
