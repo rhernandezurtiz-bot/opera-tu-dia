@@ -188,10 +188,12 @@ export const listMetaConversations = createServerFn({ method: "GET" }).handler(a
   if (!auth) return { conversations: [] };
 
   const { supabase, userId } = auth;
+  // Incluye conversaciones del usuario + huérfanas (owner NULL → modo demo
+  // antes de conectar un canal). RLS también lo permite.
   const { data, error } = await supabase
     .from("meta_conversations")
     .select("*")
-    .eq("owner_id", userId)
+    .or(`owner_id.eq.${userId},owner_id.is.null`)
     .order("last_message_at", { ascending: false })
     .limit(100);
   if (error) return { conversations: [] };
