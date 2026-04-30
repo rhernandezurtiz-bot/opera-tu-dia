@@ -463,7 +463,7 @@ function InboxMetaPage() {
                           Respuesta automática que enviaría Operia
                         </span>
                         <Badge variant="outline" className="text-[10px]">
-                          {mode === "auto" ? "Modo automático" : "Modo sugerido"}
+                          {mode === "suggested" ? "Modo sugerido" : "Modo manual"}
                         </Badge>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed">
