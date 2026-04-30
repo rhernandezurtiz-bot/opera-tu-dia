@@ -46,6 +46,8 @@ function Config() {
   const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const ruleLabels: Record<keyof RiskRules, string> = {
     fecha: "Fecha", hora: "Hora", direccion: "Dirección",
