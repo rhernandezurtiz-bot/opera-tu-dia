@@ -53,6 +53,13 @@ function detectIntentHeuristic(text: string): OrderIntent {
   for (const intent of order) {
     if (KEYWORDS[intent].some((rx) => rx.test(text))) return intent;
   }
+  // Fallback: si menciona un producto del catálogo o pide algo "para" una fecha → pedido_nuevo
+  if (/\b(pastel|torta|cupcake|galleta|panqu[eé]|dona|brownie|pizza)\b/i.test(text)) {
+    return "pedido_nuevo";
+  }
+  if (/\bpara\s+(hoy|mañana|el\s+\w+|\d)/i.test(text) && extractTime(text)) {
+    return "pedido_nuevo";
+  }
   return "ambiguo";
 }
 
