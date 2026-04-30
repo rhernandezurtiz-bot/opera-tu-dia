@@ -237,25 +237,24 @@ export const listChannelLogs = createServerFn({ method: "POST" })
 
 // ── Enviar mensaje ───────────────────────────────────────────────────────
 export const sendMetaMessage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
         conversationId: z.string().uuid(),
-        text: z.string().min(1).max(4096),
+        text: z.string().trim().min(1).max(4096),
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-
-    const { data: conv, error: convErr } = await supabase
+  .handler(async ({ data }) => {
+    const { data: conv, error: convErr } = await supabaseAdmin
       .from("meta_conversations")
       .select("*")
       .eq("id", data.conversationId)
-      .eq("owner_id", userId)
       .single();
-    if (convErr || !conv) throw new Error("Conversación no encontrada");
+    if (convErr || !conv) {
+      console.error("[sendMetaMessage] conversación no encontrada:", convErr);
+      throw new Error("Conversación no encontrada");
+    }
 
     const sendRes = await sendViaMeta({
       channel: conv.channel,
@@ -263,30 +262,46 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
       message: data.text,
     });
 
-    const { data: msg, error: msgErr } = await supabase
+    console.log("[sendMetaMessage] resultado envío:", sendRes);
+
+    const { data: msg, error: msgErr } = await supabaseAdmin
       .from("meta_messages")
       .insert({
-        owner_id: userId,
+        owner_id: conv.owner_id,
         conversation_id: conv.id,
         channel: conv.channel,
         direction: "outbound",
         text: data.text,
+        phone: conv.phone ?? conv.external_sender_id,
         status: sendRes.ok ? "sent" : "failed",
         external_message_id: sendRes.messageId,
         raw_payload: sendRes as any,
       })
       .select("*")
       .single();
-    if (msgErr) throw new Error(msgErr.message);
+    if (msgErr) {
+      console.error("[sendMetaMessage] error insertando mensaje saliente:", msgErr);
+      throw new Error(msgErr.message);
+    }
 
-    await supabase
-      .from("meta_channels")
-      .update({ last_outbound_at: new Date().toISOString() })
-      .eq("owner_id", userId)
-      .eq("channel", conv.channel);
+    await supabaseAdmin
+      .from("meta_conversations")
+      .update({
+        last_message_at: new Date().toISOString(),
+        last_message_preview: data.text.slice(0, 140),
+      })
+      .eq("id", conv.id);
 
-    await supabase.from("meta_message_logs").insert({
-      owner_id: userId,
+    if (conv.owner_id) {
+      await supabaseAdmin
+        .from("meta_channels")
+        .update({ last_outbound_at: new Date().toISOString() })
+        .eq("owner_id", conv.owner_id)
+        .eq("channel", conv.channel);
+    }
+
+    await supabaseAdmin.from("meta_message_logs").insert({
+      owner_id: conv.owner_id,
       channel: conv.channel,
       direction: "outbound",
       ok: sendRes.ok,
@@ -297,6 +312,10 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
         preview: data.text.slice(0, 80),
       },
     });
+
+    if (!sendRes.ok && sendRes.mode === "live") {
+      throw new Error(sendRes.error ?? "No se pudo enviar el mensaje");
+    }
 
     return { ok: sendRes.ok, mode: sendRes.mode, message: msg };
   });
