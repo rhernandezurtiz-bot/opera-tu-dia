@@ -22,13 +22,15 @@ const TEXT = { "Content-Type": "text/plain; charset=utf-8", ...CORS };
 /**
  * Recorre el payload de WhatsApp Cloud API y devuelve [{ from, body }, ...]
  */
-function extractMessages(payload: any): Array<{ from: string; body: string; waId: string | null }> {
-  const out: Array<{ from: string; body: string; waId: string | null }> = [];
+function extractMessages(payload: any): Array<{ from: string; body: string; waId: string | null; profileName: string | null }> {
+  const out: Array<{ from: string; body: string; waId: string | null; profileName: string | null }> = [];
   const entries = Array.isArray(payload?.entry) ? payload.entry : [];
   for (const entry of entries) {
     const changes = Array.isArray(entry?.changes) ? entry.changes : [];
     for (const change of changes) {
-      const messages = Array.isArray(change?.value?.messages) ? change.value.messages : [];
+      const value = change?.value ?? {};
+      const contacts = Array.isArray(value?.contacts) ? value.contacts : [];
+      const messages = Array.isArray(value?.messages) ? value.messages : [];
       for (const msg of messages) {
         const from: string | undefined = msg?.from;
         const body: string | undefined =
@@ -36,8 +38,10 @@ function extractMessages(payload: any): Array<{ from: string; body: string; waId
           msg?.button?.text ??
           msg?.interactive?.button_reply?.title ??
           msg?.interactive?.list_reply?.title;
+        const contact = contacts.find((c: any) => c?.wa_id === from) ?? contacts[0];
+        const profileName: string | null = contact?.profile?.name ?? null;
         if (from && body) {
-          out.push({ from: String(from), body: String(body), waId: msg?.id ?? null });
+          out.push({ from: String(from), body: String(body), waId: msg?.id ?? null, profileName });
         }
       }
     }
@@ -45,11 +49,11 @@ function extractMessages(payload: any): Array<{ from: string; body: string; waId
   return out;
 }
 
-async function saveMessage(from: string, body: string, waId: string | null, raw: any) {
+async function saveMessage(from: string, body: string, waId: string | null, profileName: string | null, raw: any) {
   // 1) ¿Existe conversación para este número?
   const { data: existing, error: findErr } = await supabaseAdmin
     .from("meta_conversations")
-    .select("id, unread_count")
+    .select("id, unread_count, sender_name")
     .eq("channel", "whatsapp")
     .eq("phone", from)
     .limit(1)
@@ -60,16 +64,27 @@ async function saveMessage(from: string, body: string, waId: string | null, raw:
   }
 
   let conversationId: string;
+  let customerName: string | null = profileName ?? null;
 
   if (existing?.id) {
     conversationId = existing.id;
+    customerName = profileName ?? existing.sender_name ?? null;
+    const update: {
+      last_message_at: string;
+      last_message_preview: string;
+      unread_count: number;
+      sender_name?: string;
+    } = {
+      last_message_at: new Date().toISOString(),
+      last_message_preview: body.slice(0, 140),
+      unread_count: (existing.unread_count ?? 0) + 1,
+    };
+    if (profileName && profileName !== existing.sender_name) {
+      update.sender_name = profileName;
+    }
     const { error: updErr } = await supabaseAdmin
       .from("meta_conversations")
-      .update({
-        last_message_at: new Date().toISOString(),
-        last_message_preview: body.slice(0, 140),
-        unread_count: (existing.unread_count ?? 0) + 1,
-      })
+      .update(update)
       .eq("id", existing.id);
     if (updErr) console.error("[whatsapp-webhook] ❌ error actualizando conversación:", updErr);
     console.log("[whatsapp-webhook] ✓ conversación existente reutilizada:", conversationId);
@@ -82,6 +97,7 @@ async function saveMessage(from: string, body: string, waId: string | null, raw:
         phone: from,
         external_conversation_id: from,
         external_sender_id: from,
+        sender_name: profileName,
         last_message_at: new Date().toISOString(),
         last_message_preview: body.slice(0, 140),
         unread_count: 1,
@@ -135,18 +151,26 @@ async function saveMessage(from: string, body: string, waId: string | null, raw:
       .from("orders")
       .insert({
         conversation_id: conversationId,
+        customer_name: customerName,
         phone: from,
         channel: "whatsapp",
         source_message_text: body,
         status: "nuevo",
       })
-      .select("id")
+      .select("id, customer_name")
       .single();
 
     if (orderErr) {
       console.error("[whatsapp-webhook] ❌ error creando pedido:", orderErr);
     } else {
-      console.log("PEDIDO CREADO", { id: order?.id, phone: from, conversationId });
+      console.log("PEDIDO CREADO", {
+        id: order?.id,
+        customer_name: order?.customer_name,
+        phone: from,
+        message: body,
+        status: "nuevo",
+        conversationId,
+      });
     }
 
     // 4b) Etiquetar conversación (añadir 'pedido_detectado' sin duplicar)
@@ -201,7 +225,7 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
 
         for (const m of messages) {
           try {
-            await saveMessage(m.from, m.body, m.waId, payload);
+            await saveMessage(m.from, m.body, m.waId, m.profileName, payload);
           } catch (err) {
             console.error("[whatsapp-webhook] ❌ excepción al guardar:", err);
           }
