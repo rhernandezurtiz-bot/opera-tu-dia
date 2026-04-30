@@ -36,6 +36,14 @@ function Pedidos() {
       <PageHeader
         title="Pedidos"
         subtitle={`${filtered.length} de ${orders.length} en total`}
+        actions={
+          <Link
+            to="/pedidos/board"
+            className="inline-flex items-center rounded-full border px-3 py-1.5 text-xs hover:bg-muted"
+          >
+            Ver tablero Kanban →
+          </Link>
+        }
       />
 
       <Card className="p-4 rounded-xl mb-6 grid grid-cols-2 md:grid-cols-4 gap-3">
