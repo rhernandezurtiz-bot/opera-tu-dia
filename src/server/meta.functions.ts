@@ -205,11 +205,10 @@ export const listMetaMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ conversationId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+    const { supabase } = context;
     const { data: rows, error } = await supabase
       .from("meta_messages")
       .select("*")
-      .eq("owner_id", userId)
       .eq("conversation_id", data.conversationId)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
