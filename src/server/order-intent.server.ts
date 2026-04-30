@@ -284,10 +284,40 @@ export function computeMissingFields(order: {
 export { detectRiskLevel };
 
 // ─── Generación de respuestas ─────────────────────────────────────────────
+
+function formatHumanDate(iso: string | null): string | null {
+  if (!iso) return null;
+  const today = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  if (iso === fmt(today)) return "hoy";
+  if (iso === fmt(tomorrow)) return "mañana";
+  // dd/mm
+  const [y, m, d] = iso.split("-");
+  return `${parseInt(d)}/${parseInt(m)}`;
+}
+
+function formatHumanTime(t: string | null): string | null {
+  if (!t) return null;
+  const [hStr, mStr] = t.split(":");
+  let h = parseInt(hStr);
+  const min = parseInt(mStr);
+  const ap = h >= 12 ? "pm" : "am";
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  return min === 0 ? `${h} ${ap}` : `${h}:${String(min).padStart(2, "0")} ${ap}`;
+}
+
 export function buildReplyForIntent(args: {
   intent: OrderIntent;
   customerName: string | null;
   missing: string[];
+  order?: {
+    product_requested?: string | null;
+    requested_date?: string | null;
+    requested_time?: string | null;
+    delivery_mode?: string | null;
+  };
 }): { text: string; safeToAutoSend: boolean } {
   const greet = args.customerName ? args.customerName.split(" ")[0] : "";
   const hi = greet ? `¡Hola ${greet}!` : "¡Hola!";
@@ -295,15 +325,43 @@ export function buildReplyForIntent(args: {
   switch (args.intent) {
     case "pedido_nuevo":
     case "cotizacion": {
-      if (args.missing.length === 0) {
+      const o = args.order ?? {};
+      // Mapear "missing" del cómputo del pedido al vocabulario simple del MVP.
+      // Solo nos interesan: producto, fecha, hora, tipo_entrega.
+      const missing = args.missing
+        .map((m) => (m === "entrega o recoger" ? "tipo_entrega" : m))
+        .filter((m) => ["producto", "fecha", "hora", "tipo_entrega"].includes(m));
+
+      if (missing.length === 0) {
+        const fecha = formatHumanDate(o.requested_date ?? null) ?? "la fecha indicada";
+        const hora = formatHumanTime(o.requested_time ?? null) ?? "la hora indicada";
+        const tipo = o.delivery_mode === "recoger" ? "recoger" : "domicilio";
+        const prod = o.product_requested ?? "tu pedido";
         return {
-          text: `${hi} Recibimos tu pedido 🙌. Te confirmamos los detalles en breve.`,
+          text: `Perfecto 🙌 Tengo tu pedido de ${prod} para ${fecha} a las ${hora} (${tipo}). ¿Confirmas tu pedido?`,
           safeToAutoSend: true,
         };
       }
-      const list = args.missing.map((m) => `• ${m}`).join("\n");
+
+      // Preguntar SOLO lo que falta, una pregunta concreta por cada campo.
+      const lines: string[] = [];
+      if (missing.includes("producto")) lines.push("¿Qué producto te gustaría pedir?");
+      if (missing.includes("fecha")) lines.push("¿Para qué día lo necesitas?");
+      if (missing.includes("hora")) lines.push("¿Para qué hora lo necesitas?");
+      if (missing.includes("tipo_entrega")) lines.push("¿Será para recoger o envío a domicilio?");
+
+      // Si tenemos algunos datos, los reconocemos antes de preguntar.
+      const known: string[] = [];
+      if (!missing.includes("producto") && o.product_requested) known.push(o.product_requested);
+      if (!missing.includes("fecha") && o.requested_date) known.push(`para ${formatHumanDate(o.requested_date)}`);
+      if (!missing.includes("hora") && o.requested_time) known.push(`a las ${formatHumanTime(o.requested_time)}`);
+
+      const prefix = known.length > 0
+        ? `${hi} Anoté ${known.join(" ")}. `
+        : `${hi} `;
+
       return {
-        text: `${hi} Gracias por tu mensaje. Para preparar tu pedido necesitamos:\n${list}\n¿Nos los compartes? 🙏`,
+        text: `${prefix}${lines.join(" ")}`,
         safeToAutoSend: true,
       };
     }
