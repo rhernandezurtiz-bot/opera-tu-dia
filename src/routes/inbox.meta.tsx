@@ -444,8 +444,17 @@ function InboxMetaPage() {
 
               {(() => {
                 const mode = channelModes[selected.channel] ?? "manual";
+                // Solo en manual o suggested
+                if (mode !== "manual" && mode !== "suggested") return null;
                 const lastInbound = [...messages].reverse().find((m) => m.direction === "inbound");
-                if ((mode !== "auto" && mode !== "suggested") || !lastInbound) return null;
+                if (!lastInbound) return null;
+                // Si ya hay un outbound posterior al último entrante, no mostrar la caja
+                const alreadyAnswered = messages.some(
+                  (m) => m.direction === "outbound" && m.created_at > lastInbound.created_at,
+                );
+                if (alreadyAnswered) return null;
+                // En manual solo mostrar si el usuario lo pide explícitamente — aquí
+                // mostramos la sugerencia siempre que no haya respuesta aún.
                 return (
                   <div className="px-3 pt-3">
                     <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
