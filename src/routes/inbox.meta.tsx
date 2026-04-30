@@ -37,6 +37,9 @@ export const Route = createFileRoute("/inbox/meta")({
   component: InboxMetaPage,
 });
 
+const AUTO_REPLY_PREVIEW =
+  "¡Hola! Gracias por escribir a Operia. Ya recibimos tu mensaje y en breve te ayudamos 🙌";
+
 interface ConvRow {
   id: string;
   channel: "whatsapp" | "instagram" | "facebook";
