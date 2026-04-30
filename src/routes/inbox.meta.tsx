@@ -473,7 +473,7 @@ function InboxMetaPage() {
                                     }
                                     if (selected) {
                                       const r = await listMetaMessages({ data: { conversationId: selected.id } });
-                                      setMessages(r?.messages ?? []);
+                                      setMessages((r?.messages ?? []) as unknown as MsgRow[]);
                                     }
                                   } catch (err: any) {
                                     toast.error(err?.message ?? "Error al reintentar");
