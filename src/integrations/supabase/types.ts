@@ -202,10 +202,21 @@ export type Database = {
           conversation_id: string | null
           created_at: string
           customer_name: string | null
+          delivery_address: string | null
+          delivery_mode: string | null
           id: string
+          intent: string | null
+          missing_fields: string[]
+          notes: string | null
+          original_message: string
           owner_id: string | null
+          payment_status: string
           phone: string
-          source_message_text: string
+          product_requested: string | null
+          quantity: number | null
+          requested_date: string | null
+          requested_time: string | null
+          risk_level: string
           status: string
           updated_at: string
         }
@@ -214,10 +225,21 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           customer_name?: string | null
+          delivery_address?: string | null
+          delivery_mode?: string | null
           id?: string
+          intent?: string | null
+          missing_fields?: string[]
+          notes?: string | null
+          original_message: string
           owner_id?: string | null
+          payment_status?: string
           phone: string
-          source_message_text: string
+          product_requested?: string | null
+          quantity?: number | null
+          requested_date?: string | null
+          requested_time?: string | null
+          risk_level?: string
           status?: string
           updated_at?: string
         }
@@ -226,10 +248,21 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           customer_name?: string | null
+          delivery_address?: string | null
+          delivery_mode?: string | null
           id?: string
+          intent?: string | null
+          missing_fields?: string[]
+          notes?: string | null
+          original_message?: string
           owner_id?: string | null
+          payment_status?: string
           phone?: string
-          source_message_text?: string
+          product_requested?: string | null
+          quantity?: number | null
+          requested_date?: string | null
+          requested_time?: string | null
+          risk_level?: string
           status?: string
           updated_at?: string
         }
