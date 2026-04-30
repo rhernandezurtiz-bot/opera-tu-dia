@@ -303,16 +303,16 @@ export const sendMetaMessage = createServerFn({ method: "POST" })
 
 // ── Marcar conversación como leída ───────────────────────────────────────
 export const markConversationRead = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ conversationId: z.string().uuid() }).parse(input))
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { error } = await supabase
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
       .from("meta_conversations")
       .update({ unread_count: 0 })
-      .eq("id", data.conversationId)
-      .eq("owner_id", userId);
-    if (error) throw new Error(error.message);
+      .eq("id", data.conversationId);
+    if (error) {
+      console.error("[markConversationRead] error:", error);
+      return { ok: false };
+    }
     return { ok: true };
   });
 
