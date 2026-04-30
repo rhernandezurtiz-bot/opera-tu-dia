@@ -25,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PedidosIndexRouteImport } from './routes/pedidos.index'
 import { Route as InboxIndexRouteImport } from './routes/inbox.index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
+import { Route as PedidosBoardRouteImport } from './routes/pedidos.board'
 import { Route as PedidosIdRouteImport } from './routes/pedidos.$id'
 import { Route as InboxMetaRouteImport } from './routes/inbox.meta'
 import { Route as InboxIdRouteImport } from './routes/inbox.$id'
@@ -118,6 +119,11 @@ const InboxIndexRoute = InboxIndexRouteImport.update({
 const ClientesIndexRoute = ClientesIndexRouteImport.update({
   id: '/clientes/',
   path: '/clientes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PedidosBoardRoute = PedidosBoardRouteImport.update({
+  id: '/pedidos/board',
+  path: '/pedidos/board',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PedidosIdRoute = PedidosIdRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/inbox/$id': typeof InboxIdRoute
   '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/pedidos/board': typeof PedidosBoardRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/inbox/$id': typeof InboxIdRoute
   '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/pedidos/board': typeof PedidosBoardRoute
   '/clientes': typeof ClientesIndexRoute
   '/inbox': typeof InboxIndexRoute
   '/pedidos': typeof PedidosIndexRoute
@@ -282,6 +290,7 @@ export interface FileRoutesById {
   '/inbox/$id': typeof InboxIdRoute
   '/inbox/meta': typeof InboxMetaRoute
   '/pedidos/$id': typeof PedidosIdRoute
+  '/pedidos/board': typeof PedidosBoardRoute
   '/clientes/': typeof ClientesIndexRoute
   '/inbox/': typeof InboxIndexRoute
   '/pedidos/': typeof PedidosIndexRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/inbox/$id'
     | '/inbox/meta'
     | '/pedidos/$id'
+    | '/pedidos/board'
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/inbox/$id'
     | '/inbox/meta'
     | '/pedidos/$id'
+    | '/pedidos/board'
     | '/clientes'
     | '/inbox'
     | '/pedidos'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/inbox/$id'
     | '/inbox/meta'
     | '/pedidos/$id'
+    | '/pedidos/board'
     | '/clientes/'
     | '/inbox/'
     | '/pedidos/'
@@ -413,6 +425,7 @@ export interface RootRouteChildren {
   InboxIdRoute: typeof InboxIdRoute
   InboxMetaRoute: typeof InboxMetaRoute
   PedidosIdRoute: typeof PedidosIdRoute
+  PedidosBoardRoute: typeof PedidosBoardRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   InboxIndexRoute: typeof InboxIndexRoute
   PedidosIndexRoute: typeof PedidosIndexRoute
@@ -538,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pedidos/board': {
+      id: '/pedidos/board'
+      path: '/pedidos/board'
+      fullPath: '/pedidos/board'
+      preLoaderRoute: typeof PedidosBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pedidos/$id': {
       id: '/pedidos/$id'
       path: '/pedidos/$id'
@@ -661,6 +681,7 @@ const rootRouteChildren: RootRouteChildren = {
   InboxIdRoute: InboxIdRoute,
   InboxMetaRoute: InboxMetaRoute,
   PedidosIdRoute: PedidosIdRoute,
+  PedidosBoardRoute: PedidosBoardRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   InboxIndexRoute: InboxIndexRoute,
   PedidosIndexRoute: PedidosIndexRoute,

@@ -129,7 +129,7 @@ function BoardPage() {
       <PageHeader
         title="Tablero de pedidos"
         subtitle={`${totalShown} pedidos${reviewCount ? ` · ${reviewCount} requieren revisión` : ""}`}
-        right={
+        actions={
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="rounded-full">
               <Link to="/pedidos">Vista lista</Link>
