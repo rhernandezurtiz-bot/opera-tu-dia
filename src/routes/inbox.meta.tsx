@@ -56,6 +56,13 @@ interface MsgRow {
   text: string | null;
   status: string;
   created_at: string;
+  raw_payload?: Record<string, unknown> | null;
+}
+
+function isAutoReply(m: MsgRow): boolean {
+  const raw = m.raw_payload;
+  if (!raw || typeof raw !== "object") return false;
+  return (raw as { kind?: string }).kind === "auto_reply";
 }
 
 function formatDateSeparator(iso: string): string {
