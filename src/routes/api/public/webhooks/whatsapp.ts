@@ -22,13 +22,15 @@ const TEXT = { "Content-Type": "text/plain; charset=utf-8", ...CORS };
 /**
  * Recorre el payload de WhatsApp Cloud API y devuelve [{ from, body }, ...]
  */
-function extractMessages(payload: any): Array<{ from: string; body: string; waId: string | null }> {
-  const out: Array<{ from: string; body: string; waId: string | null }> = [];
+function extractMessages(payload: any): Array<{ from: string; body: string; waId: string | null; profileName: string | null }> {
+  const out: Array<{ from: string; body: string; waId: string | null; profileName: string | null }> = [];
   const entries = Array.isArray(payload?.entry) ? payload.entry : [];
   for (const entry of entries) {
     const changes = Array.isArray(entry?.changes) ? entry.changes : [];
     for (const change of changes) {
-      const messages = Array.isArray(change?.value?.messages) ? change.value.messages : [];
+      const value = change?.value ?? {};
+      const contacts = Array.isArray(value?.contacts) ? value.contacts : [];
+      const messages = Array.isArray(value?.messages) ? value.messages : [];
       for (const msg of messages) {
         const from: string | undefined = msg?.from;
         const body: string | undefined =
@@ -36,8 +38,10 @@ function extractMessages(payload: any): Array<{ from: string; body: string; waId
           msg?.button?.text ??
           msg?.interactive?.button_reply?.title ??
           msg?.interactive?.list_reply?.title;
+        const contact = contacts.find((c: any) => c?.wa_id === from) ?? contacts[0];
+        const profileName: string | null = contact?.profile?.name ?? null;
         if (from && body) {
-          out.push({ from: String(from), body: String(body), waId: msg?.id ?? null });
+          out.push({ from: String(from), body: String(body), waId: msg?.id ?? null, profileName });
         }
       }
     }
