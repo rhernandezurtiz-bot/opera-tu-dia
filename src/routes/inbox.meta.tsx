@@ -200,6 +200,23 @@ function InboxMetaPage() {
     }
   };
 
+  const sendAutoReply = async () => {
+    if (!selected) return;
+    setSending(true);
+    try {
+      await sendMetaMessage({
+        data: { conversationId: selected.id, text: AUTO_REPLY_PREVIEW },
+      });
+      toast.success("Respuesta automática enviada");
+      const { messages: rows } = await listMetaMessages({ data: { conversationId: selected.id } });
+      setMessages(rows as MsgRow[]);
+    } catch (err: any) {
+      toast.error(err?.message ?? "No se pudo enviar");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const toggleAuto = async () => {
     if (!selected) return;
     const current = channelModes[selected.channel] ?? "manual";
