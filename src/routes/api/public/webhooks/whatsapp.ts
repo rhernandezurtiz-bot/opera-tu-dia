@@ -225,7 +225,7 @@ export const Route = createFileRoute("/api/public/webhooks/whatsapp")({
 
         for (const m of messages) {
           try {
-            await saveMessage(m.from, m.body, m.waId, payload);
+            await saveMessage(m.from, m.body, m.waId, m.profileName, payload);
           } catch (err) {
             console.error("[whatsapp-webhook] ❌ excepción al guardar:", err);
           }
