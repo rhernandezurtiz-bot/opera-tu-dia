@@ -151,18 +151,26 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
       .from("orders")
       .insert({
         conversation_id: conversationId,
+        customer_name: customerName,
         phone: from,
         channel: "whatsapp",
         source_message_text: body,
         status: "nuevo",
       })
-      .select("id")
+      .select("id, customer_name")
       .single();
 
     if (orderErr) {
       console.error("[whatsapp-webhook] ❌ error creando pedido:", orderErr);
     } else {
-      console.log("PEDIDO CREADO", { id: order?.id, phone: from, conversationId });
+      console.log("PEDIDO CREADO", {
+        id: order?.id,
+        customer_name: order?.customer_name,
+        phone: from,
+        message: body,
+        status: "nuevo",
+        conversationId,
+      });
     }
 
     // 4b) Etiquetar conversación (añadir 'pedido_detectado' sin duplicar)
