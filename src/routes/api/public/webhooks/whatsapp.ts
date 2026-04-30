@@ -206,8 +206,12 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
       .maybeSingle();
 
     if (chan?.reply_mode === "auto") {
-      console.log("[whatsapp-webhook] 🤖 canal en modo auto → enviando respuesta");
+      console.log("[whatsapp-webhook] 🤖 canal en modo auto → enviando respuesta real");
       const sendRes = await sendViaMeta({ channel: "whatsapp", to: from, message: AUTO_REPLY_TEXT });
+
+      if (!sendRes.ok) {
+        console.error("[whatsapp-webhook] ❌ envío Meta falló:", sendRes);
+      }
 
       const { error: outErr } = await supabaseAdmin.from("meta_messages").insert({
         owner_id: chan.owner_id,
@@ -230,7 +234,25 @@ async function saveMessage(from: string, body: string, waId: string | null, prof
         })
         .eq("id", conversationId);
 
-      console.log("AUTO-RESPUESTA ENVIADA", { mode: sendRes.mode, ok: sendRes.ok });
+      // Log de auditoría
+      const { error: logErr } = await supabaseAdmin.from("meta_message_logs").insert({
+        owner_id: chan.owner_id,
+        channel: "whatsapp",
+        direction: "outbound",
+        ok: sendRes.ok,
+        info: {
+          kind: "auto_reply",
+          mode: sendRes.mode,
+          provider: sendRes.provider,
+          messageId: sendRes.messageId,
+          status: sendRes.status,
+          error: sendRes.error,
+          to: from,
+        } as any,
+      });
+      if (logErr) console.error("[whatsapp-webhook] ❌ error escribiendo log:", logErr);
+
+      console.log("AUTO-RESPUESTA", { mode: sendRes.mode, ok: sendRes.ok, error: sendRes.error });
     }
   } catch (err) {
     console.error("[whatsapp-webhook] ❌ excepción en auto-respuesta:", err);
