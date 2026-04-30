@@ -196,14 +196,18 @@ function Config() {
             <h3 className="font-display text-lg">Canales conectados</h3>
             <div className="ml-auto flex items-center gap-2 text-[12px]">
               <span className="text-muted-foreground">Modo</span>
-              <select
-                value={channelMode}
-                onChange={(e) => setChannelMode(e.target.value as "demo" | "produccion")}
-                className="h-8 rounded-lg border border-border bg-background px-2 text-[12px]"
-              >
-                <option value="demo">Demo</option>
-                <option value="produccion">Producción</option>
-              </select>
+              {mounted ? (
+                <select
+                  value={channelMode}
+                  onChange={(e) => setChannelMode(e.target.value as "demo" | "produccion")}
+                  className="h-8 rounded-lg border border-border bg-background px-2 text-[12px]"
+                >
+                  <option value="demo">Demo</option>
+                  <option value="produccion">Producción</option>
+                </select>
+              ) : (
+                <span className="h-8 inline-flex items-center rounded-lg border border-border bg-background px-2 text-[12px] text-muted-foreground">—</span>
+              )}
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
