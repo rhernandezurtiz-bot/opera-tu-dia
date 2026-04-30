@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,8 @@ function Config() {
   const payments = negocio.payments;
 
   const [nm, setNm] = useState({ nombre: "", rol: "" });
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const ruleLabels: Record<keyof RiskRules, string> = {
     fecha: "Fecha", hora: "Hora", direccion: "Dirección",
@@ -194,14 +196,18 @@ function Config() {
             <h3 className="font-display text-lg">Canales conectados</h3>
             <div className="ml-auto flex items-center gap-2 text-[12px]">
               <span className="text-muted-foreground">Modo</span>
-              <select
-                value={channelMode}
-                onChange={(e) => setChannelMode(e.target.value as "demo" | "produccion")}
-                className="h-8 rounded-lg border border-border bg-background px-2 text-[12px]"
-              >
-                <option value="demo">Demo</option>
-                <option value="produccion">Producción</option>
-              </select>
+              {mounted ? (
+                <select
+                  value={channelMode}
+                  onChange={(e) => setChannelMode(e.target.value as "demo" | "produccion")}
+                  className="h-8 rounded-lg border border-border bg-background px-2 text-[12px]"
+                >
+                  <option value="demo">Demo</option>
+                  <option value="produccion">Producción</option>
+                </select>
+              ) : (
+                <span className="h-8 inline-flex items-center rounded-lg border border-border bg-background px-2 text-[12px] text-muted-foreground">—</span>
+              )}
             </div>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -284,37 +290,49 @@ function Config() {
           <div className="grid md:grid-cols-3 gap-3 mb-4">
             <div>
               <Label className="text-xs text-muted-foreground">Proveedor principal</Label>
-              <select
-                value={payments.proveedorPrincipal}
-                onChange={(e) => setPaymentsConfig({ proveedorPrincipal: e.target.value as "mercadopago" | "stripe" | "ambos" })}
-                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
-              >
-                <option value="mercadopago">Mercado Pago</option>
-                <option value="stripe">Stripe</option>
-                <option value="ambos">Ambos</option>
-              </select>
+              {mounted ? (
+                <select
+                  value={payments.proveedorPrincipal}
+                  onChange={(e) => setPaymentsConfig({ proveedorPrincipal: e.target.value as "mercadopago" | "stripe" | "ambos" })}
+                  className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                >
+                  <option value="mercadopago">Mercado Pago</option>
+                  <option value="stripe">Stripe</option>
+                  <option value="ambos">Ambos</option>
+                </select>
+              ) : (
+                <div className="mt-1 w-full h-10 rounded-xl border border-border bg-background" />
+              )}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Moneda</Label>
-              <select
-                value={payments.moneda}
-                onChange={(e) => setPaymentsConfig({ moneda: e.target.value as "MXN" | "USD" })}
-                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
-              >
-                <option value="MXN">MXN — Peso mexicano</option>
-                <option value="USD">USD — Dólar</option>
-              </select>
+              {mounted ? (
+                <select
+                  value={payments.moneda}
+                  onChange={(e) => setPaymentsConfig({ moneda: e.target.value as "MXN" | "USD" })}
+                  className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                >
+                  <option value="MXN">MXN — Peso mexicano</option>
+                  <option value="USD">USD — Dólar</option>
+                </select>
+              ) : (
+                <div className="mt-1 w-full h-10 rounded-xl border border-border bg-background" />
+              )}
             </div>
             <div>
               <Label className="text-xs text-muted-foreground">Modo</Label>
-              <select
-                value={payments.modo}
-                onChange={(e) => setPaymentsConfig({ modo: e.target.value as "simulacion" | "produccion" })}
-                className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
-              >
-                <option value="simulacion">Simulación</option>
-                <option value="produccion">Producción</option>
-              </select>
+              {mounted ? (
+                <select
+                  value={payments.modo}
+                  onChange={(e) => setPaymentsConfig({ modo: e.target.value as "simulacion" | "produccion" })}
+                  className="mt-1 w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                >
+                  <option value="simulacion">Simulación</option>
+                  <option value="produccion">Producción</option>
+                </select>
+              ) : (
+                <div className="mt-1 w-full h-10 rounded-xl border border-border bg-background" />
+              )}
             </div>
           </div>
 
