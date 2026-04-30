@@ -64,7 +64,6 @@ export const listMetaChannels = createServerFn({ method: "GET" }).handler(async 
 
 // ── Upsert configuración de canal ────────────────────────────────────────
 export const upsertMetaChannel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
@@ -78,10 +77,17 @@ export const upsertMetaChannel = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
+  .handler(async ({ data }) => {
+    // Modo demo: si no hay usuario autenticado, devolvemos una respuesta
+    // amigable en lugar de lanzar (evita el error [object Response]).
+    const auth = await getOptionalUserScopedSupabase();
+    if (!auth) {
+      console.warn("[upsertMetaChannel] sin sesión: no se puede modificar canal");
+      return { channel: null, ok: false, reason: "not_authenticated" as const };
+    }
 
-    // leer el actual para preservar campos no enviados
+    const { supabase, userId } = auth;
+
     const { data: cur } = await supabase
       .from("meta_channels")
       .select("*")
@@ -110,8 +116,11 @@ export const upsertMetaChannel = createServerFn({ method: "POST" })
       .upsert(next, { onConflict: "owner_id,channel" })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
-    return { channel: row };
+    if (error) {
+      console.error("[upsertMetaChannel] error:", error);
+      return { channel: null, ok: false, reason: "db_error" as const };
+    }
+    return { channel: row, ok: true as const };
   });
 
 // ── Probar conexión (mock) ───────────────────────────────────────────────
